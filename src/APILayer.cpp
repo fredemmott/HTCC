@@ -33,6 +33,9 @@
 #include "DebugPrint.h"
 #include "OpenXRNext.h"
 
+template <class CharT>
+struct std::formatter<XrResult, CharT> : std::formatter<int, CharT> {};
+
 namespace DCSQuestHandTracking {
 
 static constexpr XrPosef XR_POSEF_IDENTITY {
@@ -48,6 +51,7 @@ static std::shared_ptr<OpenXRNext> gNext;
 
 APILayer::APILayer(XrSession session, const std::shared_ptr<OpenXRNext>& next)
   : mOpenXR(next) {
+  DebugPrint("{}", __FUNCTION__);
   auto oxr = next.get();
 
   XrReferenceSpaceCreateInfo referenceSpace {
@@ -95,14 +99,68 @@ XrResult xrCreateSession(
 
   auto nextResult = gNext->xrCreateSession(instance, createInfo, session);
   if (nextResult != XR_SUCCESS) {
-    DebugPrint("next xrCreateSession failed");
+    DebugPrint("next xrCreateSession failed: {}", nextResult);
     return nextResult;
   }
 
+  uint32_t count = 0;
+  nextResult = gNext->xrEnumerateInstanceExtensionProperties(
+    nullptr, 0, &count, nullptr);
+  if (nextResult != XR_SUCCESS) {
+    DebugPrint("Getting extension count failed: {}", nextResult);
+    return nextResult;
+  }
+
+  if (count == 0) {
+    DebugPrint(
+      "Runtime supports no extensions, so definitely doesn't support hand "
+      "tracking. Reporting success but doing nothing.");
+    return XR_SUCCESS;
+  }
+
+  std::vector<XrExtensionProperties> extensions(count);
+  nextResult = gNext->xrEnumerateInstanceExtensionProperties(
+    nullptr, count, &count, extensions.data());
+  if (nextResult != XR_SUCCESS) {
+    DebugPrint("Enumerating extensions failed: {}", nextResult);
+    return nextResult;
+  }
+
+  bool foundHandTracking = false;
+  bool foundHandTrackingAim = false;
+  for (const auto& it: extensions) {
+    const std::string_view name {it.extensionName};
+    DebugPrint("Found {}", name);
+
+    if (name == XR_EXT_HAND_TRACKING_EXTENSION_NAME) {
+      foundHandTracking = true;
+      continue;
+    }
+    if (name == XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME) {
+      foundHandTrackingAim = true;
+      continue;
+    }
+  }
+
+  if (!foundHandTracking) {
+    DebugPrint(
+      "Did not find {}, doing nothing.", XR_EXT_HAND_TRACKING_EXTENSION_NAME);
+    return XR_SUCCESS;
+  }
+
+  if (!foundHandTrackingAim) {
+    DebugPrint(
+      "Did not find {}, doing nothing.",
+      XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME);
+    return XR_SUCCESS;
+  }
+
   if (gInstance) {
-    DebugPrint("Already have a kneeboard, refusing to initialize twice");
+    DebugPrint("Already have an instance, refusing to initialize twice");
     return XR_ERROR_INITIALIZATION_FAILED;
   }
+
+  gInstance = new APILayer(*session, gNext);
 
   return XR_SUCCESS;
 }

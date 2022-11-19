@@ -35,7 +35,8 @@
   IT(xrDestroySwapchain) \
   IT(xrCreateReferenceSpace) \
   IT(xrDestroySpace) \
-  IT(xrLocateSpace)
+  IT(xrLocateSpace) \
+  IT(xrEnumerateInstanceExtensionProperties)
 
 namespace DCSQuestHandTracking {
 
