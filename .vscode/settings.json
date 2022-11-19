@@ -1,0 +1,6 @@
+{
+  "editor.formatOnSave": true,
+  "files.associations": {
+    "utility": "cpp"
+  }
+}
