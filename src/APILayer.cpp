@@ -51,7 +51,7 @@ static std::shared_ptr<OpenXRNext> gNext;
 
 APILayer::APILayer(XrSession session, const std::shared_ptr<OpenXRNext>& next)
   : mOpenXR(next) {
-  DebugPrint("{}", __FUNCTION__);
+  DebugPrint("{}()", __FUNCTION__);
   auto oxr = next.get();
 
   XrReferenceSpaceCreateInfo referenceSpace {
@@ -118,7 +118,8 @@ XrResult xrCreateSession(
     return XR_SUCCESS;
   }
 
-  std::vector<XrExtensionProperties> extensions(count);
+  std::vector<XrExtensionProperties> extensions(
+    count, XrExtensionProperties {XR_TYPE_EXTENSION_PROPERTIES});
   nextResult = gNext->xrEnumerateInstanceExtensionProperties(
     nullptr, count, &count, extensions.data());
   if (nextResult != XR_SUCCESS) {
@@ -160,6 +161,7 @@ XrResult xrCreateSession(
     return XR_ERROR_INITIALIZATION_FAILED;
   }
 
+  DebugPrint("Found required extensions, initializing");
   gInstance = new APILayer(*session, gNext);
 
   return XR_SUCCESS;
@@ -229,8 +231,6 @@ XrResult xrCreateApiLayerInstance(
 
   gNext = std::make_shared<OpenXRNext>(
     *instance, layerInfo->nextInfo->nextGetInstanceProcAddr);
-
-  DebugPrint("Created API layer instance");
 
   return XR_SUCCESS;
 }

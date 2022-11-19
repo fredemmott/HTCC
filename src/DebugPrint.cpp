@@ -29,7 +29,7 @@
 namespace DCSQuestHandTracking::detail {
 
 void DebugPrintString(std::wstring_view message) {
-  const auto formatted = std::format(L"[DCSQuestHandTracking] {}", message);
+  const auto formatted = std::format(L"[DCSQuestHandTracking] {}\n", message);
 
   OutputDebugStringW(formatted.c_str());
 }
