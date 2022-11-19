@@ -8,12 +8,11 @@ This project emulates Oculus Touch controllers using hand tracking on Oculus hea
 
 Hand tracking is used to emulate touch controllers with the following actions:
 
-Index finger pinch: thumbstick aft ('left click')
-Middle finger pinch: thumbstick forward ('right click')
-Ring finger pinch: thumbstick left ('mouse wheel up')
-Little finger pinch: thumbstick right ('mouse wheel down')
-
-All finger pinch: enable/disable
+- Index finger pinch: thumbstick aft ('left click')
+- Middle finger pinch: thumbstick forward ('right click')
+- Ring finger pinch: thumbstick left ('mouse wheel up')
+- Little finger pinch: thumbstick right ('mouse wheel down')
+- All finger pinch: enable/disable
 
 These mappings are selected to fit well with DCS World's handling of Touch controllers.
 
