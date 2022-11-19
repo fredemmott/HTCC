@@ -18,3 +18,10 @@ target_precompile_headers(
   PRIVATE
   pch.h
 )
+
+file(
+  GENERATE
+  OUTPUT "$<TARGET_FILE_DIR:XR_APILAYER_FREDEMMOTT_DCSQuestHandTracking>/XR_APILAYER_FREDEMMOTT_DCSQuestHandTracking.json"
+  INPUT "APILayer.json.in"
+  NEWLINE_STYLE UNIX
+)
