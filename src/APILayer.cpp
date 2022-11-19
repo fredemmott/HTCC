@@ -30,6 +30,7 @@
 #include <memory>
 #include <string>
 
+#include "DebugPrint.h"
 #include "OpenXRNext.h"
 
 namespace DCSQuestHandTracking {
@@ -87,17 +88,19 @@ XrResult xrCreateSession(
   XrSession* session) {
   XrInstanceProperties instanceProps {XR_TYPE_INSTANCE_PROPERTIES};
   gNext->xrGetInstanceProperties(instance, &instanceProps);
-  // dprintf("OpenXR runtime: '{}' v{:#x}", instanceProps.runtimeName,
-  // instanceProps.runtimeVersion);
+  DebugPrint(
+    "OpenXR runtime: '{}' v{:#x}",
+    instanceProps.runtimeName,
+    instanceProps.runtimeVersion);
 
   auto nextResult = gNext->xrCreateSession(instance, createInfo, session);
   if (nextResult != XR_SUCCESS) {
-    // dprint("next xrCreateSession failed");
+    DebugPrint("next xrCreateSession failed");
     return nextResult;
   }
 
   if (gInstance) {
-    // dprint("Already have a kneeboard, refusing to initialize twice");
+    DebugPrint("Already have a kneeboard, refusing to initialize twice");
     return XR_ERROR_INITIALIZATION_FAILED;
   }
 
@@ -144,10 +147,10 @@ XrResult xrGetInstanceProcAddr(
     return XR_SUCCESS;
   }
 
-  /*dprintf(
+  DebugPrint(
     "Unsupported OpenXR call '{}' with instance {:#016x} and no next",
     name,
-    reinterpret_cast<uintptr_t>(instance));*/
+    reinterpret_cast<uintptr_t>(instance));
   return XR_ERROR_FUNCTION_UNSUPPORTED;
 }
 
@@ -155,21 +158,21 @@ XrResult xrCreateApiLayerInstance(
   const XrInstanceCreateInfo* info,
   const struct XrApiLayerCreateInfo* layerInfo,
   XrInstance* instance) {
-  // dprintf("{}", __FUNCTION__);
+  DebugPrint("{}", __FUNCTION__);
   //  TODO: check version fields etc in layerInfo
   XrApiLayerCreateInfo nextLayerInfo = *layerInfo;
   nextLayerInfo.nextInfo = layerInfo->nextInfo->next;
   auto nextResult = layerInfo->nextInfo->nextCreateApiLayerInstance(
     info, &nextLayerInfo, instance);
   if (nextResult != XR_SUCCESS) {
-    // dprint("Next failed.");
+    DebugPrint("Next failed.");
     return nextResult;
   }
 
   gNext = std::make_shared<OpenXRNext>(
     *instance, layerInfo->nextInfo->nextGetInstanceProcAddr);
 
-  // dprint("Created API layer instance");
+  DebugPrint("Created API layer instance");
 
   return XR_SUCCESS;
 }
@@ -185,7 +188,7 @@ XrResult __declspec(dllexport) XRAPI_CALL
     const char* layerName,
     XrNegotiateApiLayerRequest* apiLayerRequest) {
   if (layerName != DCSQuestHandTracking::OpenXRLayerName) {
-    // dprintf("Layer name mismatch:\n -{}\n +{}", OpenXRLayerName, layerName);
+    DebugPrint("Layer name mismatch:\n -{}\n +{}", OpenXRLayerName, layerName);
     return XR_ERROR_INITIALIZATION_FAILED;
   }
 
