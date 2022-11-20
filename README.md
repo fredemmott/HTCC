@@ -1,8 +1,10 @@
-# Quest Handtracking for DCS World
+# EXPERIMENT: Quest Handtracking for DCS World
 
 This project emulates mouse events in DCS using hand tracking on Oculus headsets.
 
 [OpenComposite] is required, and DCS World must be launched in SteamVR mode.
+
+**THIS IS AN EXPERIMENT - IT IS NOT READY FOR USE**. Do not ask for help using or installing it, etc.
 
 ## Control mapping
 
