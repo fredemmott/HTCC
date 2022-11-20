@@ -147,6 +147,12 @@ static void DumpHandState(
     state.aimPose.position.x,
     state.aimPose.position.y,
     state.aimPose.position.z);
+  DebugPrint(
+    "  I{:.02f} M{:.02f} R{:.02f} L{:.02f}",
+    state.pinchStrengthIndex,
+    state.pinchStrengthMiddle,
+    state.pinchStrengthRing,
+    state.pinchStrengthLittle);
 }
 
 XrResult APILayer::xrEndFrame(
