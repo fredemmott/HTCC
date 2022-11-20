@@ -56,16 +56,20 @@ VirtualTouchScreen::VirtualTouchScreen(
   mFov = views[0].fov;
   mFov.angleRight = views[1].fov.angleRight;
 
+  mTanFovX = std::tanf(mFov.angleRight);
+  mTanFovUp = std::tanf(mFov.angleUp);
+  mTanFovDown = std::tanf(std::abs(mFov.angleDown));
+  mNormalizedFovOriginY = std::abs(mFov.angleUp)
+    / (std::abs(mFov.angleUp) + std::abs(mFov.angleDown));
+
   DebugPrint(
-    "Headset FOV: {} {} {} {}",
+    "Headset FOV: {} {} {} {} - vertical split at {}",
     mFov.angleLeft,
     mFov.angleRight,
     mFov.angleUp,
-    mFov.angleDown);
+    mFov.angleDown,
+    mNormalizedFovOriginY);
 
-  mTanFovX = std::tanf(mFov.angleRight);
-  mTanFovY
-    = std::tanf(std::min(std::abs(mFov.angleUp), std::abs(mFov.angleDown)));
   UpdateMainWindow();
 }
 
@@ -148,13 +152,16 @@ bool VirtualTouchScreen::NormalizeHand(
     return false;
   }
 
+  const auto isUp = hand.aimPose.position.y >= 0;
+  const auto tanY = isUp ? mTanFovUp : mTanFovDown;
+
   const auto screenY
-    = hand.aimPose.position.y / (hand.aimPose.position.z * mTanFovY);
+    = hand.aimPose.position.y / (hand.aimPose.position.z * tanY);
   if (screenY > 1 || screenY < -1) {
     return false;
   }
 
-  *xy = {0.5f + (screenX / -2), 0.5f + (screenY / 2)};
+  *xy = {0.5f + (screenX / -2), mNormalizedFovOriginY + (screenY / 2)};
 
   return true;
 }
