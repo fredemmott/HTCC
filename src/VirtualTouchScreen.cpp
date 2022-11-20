@@ -53,10 +53,12 @@ VirtualTouchScreen::VirtualTouchScreen(
     return;
   }
 
-  mFov = views[0].fov;
-  mFov.angleRight = views[1].fov.angleRight;
+  mFov = views[Config::MirrorEye].fov;
 
-  mTanFovX = std::tanf(mFov.angleRight);
+  mTanFovLeft = std::tanf(std::abs(mFov.angleLeft));
+  mTanFovRight = std::tanf(mFov.angleRight);
+  mNormalizedFovOriginX = std::abs(mFov.angleLeft)
+    / (std::abs(mFov.angleLeft) + std::abs(mFov.angleRight));
   mTanFovUp = std::tanf(mFov.angleUp);
   mTanFovDown = std::tanf(std::abs(mFov.angleDown));
   mNormalizedFovOriginY = std::abs(mFov.angleUp)
@@ -146,8 +148,10 @@ bool VirtualTouchScreen::NormalizeHand(
   }
 
   // Assuming left and right FOV are identical...
+  const auto isLeft = hand.aimPose.position.x <= 0;
+  const auto tanX = isLeft ? mTanFovLeft : mTanFovRight;
   const auto screenX
-    = hand.aimPose.position.x / (hand.aimPose.position.z * mTanFovX);
+    = hand.aimPose.position.x / (hand.aimPose.position.z * tanX);
   if (screenX > 1 || screenX < -1) {
     return false;
   }
@@ -161,7 +165,10 @@ bool VirtualTouchScreen::NormalizeHand(
     return false;
   }
 
-  *xy = {0.5f + (screenX / -2), mNormalizedFovOriginY + (screenY / 2)};
+  *xy = {
+    mNormalizedFovOriginX + (screenX / -2),
+    mNormalizedFovOriginY + (screenY / 2),
+  };
 
   return true;
 }
@@ -188,7 +195,7 @@ void VirtualTouchScreen::SubmitData(
   const auto x = ((xy.x * mWindowSize.x) + mWindowRect.left) / mScreenSize.x;
   const auto y = ((xy.y * mWindowSize.y) + mWindowRect.top) / mScreenSize.y;
 
-  if (Config::VerboseDebug) {
+  if (Config::VerboseDebug >= 3) {
     DebugPrint(
       "Raw: ({:.02f}, {:0.2f}); adjusted for window: ({:.02f}, {:.02f})",
       xy.x,

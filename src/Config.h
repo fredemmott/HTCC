@@ -23,9 +23,15 @@
  */
 #pragma once
 
+#include <cinttypes>
+
 namespace DCSQuestHandTracking::Config {
 
-constexpr bool VerboseDebug = false;
+// 0 = left, 1 == right
+constexpr uint8_t MirrorEye = 1;
+
+// 0 = off, 1 = some, 2 = more, 3 = every frame
+constexpr uint8_t VerboseDebug = 1;
 constexpr bool PinchToClick = true;
 constexpr bool PinchToScroll = true;
 
