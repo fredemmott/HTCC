@@ -28,6 +28,7 @@
 #include <filesystem>
 
 #include "APILayer.h"
+#include "Config.h"
 #include "DebugPrint.h"
 #include "OpenXRNext.h"
 
@@ -264,7 +265,11 @@ XrResult __declspec(dllexport) XRAPI_CALL
                          .filename();
   if (exeName != L"DCS.exe") {
     DebugPrint(L"Doing nothing - '{}' is not 'DCS.exe'", exeName.wstring());
-    DCSQuestHandTracking::Loader::gIsDCS = false;
+    if (!DCSQuestHandTracking::Config::CheckDCS) {
+      DebugPrint("Loading anyway, Config::CheckDCS is false");
+    } else {
+      DCSQuestHandTracking::Loader::gIsDCS = false;
+    }
   }
 
   // TODO: check version fields etc in loaderInfo

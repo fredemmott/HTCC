@@ -181,7 +181,9 @@ XrResult APILayer::xrEndFrame(
 
   static std::chrono::steady_clock::time_point lastPrint {};
   const auto now = std::chrono::steady_clock::now();
-  if (Config::VerboseDebug && (now - lastPrint > std::chrono::seconds(1))) {
+  if (
+    (Config::VerboseDebug >= 2)
+    && (now - lastPrint > std::chrono::seconds(1))) {
     lastPrint = now;
     DumpHandState("Left", left);
     DumpHandState("Right", right);

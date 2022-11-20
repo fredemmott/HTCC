@@ -49,14 +49,10 @@ class VirtualTouchScreen final {
   XrVector2f mWindowSize {};
   RECT mWindowRect {};
   XrVector2f mScreenSize;
+
   XrFovf mFov {};
-  float mTanFovLeft;
-  float mTanFovRight;
-  float mTanFovUp;
-  float mTanFovDown;
-  // 0..1
-  float mNormalizedFovOriginX;
-  float mNormalizedFovOriginY;
+  XrVector2f mCombinedFov {};
+  XrVector2f mFovOrigin0To1 {};
 
   bool mLeftClick {false};
   bool mRightClick {false};

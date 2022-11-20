@@ -55,22 +55,27 @@ VirtualTouchScreen::VirtualTouchScreen(
 
   mFov = views[Config::MirrorEye].fov;
 
-  mTanFovLeft = std::tanf(std::abs(mFov.angleLeft));
-  mTanFovRight = std::tanf(mFov.angleRight);
-  mNormalizedFovOriginX = std::abs(mFov.angleLeft)
-    / (std::abs(mFov.angleLeft) + std::abs(mFov.angleRight));
-  mTanFovUp = std::tanf(mFov.angleUp);
-  mTanFovDown = std::tanf(std::abs(mFov.angleDown));
-  mNormalizedFovOriginY = std::abs(mFov.angleUp)
-    / (std::abs(mFov.angleUp) + std::abs(mFov.angleDown));
+  mCombinedFov = {
+    std::abs(mFov.angleLeft) + std::abs(mFov.angleRight),
+    std::abs(mFov.angleUp) + std::abs(mFov.angleDown),
+  };
+
+  mFovOrigin0To1 = {
+    std::abs(mFov.angleLeft) / mCombinedFov.x,
+    std::abs(mFov.angleUp) / mCombinedFov.y,
+  };
 
   DebugPrint(
-    "Reported eye FOV: {} {} {} {} - vertical split at {}",
+    "Reported eye FOV: L {} R {} U {} D {} ({}x{}) - tracking origin at ({}, "
+    "{})",
     mFov.angleLeft,
     mFov.angleRight,
     mFov.angleUp,
     mFov.angleDown,
-    mNormalizedFovOriginY);
+    mCombinedFov.x,
+    mCombinedFov.y,
+    mFovOrigin0To1.x,
+    mFovOrigin0To1.y);
 
   UpdateMainWindow();
 }
@@ -147,28 +152,29 @@ bool VirtualTouchScreen::NormalizeHand(
     return false;
   }
 
-  // Assuming left and right FOV are identical...
-  const auto isLeft = hand.aimPose.position.x <= 0;
-  const auto tanX = isLeft ? mTanFovLeft : mTanFovRight;
-  const auto screenX
-    = hand.aimPose.position.x / (hand.aimPose.position.z * tanX);
-  if (screenX > 1 || screenX < -1) {
+  const auto rx
+    = std::atan2f(hand.aimPose.position.x, -hand.aimPose.position.z);
+  const auto ry
+    = std::atan2f(hand.aimPose.position.y, -hand.aimPose.position.z);
+
+  if (Config::VerboseDebug >= 3) {
+    DebugPrint(
+      "(x,y,z) = ({}, {}, {}), (rx, ry) = ({}, {})",
+      hand.aimPose.position.x,
+      hand.aimPose.position.y,
+      hand.aimPose.position.z,
+      rx,
+      ry);
+  }
+  const auto screenX = mFovOrigin0To1.x + (rx / mCombinedFov.x);
+  // OpenXR has Y origin in bottom left, screeen has it in top left
+  const auto screenY = mFovOrigin0To1.y - (ry / mCombinedFov.y);
+
+  if (screenX < 0 || screenX > 1 || screenY < 0 || screenY > 1) {
     return false;
   }
 
-  const auto isUp = hand.aimPose.position.y >= 0;
-  const auto tanY = isUp ? mTanFovUp : mTanFovDown;
-
-  const auto screenY
-    = hand.aimPose.position.y / (hand.aimPose.position.z * tanY);
-  if (screenY > 1 || screenY < -1) {
-    return false;
-  }
-
-  *xy = {
-    mNormalizedFovOriginX + (screenX / -2),
-    mNormalizedFovOriginY + (screenY / 2),
-  };
+  *xy = {screenX, screenY};
 
   return true;
 }

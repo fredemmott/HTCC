@@ -27,11 +27,13 @@
 
 namespace DCSQuestHandTracking::Config {
 
+constexpr bool CheckDCS = true;
+
 // 0 = left, 1 == right
 constexpr uint8_t MirrorEye = 1;
 
 // 0 = off, 1 = some, 2 = more, 3 = every frame
-constexpr uint8_t VerboseDebug = 1;
+constexpr uint8_t VerboseDebug = 0;
 constexpr bool PinchToClick = true;
 constexpr bool PinchToScroll = true;
 
