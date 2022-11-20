@@ -50,6 +50,10 @@ class VirtualTouchScreen final {
   XrFovf mFov {};
   float mTanFovX;
   float mTanFovY;
+
+  bool mLeftClick {false};
+  bool mRightClick {false};
+
   std::chrono::steady_clock::time_point mLastWindowCheck {};
 
   bool NormalizeHand(const XrHandTrackingAimStateFB& hand, XrVector2f* xy);

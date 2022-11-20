@@ -168,7 +168,7 @@ void VirtualTouchScreen::SubmitData(
     UpdateMainWindow();
   }
 
-  const auto xy = leftValid ? leftXY : rightXY;
+  const auto& xy = leftValid ? leftXY : rightXY;
 
   const auto x = ((xy.x * mWindowSize.x) + mWindowRect.left) / mScreenSize.x;
   const auto y = ((xy.y * mWindowSize.y) + mWindowRect.top) / mScreenSize.y;
@@ -180,16 +180,44 @@ void VirtualTouchScreen::SubmitData(
     x,
     y);
 
-  INPUT input {
-    .type = INPUT_MOUSE,
-    .mi = MOUSEINPUT {
-      .dx = std::lround(x * 65535),
-      .dy = std::lround(y * 65535),
-      .dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE,
-    },
+  std::vector<INPUT> events {
+    INPUT {
+      .type = INPUT_MOUSE,
+      .mi = MOUSEINPUT {
+        .dx = std::lround(x * 65535),
+        .dy = std::lround(y * 65535),
+        .dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE,
+      },
+    }
   };
 
-  SendInput(1, &input, sizeof(input));
+  const auto& hand = leftValid ? left : right;
+  const auto flags = hand.status;
+
+  const auto leftClick
+    = HasFlags(flags, XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB);
+  if (leftClick != mLeftClick) {
+    mLeftClick = leftClick;
+    events.push_back(INPUT {
+      .type = INPUT_MOUSE,
+      .mi = MOUSEINPUT {
+        .dwFlags = static_cast<DWORD>(
+          leftClick ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP),
+      }});
+  }
+  const auto rightClick
+    = HasFlags(flags, XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB);
+  if (rightClick != mRightClick) {
+    mRightClick = rightClick;
+    events.push_back(INPUT {
+      .type = INPUT_MOUSE,
+      .mi = MOUSEINPUT {
+        .dwFlags = static_cast<DWORD>(
+          rightClick ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_RIGHTUP),
+      }});
+  }
+
+  SendInput(events.size(), events.data(), sizeof(INPUT));
 }
 
 }// namespace DCSQuestHandTracking
