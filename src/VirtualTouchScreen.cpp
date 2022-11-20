@@ -64,7 +64,61 @@ VirtualTouchScreen::VirtualTouchScreen(
 
   mTanFovX = std::tanf(mFov.angleRight);
   mTanFovY
-    = std::tanf(std::max(std::abs(mFov.angleUp), std::abs(mFov.angleDown)));
+    = std::tanf(std::min(std::abs(mFov.angleUp), std::abs(mFov.angleDown)));
+  UpdateMainWindow();
+}
+
+void VirtualTouchScreen::UpdateMainWindow() {
+  mThisProcess = GetCurrentProcessId();
+  mConsoleWindow = GetConsoleWindow();
+  EnumWindows(
+    &VirtualTouchScreen::EnumWindowCallback, reinterpret_cast<LPARAM>(this));
+}
+
+BOOL CALLBACK VirtualTouchScreen::EnumWindowCallback(HWND hwnd, LPARAM lparam) {
+  auto this_ = reinterpret_cast<VirtualTouchScreen*>(lparam);
+  DWORD processID {};
+  GetWindowThreadProcessId(hwnd, &processID);
+  if (processID != this_->mThisProcess) {
+    return TRUE;
+  }
+
+  // Has a parent window
+  if (GetWindow(hwnd, GW_OWNER) != (HWND)0) {
+    return TRUE;
+  }
+
+  if (hwnd == this_->mConsoleWindow) {
+    return TRUE;
+  }
+
+  RECT rect {};
+  GetWindowRect(hwnd, &rect);
+  this_->mWindowRect = rect;
+  this_->mWindowSize = {
+    static_cast<float>(rect.right - rect.left),
+    static_cast<float>(rect.bottom - rect.top),
+  };
+
+  DebugPrint(
+    "Found game window; mapping hand-tracking within headset FOV to on-screen "
+    "rect ({}, {}) -> ({}, {})",
+    rect.left,
+    rect.top,
+    rect.right,
+    rect.bottom);
+
+  auto monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
+  MONITORINFO monitorInfo {sizeof(MONITORINFO)};
+  GetMonitorInfo(monitor, &monitorInfo);
+
+  rect = monitorInfo.rcMonitor;
+  this_->mScreenSize = {
+    static_cast<float>(rect.right - rect.left),
+    static_cast<float>(rect.bottom - rect.top),
+  };
+
+  return FALSE;
 }
 
 template <class Actual, class Wanted>
@@ -109,13 +163,28 @@ void VirtualTouchScreen::SubmitData(
     return;
   }
 
+  const auto now = std::chrono::steady_clock::now();
+  if (now - mLastWindowCheck > std::chrono::seconds(1)) {
+    UpdateMainWindow();
+  }
+
   const auto xy = leftValid ? leftXY : rightXY;
+
+  const auto x = ((xy.x * mWindowSize.x) + mWindowRect.left) / mScreenSize.x;
+  const auto y = ((xy.y * mWindowSize.y) + mWindowRect.top) / mScreenSize.y;
+
+  DebugPrint(
+    "Raw: ({:.02f}, {:0.2f}); adjusted for window: ({:.02f}, {:.02f})",
+    xy.x,
+    xy.y,
+    x,
+    y);
 
   INPUT input {
     .type = INPUT_MOUSE,
     .mi = MOUSEINPUT {
-      .dx = std::lround(xy.x * 65535),
-      .dy = std::lround(xy.y * 65535),
+      .dx = std::lround(x * 65535),
+      .dy = std::lround(y * 65535),
       .dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE,
     },
   };

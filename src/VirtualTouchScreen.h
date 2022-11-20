@@ -42,11 +42,20 @@ class VirtualTouchScreen final {
     const XrHandTrackingAimStateFB& right);
 
  private:
+  DWORD mThisProcess;
+  HWND mConsoleWindow {};
+  XrVector2f mWindowSize {};
+  RECT mWindowRect {};
+  XrVector2f mScreenSize;
   XrFovf mFov {};
   float mTanFovX;
   float mTanFovY;
+  std::chrono::steady_clock::time_point mLastWindowCheck {};
 
   bool NormalizeHand(const XrHandTrackingAimStateFB& hand, XrVector2f* xy);
+
+  void UpdateMainWindow();
+  static BOOL CALLBACK EnumWindowCallback(HWND hwnd, LPARAM lparam);
 };
 
 }// namespace DCSQuestHandTracking
