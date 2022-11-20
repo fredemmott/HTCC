@@ -32,11 +32,16 @@
   IT(xrCreateSession) \
   IT(xrDestroySession) \
   IT(xrGetInstanceProperties) \
-  IT(xrDestroySwapchain) \
   IT(xrCreateReferenceSpace) \
   IT(xrDestroySpace) \
   IT(xrLocateSpace) \
-  IT(xrEnumerateInstanceExtensionProperties)
+  IT(xrEnumerateInstanceExtensionProperties) \
+  IT(xrEndFrame) \
+  IT(xrCreateHandTrackerEXT) \
+  IT(xrDestroyHandTrackerEXT) \
+  IT(xrLocateHandJointsEXT) \
+  IT(xrGetSystem) \
+  IT(xrGetSystemProperties)
 
 namespace DCSQuestHandTracking {
 
@@ -47,6 +52,16 @@ class OpenXRNext final {
 #define IT(func) \
   template <class... Args> \
   auto func(Args&&... args) { \
+    if (!this->m_##func) [[unlikely]] { \
+      auto nextResult = this->m_xrGetInstanceProcAddr( \
+        mInstance, \
+        #func, \
+        reinterpret_cast<PFN_xrVoidFunction*>(&this->m_##func)); \
+      if (nextResult != XR_SUCCESS) { \
+        DebugPrint("Failed to find function {}: {}", #func, (int)nextResult); \
+        return nextResult; \
+      } \
+    } \
     return this->m_##func(std::forward<Args>(args)...); \
   }
   IT(xrGetInstanceProcAddr)
@@ -54,6 +69,7 @@ class OpenXRNext final {
 #undef IT
 
  private:
+  XrInstance mInstance;
 #define IT(func) PFN_##func m_##func {nullptr};
   IT(xrGetInstanceProcAddr)
   NEXT_OPENXR_FUNCS

@@ -26,8 +26,8 @@
 namespace DCSQuestHandTracking {
 
 OpenXRNext::OpenXRNext(XrInstance instance, PFN_xrGetInstanceProcAddr getNext) {
-  this->m_xrGetInstanceProcAddr = getNext;
-
+  mInstance = instance;
+  m_xrGetInstanceProcAddr = getNext;
 #define IT(func) \
   getNext( \
     instance, #func, reinterpret_cast<PFN_xrVoidFunction*>(&this->m_##func));

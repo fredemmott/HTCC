@@ -37,10 +37,17 @@ class APILayer final {
   APILayer(XrSession, const std::shared_ptr<OpenXRNext>&);
   virtual ~APILayer();
 
+  XrResult xrEndFrame(XrSession session, const XrFrameEndInfo* frameEndInfo);
+
  private:
+  void InitHandTrackers(XrSession session);
+
   std::shared_ptr<OpenXRNext> mOpenXR;
   XrSpace mLocalSpace {};
   XrSpace mViewSpace {};
+
+  XrHandTrackerEXT mLeftHand {};
+  XrHandTrackerEXT mRightHand {};
 };
 
 }// namespace DCSQuestHandTracking

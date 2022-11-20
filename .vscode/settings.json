@@ -1,7 +1,8 @@
 {
   "editor.formatOnSave": true,
   "files.associations": {
-    "utility": "cpp"
+    "utility": "cpp",
+    "memory": "cpp"
   },
   "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }
