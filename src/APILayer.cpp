@@ -368,7 +368,6 @@ static XrResult xrCreateApiLayerInstance(
   XrApiLayerCreateInfo nextLayerInfo = *layerInfo;
   nextLayerInfo.nextInfo = layerInfo->nextInfo->next;
 
-  DebugBreak();
   auto nextResult = layerInfo->nextInfo->nextCreateApiLayerInstance(
     &info, &nextLayerInfo, instance);
   if (nextResult != XR_SUCCESS) {
