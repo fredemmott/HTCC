@@ -17,7 +17,7 @@ This project emulates mouse events in DCS using hand tracking on Oculus headsets
 
 ### Why only Oculus headsets?
 
-The [`XR_FB_hand_tracking_aim`] OpenXR extension is required, which is currently only supported by Oculus headsets. I will not be adding support for other headsets.
+The [`XR_FB_hand_tracking_aim`] OpenXR extension is required, which is currently only supported by Oculus headsets.
 
 Other headsets would work if other OpenXR runtimes add support for `XR_FB_hand_tracking_aim`, or if other projects emulate it using [`XR_EXT_hand_tracking`] or vendor-specific APIs. I am not aware of any projects doing this at present.
 
