@@ -6,8 +6,10 @@ This project emulates mouse events in DCS using hand tracking on Oculus headsets
 
 ## Control mapping
 
-- Index finger pinch: left click
-- Middle finger pinch: right click
+- Index finger pinch to thumb: left click
+- Middle finger pinch to thumb: right click
+- Ring finger pinch to thumb: scroll wheel up
+- Little finger pinch to thumb: scroll wheel down
 
 ## FAQ
 

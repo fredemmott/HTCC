@@ -191,7 +191,7 @@ XrResult APILayer::xrEndFrame(
 
   static std::chrono::steady_clock::time_point lastPrint {};
   const auto now = std::chrono::steady_clock::now();
-  if (now - lastPrint > std::chrono::seconds(1)) {
+  if (Config::VerboseDebug && (now - lastPrint > std::chrono::seconds(1))) {
     lastPrint = now;
     DumpHandState("Left", left);
     DumpHandState("Right", right);
@@ -316,7 +316,9 @@ static bool HaveHandTracking(OpenXRNext* oxr) {
   bool foundHandTrackingAim = false;
   for (const auto& it: extensions) {
     const std::string_view name {it.extensionName};
-    DebugPrint("Found {}", name);
+    if (Config::VerboseDebug) {
+      DebugPrint("Found {}", name);
+    }
 
     if (name == XR_EXT_HAND_TRACKING_EXTENSION_NAME) {
       foundHandTracking = true;

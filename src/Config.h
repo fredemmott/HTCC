@@ -23,46 +23,10 @@
  */
 #pragma once
 
-#include <openxr/openxr.h>
+namespace DCSQuestHandTracking::Config {
 
-#include "Config.h"
-#include "OpenXRNext.h"
+constexpr bool VerboseDebug = false;
+constexpr bool PinchToClick = true;
+constexpr bool PinchToScroll = true;
 
-namespace DCSQuestHandTracking {
-
-class VirtualTouchScreen final {
- public:
-  VirtualTouchScreen(
-    const std::shared_ptr<OpenXRNext>& oxr,
-    XrSession session,
-    XrTime nextDisplayTime,
-    XrSpace viewSpace);
-
-  void SubmitData(
-    const XrHandTrackingAimStateFB& left,
-    const XrHandTrackingAimStateFB& right);
-
- private:
-  DWORD mThisProcess;
-  HWND mConsoleWindow {};
-  XrVector2f mWindowSize {};
-  RECT mWindowRect {};
-  XrVector2f mScreenSize;
-  XrFovf mFov {};
-  float mTanFovX;
-  float mTanFovY;
-
-  bool mLeftClick {false};
-  bool mRightClick {false};
-
-  std::chrono::steady_clock::time_point mLastWindowCheck {};
-  std::chrono::steady_clock::time_point mLastWheelUp {};
-  std::chrono::steady_clock::time_point mLastWheelDown {};
-
-  bool NormalizeHand(const XrHandTrackingAimStateFB& hand, XrVector2f* xy);
-
-  void UpdateMainWindow();
-  static BOOL CALLBACK EnumWindowCallback(HWND hwnd, LPARAM lparam);
-};
-
-}// namespace DCSQuestHandTracking
+}// namespace DCSQuestHandTracking::Config

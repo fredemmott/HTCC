@@ -25,6 +25,7 @@
 
 #include <cmath>
 
+#include "Config.h"
 #include "DebugPrint.h"
 
 namespace DCSQuestHandTracking {
@@ -73,6 +74,7 @@ void VirtualTouchScreen::UpdateMainWindow() {
   mConsoleWindow = GetConsoleWindow();
   EnumWindows(
     &VirtualTouchScreen::EnumWindowCallback, reinterpret_cast<LPARAM>(this));
+  mLastWindowCheck = std::chrono::steady_clock::now();
 }
 
 BOOL CALLBACK VirtualTouchScreen::EnumWindowCallback(HWND hwnd, LPARAM lparam) {
@@ -173,17 +175,19 @@ void VirtualTouchScreen::SubmitData(
   const auto x = ((xy.x * mWindowSize.x) + mWindowRect.left) / mScreenSize.x;
   const auto y = ((xy.y * mWindowSize.y) + mWindowRect.top) / mScreenSize.y;
 
-  DebugPrint(
-    "Raw: ({:.02f}, {:0.2f}); adjusted for window: ({:.02f}, {:.02f})",
-    xy.x,
-    xy.y,
-    x,
-    y);
+  if (Config::VerboseDebug) {
+    DebugPrint(
+      "Raw: ({:.02f}, {:0.2f}); adjusted for window: ({:.02f}, {:.02f})",
+      xy.x,
+      xy.y,
+      x,
+      y);
+  }
 
   std::vector<INPUT> events {
     INPUT {
       .type = INPUT_MOUSE,
-      .mi = MOUSEINPUT {
+      .mi = {
         .dx = std::lround(x * 65535),
         .dy = std::lround(y * 65535),
         .dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE,
@@ -194,27 +198,62 @@ void VirtualTouchScreen::SubmitData(
   const auto& hand = leftValid ? left : right;
   const auto flags = hand.status;
 
-  const auto leftClick
-    = HasFlags(flags, XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB);
-  if (leftClick != mLeftClick) {
-    mLeftClick = leftClick;
-    events.push_back(INPUT {
-      .type = INPUT_MOUSE,
-      .mi = MOUSEINPUT {
-        .dwFlags = static_cast<DWORD>(
-          leftClick ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP),
-      }});
+  if (Config::PinchToClick) {
+    const auto leftClick
+      = HasFlags(flags, XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB);
+    if (leftClick != mLeftClick) {
+      mLeftClick = leftClick;
+      events.push_back(
+        {.type = INPUT_MOUSE,
+         .mi = {
+           .dwFlags = static_cast<DWORD>(
+             leftClick ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP),
+         }});
+    }
+
+    const auto rightClick
+      = HasFlags(flags, XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB);
+    if (rightClick != mRightClick) {
+      mRightClick = rightClick;
+      events.push_back(
+        {.type = INPUT_MOUSE,
+         .mi = {
+           .dwFlags = static_cast<DWORD>(
+             rightClick ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_RIGHTUP),
+         }});
+    }
   }
-  const auto rightClick
-    = HasFlags(flags, XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB);
-  if (rightClick != mRightClick) {
-    mRightClick = rightClick;
-    events.push_back(INPUT {
+
+  if (Config::PinchToScroll) {
+    const auto wheelUp
+      = HasFlags(flags, XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB);
+    const auto wheelDown
+      = HasFlags(flags, XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB);
+    if (
+      wheelUp && (!wheelDown)
+      && (now - mLastWheelUp > std::chrono::milliseconds(250))) {
+      mLastWheelUp = now;
+      events.push_back({
       .type = INPUT_MOUSE,
-      .mi = MOUSEINPUT {
-        .dwFlags = static_cast<DWORD>(
-          rightClick ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_RIGHTUP),
-      }});
+      .mi = {
+        .mouseData = static_cast<DWORD>(-WHEEL_DELTA),
+        .dwFlags = MOUSEEVENTF_WHEEL,
+      },
+    });
+    }
+
+    if (
+      wheelDown && (!wheelUp)
+      && (now - mLastWheelDown > std::chrono::milliseconds(250))) {
+      mLastWheelDown = now;
+      events.push_back({
+      .type = INPUT_MOUSE,
+      .mi = {
+        .mouseData = static_cast<DWORD>(WHEEL_DELTA),
+        .dwFlags = MOUSEEVENTF_WHEEL,
+      },
+    });
+    }
   }
 
   SendInput(events.size(), events.data(), sizeof(INPUT));
