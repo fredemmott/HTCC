@@ -1,20 +1,13 @@
 # Quest Handtracking for DCS World
 
-This project emulates Oculus Touch controllers using hand tracking on Oculus headsets for the game DCS World.
+This project emulates mouse events in DCS using hand tracking on Oculus headsets.
 
 [OpenComposite] is required, and DCS World must be launched in SteamVR mode.
 
 ## Control mapping
 
-Hand tracking is used to emulate touch controllers with the following actions:
-
-- Index finger pinch: thumbstick aft ('left click')
-- Middle finger pinch: thumbstick forward ('right click')
-- Ring finger pinch: thumbstick left ('mouse wheel up')
-- Little finger pinch: thumbstick right ('mouse wheel down')
-- All finger pinch: enable/disable
-
-These mappings are selected to fit well with DCS World's handling of Touch controllers.
+- Index finger pinch: left click
+- Middle finger pinch: right click
 
 ## FAQ
 
@@ -33,6 +26,12 @@ I don't want the complexity of making the control scheme configurable; this proj
 Hand tracking is only supported by Meta in OpenXR games, so OpenComposite must be used to run DCS using OpenXR.
 
 DCS must be launched in SteamVR mode because OpenComposite works by pretending to be SteamVR.
+
+## Why emulating a mouse instead of a controller?
+
+DCS draws hands instead of a controller; it feels *really* weird.
+
+DCS's mouse support also works nicely when turning away from a control while you're clicking it.
 
 ## License
 
