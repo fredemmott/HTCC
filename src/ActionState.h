@@ -23,41 +23,15 @@
  */
 #pragma once
 
-#include <dinput.h>
-
-#include <cinttypes>
-
-#include "ActionState.h"
-
 namespace DCSQuestHandTracking {
 
-// Wrapper for PointCtrl joystick devices. This currently requires a custom
-// firmware.
-class PointCtrl final {
- public:
-  PointCtrl();
+struct ActionState {
+  bool mLeftClick {};
+  bool mRightClick {};
+  bool mWheelUp {};
+  bool mWheelDown {};
 
-  std::optional<ActionState> GetActionState();
-
- private:
-  static BOOL EnumDevicesCallbackStatic(
-    LPCDIDEVICEINSTANCE lpddi,
-    LPVOID pvRef);
-  BOOL EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi);
-
-  static constexpr uint16_t VID {0x04d8};
-  static constexpr uint16_t PID {0xeeec};
-
-  // 0-indexed; most visualizers are 1-indexed
-  static constexpr uint8_t LeftClickButton = 0;
-  static constexpr uint8_t RightClickButton = 1;
-  static constexpr uint8_t WheelUpButton = 9;
-  static constexpr uint8_t WheelDownButton = 10;
-
-  winrt::com_ptr<IDirectInput8W> mDI;
-  winrt::com_ptr<IDirectInputDevice8W> mDevice;
-
-  ActionState mActionState {};
+  constexpr auto operator<=>(const ActionState&) const noexcept = default;
 };
 
 }// namespace DCSQuestHandTracking

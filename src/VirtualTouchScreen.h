@@ -46,6 +46,7 @@ class VirtualTouchScreen final {
  private:
   bool NormalizeHand(const XrHandTrackingAimStateFB& hand, XrVector2f* xy);
   void UpdateMainWindow();
+  ActionState GetHandActionState(const XrHandTrackingAimStateFB&);
   static BOOL CALLBACK EnumWindowCallback(HWND hwnd, LPARAM lparam);
 
   PointCtrl mPointCtrl;

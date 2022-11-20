@@ -27,14 +27,17 @@
 
 namespace DCSQuestHandTracking::Config {
 
-constexpr bool CheckDCS = false;
+// Do nothing unless running inside "DCS.exe"
+constexpr bool CheckDCS = true;
 
 // 0 = off, 1 = some, 2 = more, 3 = every frame
 constexpr uint8_t VerboseDebug = 0;
 
 // 0 = left, 1 == right
 constexpr uint8_t MirrorEye = 1;
+// Use Quest hand tracking pinch gestures for mouse clicks (index and middle finger)
 constexpr bool PinchToClick = true;
+// Use Quest hand tracking pinch gestures for wheel events (ring and little finger)
 constexpr bool PinchToScroll = true;
 // currently requires a custom PointCtrl firmware exposing all buttons and axis
 // as a joystick instead of a mouse

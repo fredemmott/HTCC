@@ -179,6 +179,26 @@ bool VirtualTouchScreen::NormalizeHand(
   return true;
 }
 
+ActionState VirtualTouchScreen::GetHandActionState(
+  const XrHandTrackingAimStateFB& hand) {
+  const auto flags = hand.status;
+
+  ActionState state {};
+
+  if (Config::PinchToClick) {
+    state.mLeftClick
+      = HasFlags(flags, XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB);
+    state.mRightClick
+      = HasFlags(flags, XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB);
+  }
+  if (Config::PinchToScroll) {
+    state.mWheelUp = HasFlags(flags, XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB);
+    state.mWheelDown
+      = HasFlags(flags, XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB);
+  }
+  return state;
+}
+
 void VirtualTouchScreen::SubmitData(
   const XrHandTrackingAimStateFB& left,
   const XrHandTrackingAimStateFB& right) {
@@ -222,64 +242,66 @@ void VirtualTouchScreen::SubmitData(
   };
 
   const auto& hand = leftValid ? left : right;
-  const auto flags = hand.status;
 
-  if (Config::PinchToClick) {
-    const auto leftClick
-      = HasFlags(flags, XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB);
-    if (leftClick != mLeftClick) {
-      mLeftClick = leftClick;
-      events.push_back(
-        {.type = INPUT_MOUSE,
-         .mi = {
-           .dwFlags = static_cast<DWORD>(
-             leftClick ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP),
-         }});
-    }
-
-    const auto rightClick
-      = HasFlags(flags, XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB);
-    if (rightClick != mRightClick) {
-      mRightClick = rightClick;
-      events.push_back(
-        {.type = INPUT_MOUSE,
-         .mi = {
-           .dwFlags = static_cast<DWORD>(
-             rightClick ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_RIGHTUP),
-         }});
-    }
+  auto actionState = GetHandActionState(hand);
+  const auto fcuState = mPointCtrl.GetActionState();
+  if (fcuState) {
+    actionState = {
+      .mLeftClick = actionState.mLeftClick || fcuState->mLeftClick,
+      .mRightClick = actionState.mRightClick || fcuState->mRightClick,
+      .mWheelUp = actionState.mWheelUp || fcuState->mWheelUp,
+      .mWheelDown = actionState.mWheelDown || fcuState->mWheelDown,
+    };
   }
 
-  if (Config::PinchToScroll) {
-    const auto wheelUp
-      = HasFlags(flags, XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB);
-    const auto wheelDown
-      = HasFlags(flags, XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB);
-    if (
-      wheelUp && (!wheelDown)
-      && (now - mLastWheelUp > std::chrono::milliseconds(250))) {
-      mLastWheelUp = now;
-      events.push_back({
+  const auto leftClick = actionState.mLeftClick;
+  if (leftClick != mLeftClick) {
+    mLeftClick = leftClick;
+    events.push_back(
+      {.type = INPUT_MOUSE,
+       .mi = {
+         .dwFlags = static_cast<DWORD>(
+           leftClick ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP),
+       }});
+  }
+
+  const auto rightClick = actionState.mRightClick;
+  if (rightClick != mRightClick) {
+    mRightClick = rightClick;
+    events.push_back(
+      {.type = INPUT_MOUSE,
+       .mi = {
+         .dwFlags = static_cast<DWORD>(
+           rightClick ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_RIGHTUP),
+       }});
+  }
+
+  const auto wheelUp = actionState.mWheelUp;
+  const auto wheelDown = actionState.mWheelDown;
+  if (
+    wheelUp && (!wheelDown)
+    && (now - mLastWheelUp > std::chrono::milliseconds(250))) {
+    mLastWheelUp = now;
+    events.push_back({
       .type = INPUT_MOUSE,
       .mi = {
         .mouseData = static_cast<DWORD>(-WHEEL_DELTA),
         .dwFlags = MOUSEEVENTF_WHEEL,
       },
     });
-    }
+  }
 
-    if (
-      wheelDown && (!wheelUp)
-      && (now - mLastWheelDown > std::chrono::milliseconds(250))) {
-      mLastWheelDown = now;
-      events.push_back({
+  if (
+    wheelDown && (!wheelUp)
+    && (now - mLastWheelDown > std::chrono::milliseconds(250))) {
+    mLastWheelDown = now;
+    events.push_back({
       .type = INPUT_MOUSE,
       .mi = {
         .mouseData = static_cast<DWORD>(WHEEL_DELTA),
         .dwFlags = MOUSEEVENTF_WHEEL,
       },
     });
-    }
   }
 
   SendInput(events.size(), events.data(), sizeof(INPUT));

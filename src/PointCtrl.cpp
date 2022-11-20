@@ -23,6 +23,7 @@
  */
 #include "PointCtrl.h"
 
+#include "Config.h"
 #include "DebugPrint.h"
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
@@ -72,8 +73,49 @@ BOOL PointCtrl::EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi) {
 
   DebugPrint(L"Found PointCtrlDevice '{}'", lpddi->tszInstanceName);
 
+  winrt::check_hresult(dev->SetDataFormat(&c_dfDIJoystick2));
+  winrt::check_hresult(dev->Acquire());
   mDevice = dev;
   return DIENUM_STOP;
+}
+
+std::optional<ActionState> PointCtrl::GetActionState() {
+  if (!mDevice) {
+    return {};
+  }
+
+  const auto polled = mDevice->Poll();
+  if (polled != DI_OK && polled != DI_NOEFFECT) {
+    return {mActionState};
+  }
+
+  DIJOYSTATE2 joystate;
+  if (mDevice->GetDeviceState(sizeof(joystate), &joystate) != DI_OK) {
+    return {mActionState};
+  }
+
+  constexpr auto pressedBit = 1 << 7;
+  const auto& buttons = joystate.rgbButtons;
+
+  ActionState newState {
+    .mLeftClick = (buttons[LeftClickButton] & pressedBit) == pressedBit,
+    .mRightClick = (buttons[RightClickButton] & pressedBit) == pressedBit,
+    .mWheelUp = (buttons[WheelUpButton] & pressedBit) == pressedBit,
+    .mWheelDown = (buttons[WheelDownButton] & pressedBit) == pressedBit,
+  };
+
+  if (Config::VerboseDebug >= 2 && newState != mActionState) {
+    DebugPrint(
+      "PointCtrl FCU button state change: L {} R {} U {} D {}",
+      newState.mLeftClick,
+      newState.mRightClick,
+      newState.mWheelUp,
+      newState.mWheelDown);
+  }
+
+  mActionState = newState;
+
+  return {mActionState};
 }
 
 }// namespace DCSQuestHandTracking
