@@ -125,7 +125,7 @@ APILayer::~APILayer() {
 }
 
 template <class Actual, class Wanted>
-static bool HasFlags(Actual actual, Wanted wanted) {
+static constexpr bool HasFlags(Actual actual, Wanted wanted) {
   return (actual & wanted) == wanted;
 }
 
@@ -194,6 +194,12 @@ XrResult APILayer::xrEndFrame(
     DumpHandState("Left", left);
     DumpHandState("Right", right);
   }
+
+  if (!mVirtualTouchScreen) [[unlikely]] {
+    mVirtualTouchScreen = std::make_unique<VirtualTouchScreen>(
+      gNext, session, frameEndInfo->displayTime, mViewSpace);
+  }
+  mVirtualTouchScreen->SubmitData(left, right);
 
   return mOpenXR->xrEndFrame(session, frameEndInfo);
 }

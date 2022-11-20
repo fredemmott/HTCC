@@ -23,9 +23,11 @@
  */
 #pragma once
 
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+
 // Include order matters for these, so don't let clang-format reorder them
 // clang-format off
-#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <Unknwn.h>
 // clang-format on

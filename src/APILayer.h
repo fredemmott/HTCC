@@ -27,6 +27,8 @@
 
 #include <memory>
 
+#include "VirtualTouchScreen.h"
+
 namespace DCSQuestHandTracking {
 
 class OpenXRNext;
@@ -48,6 +50,8 @@ class APILayer final {
 
   XrHandTrackerEXT mLeftHand {};
   XrHandTrackerEXT mRightHand {};
+
+  std::unique_ptr<VirtualTouchScreen> mVirtualTouchScreen;
 };
 
 }// namespace DCSQuestHandTracking

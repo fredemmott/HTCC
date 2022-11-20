@@ -25,56 +25,28 @@
 
 #include <openxr/openxr.h>
 
-#include <utility>
-
-#include "DebugPrint.h"
-
-#define NEXT_OPENXR_FUNCS \
-  IT(xrDestroyInstance) \
-  IT(xrCreateSession) \
-  IT(xrDestroySession) \
-  IT(xrGetInstanceProperties) \
-  IT(xrCreateReferenceSpace) \
-  IT(xrDestroySpace) \
-  IT(xrLocateSpace) \
-  IT(xrEnumerateInstanceExtensionProperties) \
-  IT(xrEndFrame) \
-  IT(xrCreateHandTrackerEXT) \
-  IT(xrDestroyHandTrackerEXT) \
-  IT(xrLocateHandJointsEXT) \
-  IT(xrLocateViews)
+#include "OpenXRNext.h"
 
 namespace DCSQuestHandTracking {
 
-class OpenXRNext final {
+class VirtualTouchScreen final {
  public:
-  OpenXRNext(XrInstance, PFN_xrGetInstanceProcAddr);
+  VirtualTouchScreen(
+    const std::shared_ptr<OpenXRNext>& oxr,
+    XrSession session,
+    XrTime nextDisplayTime,
+    XrSpace viewSpace);
 
-#define IT(func) \
-  template <class... Args> \
-  auto func(Args&&... args) { \
-    if (!this->m_##func) [[unlikely]] { \
-      auto nextResult = this->m_xrGetInstanceProcAddr( \
-        mInstance, \
-        #func, \
-        reinterpret_cast<PFN_xrVoidFunction*>(&this->m_##func)); \
-      if (nextResult != XR_SUCCESS) { \
-        DebugPrint("Failed to find function {}: {}", #func, (int)nextResult); \
-        return nextResult; \
-      } \
-    } \
-    return this->m_##func(std::forward<Args>(args)...); \
-  }
-  IT(xrGetInstanceProcAddr)
-  NEXT_OPENXR_FUNCS
-#undef IT
+  void SubmitData(
+    const XrHandTrackingAimStateFB& left,
+    const XrHandTrackingAimStateFB& right);
 
  private:
-  XrInstance mInstance;
-#define IT(func) PFN_##func m_##func {nullptr};
-  IT(xrGetInstanceProcAddr)
-  NEXT_OPENXR_FUNCS
-#undef IT
+  XrFovf mFov {};
+  float mTanFovX;
+  float mTanFovY;
+
+  bool NormalizeHand(const XrHandTrackingAimStateFB& hand, XrVector2f* xy);
 };
 
 }// namespace DCSQuestHandTracking

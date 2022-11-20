@@ -4,6 +4,7 @@ add_library(
   APILayer.cpp
   DebugPrint.cpp
   OpenXRNext.cpp
+  VirtualTouchScreen.cpp
 )
 
 target_link_libraries(
