@@ -65,7 +65,7 @@ VirtualTouchScreen::VirtualTouchScreen(
     / (std::abs(mFov.angleUp) + std::abs(mFov.angleDown));
 
   DebugPrint(
-    "Headset FOV: {} {} {} {} - vertical split at {}",
+    "Reported eye FOV: {} {} {} {} - vertical split at {}",
     mFov.angleLeft,
     mFov.angleRight,
     mFov.angleUp,
