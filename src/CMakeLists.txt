@@ -2,6 +2,7 @@ add_library(
   XR_APILAYER_FREDEMMOTT_DCSQuestHandTracking
   MODULE
   APILayer.cpp
+  APILayer_loader.cpp
   DebugPrint.cpp
   OpenXRNext.cpp
   VirtualTouchScreen.cpp
