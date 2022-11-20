@@ -28,6 +28,7 @@
 #include <openxr/openxr.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
@@ -51,6 +52,7 @@ static_assert(OpenXRLayerName.size() <= XR_MAX_API_LAYER_NAME_SIZE);
 
 static std::shared_ptr<OpenXRNext> gNext;
 static APILayer* gInstance = nullptr;
+static bool gIsDCS = true;
 
 APILayer::APILayer(XrSession session, const std::shared_ptr<OpenXRNext>& next)
   : mOpenXR(next) {
@@ -223,6 +225,10 @@ static XrResult xrCreateSession(
     return nextResult;
   }
 
+  if (!gIsDCS) {
+    return XR_SUCCESS;
+  }
+
   DebugPrint("Hand tracking available, starting up!");
   gInstance = new APILayer(*session, gNext);
 
@@ -354,7 +360,7 @@ static XrResult xrCreateApiLayerInstance(
   // no instance
   OpenXRNext next(NULL, layerInfo->nextInfo->nextGetInstanceProcAddr);
   std::vector<const char*> enabledExtensions;
-  if (HaveHandTracking(&next)) {
+  if (gIsDCS && HaveHandTracking(&next)) {
     for (auto i = 0; i < originalInfo->enabledExtensionCount; ++i) {
       enabledExtensions.push_back(originalInfo->enabledExtensionNames[i]);
     }
@@ -405,6 +411,17 @@ XrResult __declspec(dllexport) XRAPI_CALL
   if (layerName != DCSQuestHandTracking::OpenXRLayerName) {
     DebugPrint("Layer name mismatch:\n -{}\n +{}", OpenXRLayerName, layerName);
     return XR_ERROR_INITIALIZATION_FAILED;
+  }
+
+  wchar_t executablePath[MAX_PATH];
+  const auto executablePathLen
+    = GetModuleFileNameW(NULL, executablePath, MAX_PATH);
+  const auto exeName = std::filesystem::path(
+                         std::wstring_view {executablePath, executablePathLen})
+                         .filename();
+  if (exeName != L"DCS.exe") {
+    DebugPrint(L"Doing nothing - '{}' is not 'DCS.exe'", exeName.wstring());
+    gIsDCS = false;
   }
 
   // TODO: check version fields etc in loaderInfo
