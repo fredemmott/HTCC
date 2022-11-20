@@ -44,6 +44,7 @@ class VirtualTouchScreen final {
 
  private:
   DWORD mThisProcess;
+  HWND mWindow {};
   HWND mConsoleWindow {};
   XrVector2f mWindowSize {};
   RECT mWindowRect {};

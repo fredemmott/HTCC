@@ -102,8 +102,14 @@ BOOL CALLBACK VirtualTouchScreen::EnumWindowCallback(HWND hwnd, LPARAM lparam) {
     static_cast<float>(rect.bottom - rect.top),
   };
 
+  if (hwnd == this_->mWindow) {
+    return FALSE;
+  }
+
+  this_->mWindow = hwnd;
   DebugPrint(
-    "Found game window; mapping hand-tracking within headset FOV to on-screen "
+    "Found game window; mapping hand-tracking within headset FOV to "
+    "on-screen "
     "rect ({}, {}) -> ({}, {})",
     rect.left,
     rect.top,
