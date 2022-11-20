@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.23)
 # the lower bound is known and enforced
 set(MINIMUM_WINDOWS_VERSION "10.0.19041.0")
 set(CMAKE_SYSTEM_VERSION "${MINIMUM_WINDOWS_VERSION}")
+
 # Required for XAML resources in self-contained mode
 set(CMAKE_INSTALL_BINDIR "." CACHE STRING "Path to install binaries relative to the root" FORCE)
 
@@ -12,6 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_compile_options(
+
   # Standard C++ exception behavior
   "/EHsc"
 )
@@ -32,6 +34,7 @@ set(
   CMAKE_MSVC_RUNTIME_LIBRARY
   "MultiThreaded$<$<CONFIG:Debug>:Debug>"
 )
+
 # For backwards-compat with third-party projects that don't have CMP0091 set
 set(
   MSVC_RUNTIME_LIBRARY_COMPILE_OPTION
@@ -54,6 +57,7 @@ else()
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
   )
 endif()
+
 project(com.fredemmott.dcsquesthandtracking VERSION 0.0.1.${VERSION_BUILD} LANGUAGES CXX C)
 message(STATUS "Building DCS Quest Hand Tracking v${CMAKE_PROJECT_VERSION}")
 
@@ -68,18 +72,23 @@ message(STATUS "Simulated compiler: ${CMAKE_CXX_SIMULATE_ID}")
 message(STATUS "MSVC: ${MSVC}")
 message(STATUS "CLANG_CL: ${CLANG_CL}")
 
-set(COMMON_COMPILE_OPTIONS)
+set(COMMON_COMPILE_OPTIONS "/DUNICODE" "/D_UNICODE")
+
 if(MSVC AND NOT CLANG_CL)
   list(
     APPEND COMMON_COMPILE_OPTIONS
+
     # Standards-compliant C++20 coroutines
     "/await:strict"
+
     # Synchronous writes to PDB files in case building with parallel CL.exe
     "/FS"
+
     # Include content and marker in error messages
     "/diagnostics:caret"
   )
 endif()
+
 add_compile_options(${COMMON_COMPILE_OPTIONS})
 
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME Default)

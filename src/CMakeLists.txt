@@ -5,12 +5,15 @@ add_library(
   APILayer_loader.cpp
   DebugPrint.cpp
   OpenXRNext.cpp
+  PointCtrl.cpp
   VirtualTouchScreen.cpp
 )
 
 target_link_libraries(
   XR_APILAYER_FREDEMMOTT_DCSQuestHandTracking
   PRIVATE
+  System::Dinput8
+  System::Dxguid
   ThirdParty::CppWinRT
   ThirdParty::OpenXR
 )

@@ -27,6 +27,7 @@
 
 #include "Config.h"
 #include "OpenXRNext.h"
+#include "PointCtrl.h"
 
 namespace DCSQuestHandTracking {
 
@@ -43,6 +44,12 @@ class VirtualTouchScreen final {
     const XrHandTrackingAimStateFB& right);
 
  private:
+  bool NormalizeHand(const XrHandTrackingAimStateFB& hand, XrVector2f* xy);
+  void UpdateMainWindow();
+  static BOOL CALLBACK EnumWindowCallback(HWND hwnd, LPARAM lparam);
+
+  PointCtrl mPointCtrl;
+
   DWORD mThisProcess;
   HWND mWindow {};
   HWND mConsoleWindow {};
@@ -60,11 +67,6 @@ class VirtualTouchScreen final {
   std::chrono::steady_clock::time_point mLastWindowCheck {};
   std::chrono::steady_clock::time_point mLastWheelUp {};
   std::chrono::steady_clock::time_point mLastWheelDown {};
-
-  bool NormalizeHand(const XrHandTrackingAimStateFB& hand, XrVector2f* xy);
-
-  void UpdateMainWindow();
-  static BOOL CALLBACK EnumWindowCallback(HWND hwnd, LPARAM lparam);
 };
 
 }// namespace DCSQuestHandTracking

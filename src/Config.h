@@ -27,14 +27,17 @@
 
 namespace DCSQuestHandTracking::Config {
 
-constexpr bool CheckDCS = true;
-
-// 0 = left, 1 == right
-constexpr uint8_t MirrorEye = 1;
+constexpr bool CheckDCS = false;
 
 // 0 = off, 1 = some, 2 = more, 3 = every frame
 constexpr uint8_t VerboseDebug = 0;
+
+// 0 = left, 1 == right
+constexpr uint8_t MirrorEye = 1;
 constexpr bool PinchToClick = true;
 constexpr bool PinchToScroll = true;
+// currently requires a custom PointCtrl firmware exposing all buttons and axis
+// as a joystick instead of a mouse
+constexpr bool PointCtrlFCUClicks = true;
 
 }// namespace DCSQuestHandTracking::Config

@@ -23,14 +23,29 @@
  */
 #pragma once
 
-#define DIRECTINPUT_VERSION 0x0800
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
+#include <dinput.h>
 
-// Include order matters for these, so don't let clang-format reorder them
-// clang-format off
-#include <Windows.h>
-#include <Unknwn.h>
-// clang-format on
+#include <cinttypes>
 
-#include <winrt/base.h>
+namespace DCSQuestHandTracking {
+
+// Wrapper for PointCtrl joystick devices. This currently requires a custom
+// firmware.
+class PointCtrl final {
+ public:
+  PointCtrl();
+
+ private:
+  static BOOL EnumDevicesCallbackStatic(
+    LPCDIDEVICEINSTANCE lpddi,
+    LPVOID pvRef);
+  BOOL EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi);
+
+  static constexpr uint16_t VID {0x04d8};
+  static constexpr uint16_t PID {0xeeec};
+
+  winrt::com_ptr<IDirectInput8W> mDI;
+  winrt::com_ptr<IDirectInputDevice8W> mDevice;
+};
+
+}// namespace DCSQuestHandTracking
