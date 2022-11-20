@@ -205,7 +205,6 @@ static XrResult xrCreateSession(
   XrInstance instance,
   const XrSessionCreateInfo* createInfo,
   XrSession* session) {
-  XrInstanceProperties instanceProps {XR_TYPE_INSTANCE_PROPERTIES};
   auto nextResult = gNext->xrCreateSession(instance, createInfo, session);
   if (nextResult != XR_SUCCESS) {
     DebugPrint("Failed to create OpenXR session: {}", nextResult);
