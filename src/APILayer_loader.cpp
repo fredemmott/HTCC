@@ -44,6 +44,7 @@ static_assert(OpenXRLayerName.size() <= XR_MAX_API_LAYER_NAME_SIZE);
 static std::shared_ptr<OpenXRNext> gNext;
 static APILayer* gInstance = nullptr;
 static bool gIsDCS = true;
+static bool gHaveHandTracking = false;
 
 static XrResult xrEndFrame(
   XrSession session,
@@ -64,11 +65,17 @@ static XrResult xrCreateSession(
     return nextResult;
   }
 
-  if (!gIsDCS) {
+  if (!Config::Enabled) {
+    DebugPrint("Disabled, doing nothing");
     return XR_SUCCESS;
   }
 
-  DebugPrint("Hand tracking available, starting up!");
+  if (!gIsDCS) {
+    DebugPrint("Not DCS, doing nothing");
+    return XR_SUCCESS;
+  }
+
+  DebugPrint("Initializing API layer");
   gInstance = new APILayer(*session, gNext);
 
   return XR_SUCCESS;
@@ -200,8 +207,10 @@ static XrResult xrCreateApiLayerInstance(
   }
   // no instance
   OpenXRNext next(NULL, layerInfo->nextInfo->nextGetInstanceProcAddr);
+
   std::vector<const char*> enabledExtensions;
-  if (gIsDCS && HaveHandTracking(&next)) {
+  gHaveHandTracking = HaveHandTracking(&next);
+  if (gIsDCS && gHaveHandTracking && Config::Enabled) {
     for (auto i = 0; i < originalInfo->enabledExtensionCount; ++i) {
       enabledExtensions.push_back(originalInfo->enabledExtensionNames[i]);
     }

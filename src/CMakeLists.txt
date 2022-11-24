@@ -3,6 +3,7 @@ add_library(
   MODULE
   APILayer.cpp
   APILayer_loader.cpp
+  Config.cpp
   DebugPrint.cpp
   OpenXRNext.cpp
   PointCtrl.cpp

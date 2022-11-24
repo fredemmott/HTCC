@@ -21,33 +21,47 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#pragma once
-
-#include <cinttypes>
+#include "Config.h"
 
 namespace DCSQuestHandTracking::Config {
 
-// Enable or disable the entire API layer
-extern bool Enabled;
+bool Enabled = true;
+bool CheckDCS = true;
+uint8_t VerboseDebug = 0;
+uint8_t MirrorEye = 1;
+bool PinchToClick = true;
+bool PinchToScroll = true;
+bool PointCtrlFCUClicks = true;
 
-// Do nothing unless running inside "DCS.exe"
-extern bool CheckDCS;
+static constexpr wchar_t SubKey[] {L"SOFTWARE\\FredEmmott\\DCSHandTracking"};
 
-// 0 = off, 1 = some, 2 = more, 3 = every frame
-extern uint8_t VerboseDebug;
+template <class T>
+void LoadDWord(T& value, const wchar_t* valueName) {
+  DWORD data {};
+  DWORD dataSize = sizeof(data);
+  const auto hklmResult = RegGetValueW(
+    HKEY_LOCAL_MACHINE,
+    SubKey,
+    valueName,
+    RRF_RT_DWORD,
+    nullptr,
+    &data,
+    &dataSize);
+  if (hklmResult == ERROR_SUCCESS) {
+    value = static_cast<T>(data);
+  }
+}
 
-// 0 = left, 1 == right
-extern uint8_t MirrorEye;
-// Use Quest hand tracking pinch gestures for mouse clicks (index and middle
-// finger)
-extern bool PinchToClick;
-// Use Quest hand tracking pinch gestures for wheel events (ring and little
-// finger)
-extern bool PinchToScroll;
-// currently requires a custom PointCtrl firmware exposing all buttons and axis
-// as a joystick instead of a mouse
-extern bool PointCtrlFCUClicks;
+#define LOAD_DWORD(x) LoadDWord(Config::x, L#x);
 
-void Load();
+void Load() {
+  LOAD_DWORD(Enabled);
+  LOAD_DWORD(CheckDCS);
+  LOAD_DWORD(VerboseDebug);
+  LOAD_DWORD(MirrorEye);
+  LOAD_DWORD(PinchToClick);
+  LOAD_DWORD(PinchToScroll);
+  LOAD_DWORD(PointCtrlFCUClicks);
+}
 
 }// namespace DCSQuestHandTracking::Config
