@@ -25,30 +25,38 @@
 
 #include <openxr/openxr.h>
 
-#include <memory>
+#include "ActionState.h"
+#include "OpenXRNext.h"
 
 namespace DCSQuestHandTracking {
 
-class HandTrackingSource;
-class OpenXRNext;
-class PointCtrlSource;
-class VirtualTouchScreen;
-
-class APILayer final {
+class HandTrackingSource final {
  public:
-  APILayer() = delete;
-  APILayer(XrSession, const std::shared_ptr<OpenXRNext>&);
-  virtual ~APILayer();
+  HandTrackingSource(
+    const std::shared_ptr<OpenXRNext>& next,
+    XrSession session,
+    XrSpace space);
+  ~HandTrackingSource();
 
-  XrResult xrEndFrame(XrSession session, const XrFrameEndInfo* frameEndInfo);
+  void Update(XrTime displayTime);
+
+  std::tuple<std::optional<XrPosef>, std::optional<XrPosef>> GetPoses() const;
+  ActionState GetActionState() const;
 
  private:
-  std::shared_ptr<OpenXRNext> mOpenXR;
-  XrSpace mViewSpace {};
+  void InitHandTrackers();
 
-  std::unique_ptr<HandTrackingSource> mHandTracking;
-  std::unique_ptr<PointCtrlSource> mPointCtrl;
-  std::unique_ptr<VirtualTouchScreen> mVirtualTouchScreen;
+  std::shared_ptr<OpenXRNext> mOpenXR;
+  XrSession mSession;
+  XrSpace mSpace;
+
+  XrHandTrackerEXT mLeftHand {};
+  XrHandTrackerEXT mRightHand {};
+
+  std::optional<XrPosef> mLeftHandPose;
+  std::optional<XrPosef> mRightHandPose;
+
+  ActionState mActionState {};
 };
 
 }// namespace DCSQuestHandTracking

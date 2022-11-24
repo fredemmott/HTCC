@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include "PointCtrl.h"
+#include "PointCtrlSource.h"
 
 #include "Config.h"
 #include "DebugPrint.h"
@@ -30,7 +30,11 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 namespace DCSQuestHandTracking {
 
-PointCtrl::PointCtrl() {
+PointCtrlSource::PointCtrlSource() {
+  if (!Config::PointCtrlFCUClicks) {
+    return;
+  }
+
   winrt::check_hresult(DirectInput8Create(
     reinterpret_cast<HINSTANCE>(&__ImageBase),
     DIRECTINPUT_VERSION,
@@ -40,18 +44,18 @@ PointCtrl::PointCtrl() {
 
   winrt::check_hresult(mDI->EnumDevices(
     DI8DEVCLASS_GAMECTRL,
-    &PointCtrl::EnumDevicesCallbackStatic,
+    &PointCtrlSource::EnumDevicesCallbackStatic,
     this,
     DIEDFL_ATTACHEDONLY));
 }
 
-BOOL PointCtrl::EnumDevicesCallbackStatic(
+BOOL PointCtrlSource::EnumDevicesCallbackStatic(
   LPCDIDEVICEINSTANCE lpddi,
   LPVOID pvRef) {
-  return reinterpret_cast<PointCtrl*>(pvRef)->EnumDevicesCallback(lpddi);
+  return reinterpret_cast<PointCtrlSource*>(pvRef)->EnumDevicesCallback(lpddi);
 }
 
-BOOL PointCtrl::EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi) {
+BOOL PointCtrlSource::EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi) {
   winrt::com_ptr<IDirectInputDevice8W> dev;
   winrt::check_hresult(
     mDI->CreateDevice(lpddi->guidInstance, dev.put(), nullptr));
@@ -67,7 +71,7 @@ BOOL PointCtrl::EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi) {
   const auto vid = LOWORD(buf.dwData);
   const auto pid = HIWORD(buf.dwData);
 
-  if (vid != PointCtrl::VID || pid != PointCtrl::PID) {
+  if (vid != PointCtrlSource::VID || pid != PointCtrlSource::PID) {
     return DIENUM_CONTINUE;
   }
 
@@ -79,19 +83,19 @@ BOOL PointCtrl::EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi) {
   return DIENUM_STOP;
 }
 
-std::optional<ActionState> PointCtrl::GetActionState() {
+void PointCtrlSource::Update() {
   if (!mDevice) {
-    return {};
+    return;
   }
 
   const auto polled = mDevice->Poll();
   if (polled != DI_OK && polled != DI_NOEFFECT) {
-    return {mActionState};
+    return;
   }
 
   DIJOYSTATE2 joystate;
   if (mDevice->GetDeviceState(sizeof(joystate), &joystate) != DI_OK) {
-    return {mActionState};
+    return;
   }
 
   constexpr auto pressedBit = 1 << 7;
@@ -114,8 +118,10 @@ std::optional<ActionState> PointCtrl::GetActionState() {
   }
 
   mActionState = newState;
+}
 
-  return {mActionState};
+ActionState PointCtrlSource::GetActionState() const {
+  return mActionState;
 }
 
 }// namespace DCSQuestHandTracking

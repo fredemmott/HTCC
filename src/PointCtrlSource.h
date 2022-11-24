@@ -33,11 +33,12 @@ namespace DCSQuestHandTracking {
 
 // Wrapper for PointCtrl joystick devices. This currently requires a custom
 // firmware.
-class PointCtrl final {
+class PointCtrlSource final {
  public:
-  PointCtrl();
+  PointCtrlSource();
 
-  std::optional<ActionState> GetActionState();
+  void Update();
+  ActionState GetActionState() const;
 
  private:
   static BOOL EnumDevicesCallbackStatic(

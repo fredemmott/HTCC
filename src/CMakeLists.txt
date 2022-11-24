@@ -5,8 +5,9 @@ add_library(
   APILayer_loader.cpp
   Config.cpp
   DebugPrint.cpp
+  HandTrackingSource.cpp
   OpenXRNext.cpp
-  PointCtrl.cpp
+  PointCtrlSource.cpp
   VirtualTouchScreen.cpp
 )
 

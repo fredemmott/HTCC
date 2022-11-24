@@ -145,24 +145,16 @@ static constexpr bool HasFlags(Actual actual, Wanted wanted) {
   return (actual & wanted) == wanted;
 }
 
-bool VirtualTouchScreen::NormalizeHand(
-  const XrHandTrackingAimStateFB& hand,
-  XrVector2f* xy) {
-  if (!HasFlags(hand.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
-    return false;
-  }
-
-  const auto rx
-    = std::atan2f(hand.aimPose.position.x, -hand.aimPose.position.z);
-  const auto ry
-    = std::atan2f(hand.aimPose.position.y, -hand.aimPose.position.z);
+bool VirtualTouchScreen::NormalizeHand(const XrPosef& hand, XrVector2f* xy) {
+  const auto rx = std::atan2f(hand.position.x, -hand.position.z);
+  const auto ry = std::atan2f(hand.position.y, -hand.position.z);
 
   if (Config::VerboseDebug >= 3) {
     DebugPrint(
       "(x,y,z) = ({}, {}, {}), (rx, ry) = ({}, {})",
-      hand.aimPose.position.x,
-      hand.aimPose.position.y,
-      hand.aimPose.position.z,
+      hand.position.x,
+      hand.position.y,
+      hand.position.z,
       rx,
       ry);
   }
@@ -179,33 +171,14 @@ bool VirtualTouchScreen::NormalizeHand(
   return true;
 }
 
-ActionState VirtualTouchScreen::GetHandActionState(
-  const XrHandTrackingAimStateFB& hand) {
-  const auto flags = hand.status;
-
-  ActionState state {};
-
-  if (Config::PinchToClick) {
-    state.mLeftClick
-      = HasFlags(flags, XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB);
-    state.mRightClick
-      = HasFlags(flags, XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB);
-  }
-  if (Config::PinchToScroll) {
-    state.mWheelUp = HasFlags(flags, XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB);
-    state.mWheelDown
-      = HasFlags(flags, XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB);
-  }
-  return state;
-}
-
-void VirtualTouchScreen::SubmitData(
-  const XrHandTrackingAimStateFB& left,
-  const XrHandTrackingAimStateFB& right) {
+void VirtualTouchScreen::Update(
+  const std::optional<XrPosef>& left,
+  const std::optional<XrPosef>& right,
+  const ActionState& actionState) {
   XrVector2f leftXY {};
   XrVector2f rightXY {};
-  const bool leftValid = NormalizeHand(left, &leftXY);
-  const bool rightValid = NormalizeHand(right, &rightXY);
+  const bool leftValid = left && NormalizeHand(*left, &leftXY);
+  const bool rightValid = right && NormalizeHand(*right, &rightXY);
 
   if (leftValid == rightValid) {
     return;
@@ -240,19 +213,6 @@ void VirtualTouchScreen::SubmitData(
       },
     }
   };
-
-  const auto& hand = leftValid ? left : right;
-
-  auto actionState = GetHandActionState(hand);
-  const auto fcuState = mPointCtrl.GetActionState();
-  if (fcuState) {
-    actionState = {
-      .mLeftClick = actionState.mLeftClick || fcuState->mLeftClick,
-      .mRightClick = actionState.mRightClick || fcuState->mRightClick,
-      .mWheelUp = actionState.mWheelUp || fcuState->mWheelUp,
-      .mWheelDown = actionState.mWheelDown || fcuState->mWheelDown,
-    };
-  }
 
   const auto leftClick = actionState.mLeftClick;
   if (leftClick != mLeftClick) {

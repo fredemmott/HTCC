@@ -25,9 +25,9 @@
 
 #include <openxr/openxr.h>
 
+#include "ActionState.h"
 #include "Config.h"
 #include "OpenXRNext.h"
-#include "PointCtrl.h"
 
 namespace DCSQuestHandTracking {
 
@@ -39,17 +39,15 @@ class VirtualTouchScreen final {
     XrTime nextDisplayTime,
     XrSpace viewSpace);
 
-  void SubmitData(
-    const XrHandTrackingAimStateFB& left,
-    const XrHandTrackingAimStateFB& right);
+  void Update(
+    const std::optional<XrPosef>& left,
+    const std::optional<XrPosef>& right,
+    const ActionState& actionState);
 
  private:
-  bool NormalizeHand(const XrHandTrackingAimStateFB& hand, XrVector2f* xy);
+  bool NormalizeHand(const XrPosef& hand, XrVector2f* xy);
   void UpdateMainWindow();
-  ActionState GetHandActionState(const XrHandTrackingAimStateFB&);
   static BOOL CALLBACK EnumWindowCallback(HWND hwnd, LPARAM lparam);
-
-  PointCtrl mPointCtrl;
 
   DWORD mThisProcess;
   HWND mWindow {};
