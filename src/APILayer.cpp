@@ -52,19 +52,11 @@ APILayer::APILayer(XrSession session, const std::shared_ptr<OpenXRNext>& next)
   XrReferenceSpaceCreateInfo referenceSpace {
     .type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
     .next = nullptr,
-    .referenceSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL,
+    .referenceSpaceType = XR_REFERENCE_SPACE_TYPE_VIEW,
     .poseInReferenceSpace = XR_POSEF_IDENTITY,
   };
 
-  XrResult nextResult
-    = oxr->xrCreateReferenceSpace(session, &referenceSpace, &mLocalSpace);
-  if (nextResult != XR_SUCCESS) {
-    DebugPrint("Failed to create local space: {}", nextResult);
-    return;
-  }
-
-  referenceSpace.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_VIEW;
-  nextResult
+  auto nextResult
     = oxr->xrCreateReferenceSpace(session, &referenceSpace, &mViewSpace);
   if (nextResult != XR_SUCCESS) {
     DebugPrint("Failed to create view space: {}", nextResult);
@@ -102,9 +94,6 @@ void APILayer::InitHandTrackers(XrSession session) {
 }
 
 APILayer::~APILayer() {
-  if (mLocalSpace) {
-    mOpenXR->xrDestroySpace(mLocalSpace);
-  }
   if (mViewSpace) {
     mOpenXR->xrDestroySpace(mViewSpace);
   }

@@ -45,7 +45,6 @@ class APILayer final {
   void InitHandTrackers(XrSession session);
 
   std::shared_ptr<OpenXRNext> mOpenXR;
-  XrSpace mLocalSpace {};
   XrSpace mViewSpace {};
 
   XrHandTrackerEXT mLeftHand {};
