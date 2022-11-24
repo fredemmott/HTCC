@@ -266,6 +266,8 @@ XrResult __declspec(dllexport) XRAPI_CALL
     return XR_ERROR_INITIALIZATION_FAILED;
   }
 
+  DCSQuestHandTracking::Config::Load();
+
   wchar_t executablePath[MAX_PATH];
   const auto executablePathLen
     = GetModuleFileNameW(NULL, executablePath, MAX_PATH);
