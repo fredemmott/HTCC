@@ -105,8 +105,11 @@ XrResult APILayer::xrEndFrame(
   }
 
   if (mHandTracking) {
-    auto [left, right] = mHandTracking->GetPoses();
-    mVirtualTouchScreen->Update(left, right, actionState);
+    const auto rotation = mHandTracking->GetRXRY();
+    if (Config::VerboseDebug >= 3 && rotation) {
+      DebugPrint("Hand tracking RX {} RY {}", rotation->x, rotation->y);
+    }
+    mVirtualTouchScreen->Update(rotation, actionState);
   }
 
   return mOpenXR->xrEndFrame(session, frameEndInfo);

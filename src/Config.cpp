@@ -23,6 +23,8 @@
  */
 #include "Config.h"
 
+#include "DebugPrint.h"
+
 namespace DCSQuestHandTracking::Config {
 
 bool Enabled = true;
@@ -55,6 +57,7 @@ void LoadDWord(T& value, const wchar_t* valueName) {
 #define LOAD_DWORD(x) LoadDWord(Config::x, L#x);
 
 void Load() {
+  DebugPrint(L"Loading settings from HKLM\\{}", SubKey);
   LOAD_DWORD(Enabled);
   LOAD_DWORD(CheckDCS);
   LOAD_DWORD(VerboseDebug);

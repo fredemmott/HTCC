@@ -145,42 +145,30 @@ static constexpr bool HasFlags(Actual actual, Wanted wanted) {
   return (actual & wanted) == wanted;
 }
 
-bool VirtualTouchScreen::NormalizeHand(const XrPosef& hand, XrVector2f* xy) {
-  const auto rx = std::atan2f(hand.position.x, -hand.position.z);
-  const auto ry = std::atan2f(hand.position.y, -hand.position.z);
+bool VirtualTouchScreen::RotationToCartesian(
+  const XrVector2f& rotation,
+  XrVector2f* cartesian) {
+  // Flipped because screen X is left-to-right, which is a rotation around the Y
+  // axis
 
-  if (Config::VerboseDebug >= 3) {
-    DebugPrint(
-      "(x,y,z) = ({}, {}, {}), (rx, ry) = ({}, {})",
-      hand.position.x,
-      hand.position.y,
-      hand.position.z,
-      rx,
-      ry);
-  }
-  const auto screenX = mFovOrigin0To1.x + (rx / mCombinedFov.x);
+  const auto screenX = mFovOrigin0To1.x + (rotation.y / mCombinedFov.x);
   // OpenXR has Y origin in bottom left, screeen has it in top left
-  const auto screenY = mFovOrigin0To1.y - (ry / mCombinedFov.y);
+  const auto screenY = mFovOrigin0To1.y - (rotation.x / mCombinedFov.y);
 
   if (screenX < 0 || screenX > 1 || screenY < 0 || screenY > 1) {
     return false;
   }
 
-  *xy = {screenX, screenY};
+  *cartesian = {screenX, screenY};
 
   return true;
 }
 
 void VirtualTouchScreen::Update(
-  const std::optional<XrPosef>& left,
-  const std::optional<XrPosef>& right,
+  const std::optional<XrVector2f>& rotation,
   const ActionState& actionState) {
-  XrVector2f leftXY {};
-  XrVector2f rightXY {};
-  const bool leftValid = left && NormalizeHand(*left, &leftXY);
-  const bool rightValid = right && NormalizeHand(*right, &rightXY);
-
-  if (leftValid == rightValid) {
+  XrVector2f xy {};
+  if (!(rotation && RotationToCartesian(*rotation, &xy))) {
     return;
   }
 
@@ -188,8 +176,6 @@ void VirtualTouchScreen::Update(
   if (now - mLastWindowCheck > std::chrono::seconds(1)) {
     UpdateMainWindow();
   }
-
-  const auto& xy = leftValid ? leftXY : rightXY;
 
   const auto x = ((xy.x * mWindowSize.x) + mWindowRect.left) / mScreenSize.x;
   const auto y = ((xy.y * mWindowSize.y) + mWindowRect.top) / mScreenSize.y;

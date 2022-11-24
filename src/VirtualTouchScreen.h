@@ -40,12 +40,11 @@ class VirtualTouchScreen final {
     XrSpace viewSpace);
 
   void Update(
-    const std::optional<XrPosef>& left,
-    const std::optional<XrPosef>& right,
+    const std::optional<XrVector2f>& rxry,
     const ActionState& actionState);
 
  private:
-  bool NormalizeHand(const XrPosef& hand, XrVector2f* xy);
+  bool RotationToCartesian(const XrVector2f& rotation, XrVector2f* cartesian);
   void UpdateMainWindow();
   static BOOL CALLBACK EnumWindowCallback(HWND hwnd, LPARAM lparam);
 

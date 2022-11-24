@@ -180,6 +180,21 @@ HandTrackingSource::GetPoses() const {
   return {mLeftHandPose, mRightHandPose};
 }
 
+std::optional<XrVector2f> HandTrackingSource::GetRXRY() const {
+  const auto leftValid = mLeftHandPose.has_value();
+  const auto rightValid = mRightHandPose.has_value();
+  if (leftValid == rightValid) {
+    return {};
+  }
+
+  const auto& hand = leftValid ? mLeftHandPose : mRightHandPose;
+  const auto& pos = hand->position;
+
+  const auto rx = std::atan2f(pos.y, -pos.z);
+  const auto ry = std::atan2f(pos.x, -pos.z);
+  return {{rx, ry}};
+}
+
 ActionState HandTrackingSource::GetActionState() const {
   return mActionState;
 }
