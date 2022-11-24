@@ -273,10 +273,11 @@ XrResult __declspec(dllexport) XRAPI_CALL
                          std::wstring_view {executablePath, executablePathLen})
                          .filename();
   if (exeName != L"DCS.exe") {
-    DebugPrint(L"Doing nothing - '{}' is not 'DCS.exe'", exeName.wstring());
+    DebugPrint(L"'{}' is not 'DCS.exe'", exeName.wstring());
     if (!DCSQuestHandTracking::Config::CheckDCS) {
       DebugPrint("Loading anyway, Config::CheckDCS is false");
     } else {
+      DebugPrint("Skipping.");
       DCSQuestHandTracking::Loader::gIsDCS = false;
     }
   }
