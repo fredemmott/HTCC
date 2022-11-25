@@ -77,6 +77,18 @@ static XrResult xrGetActionStateFloat(
   return gNext->xrGetActionStateFloat(session, getInfo, state);
 }
 
+static XrResult xrGetCurrentInteractionProfile(
+  XrSession session,
+  XrPath topLevelUserPath,
+  XrInteractionProfileState* interactionProfile) {
+  if (gInstance) {
+    return gInstance->xrGetCurrentInteractionProfile(
+      session, topLevelUserPath, interactionProfile);
+  }
+  return gNext->xrGetCurrentInteractionProfile(
+    session, topLevelUserPath, interactionProfile);
+}
+
 static XrResult xrLocateSpace(
   XrSpace space,
   XrSpace baseSpace,
@@ -95,6 +107,13 @@ static XrResult xrSyncActions(
     return gInstance->xrSyncActions(session, syncInfo);
   }
   return gNext->xrSyncActions(session, syncInfo);
+}
+
+static XrResult xrPollEvent(XrInstance instance, XrEventDataBuffer* eventData) {
+  if (gInstance) {
+    return gInstance->xrPollEvent(instance, eventData);
+  }
+  return gNext->xrPollEvent(instance, eventData);
 }
 
 static XrResult xrCreateActionSpace(
@@ -128,7 +147,7 @@ static XrResult xrCreateSession(
   }
 
   DebugPrint("Initializing API layer");
-  gInstance = new APILayer(*session, gNext);
+  gInstance = new APILayer(instance, *session, gNext);
 
   return XR_SUCCESS;
 }
@@ -186,6 +205,15 @@ static XrResult xrGetInstanceProcAddr(
   }
   if (name == "xrSyncActions") {
     *function = reinterpret_cast<PFN_xrVoidFunction>(&xrSyncActions);
+    return XR_SUCCESS;
+  }
+  if (name == "xrPollEvent") {
+    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrPollEvent);
+    return XR_SUCCESS;
+  }
+  if (name == "xrGetCurrentInteractionProfile") {
+    *function
+      = reinterpret_cast<PFN_xrVoidFunction>(&xrGetCurrentInteractionProfile);
     return XR_SUCCESS;
   }
 

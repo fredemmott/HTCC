@@ -40,8 +40,13 @@ static constexpr std::string_view gSqueezeValuePath {"/input/squeeze/value"};
 
 VirtualControllerSink::VirtualControllerSink(
   const std::shared_ptr<OpenXRNext>& openXR,
+  XrInstance instance,
+  XrSession session,
   XrSpace viewSpace)
-  : mOpenXR(openXR), mViewSpace(viewSpace) {
+  : mOpenXR(openXR),
+    mInstance(instance),
+    mSession(session),
+    mViewSpace(viewSpace) {
 }
 
 void VirtualControllerSink::Update(
@@ -59,8 +64,13 @@ void VirtualControllerSink::Update(
   }
 
   // FIXME
-  mLeftHand.present = true;
+  mLeftHand.present = false;
   mRightHand.present = true;
+
+  mRightHand.aimPose = {
+    .orientation = {0.0f, 0.0f, 0.0f, 1.0f},
+    .position = {0.0f, 0.0f, -0.2f},
+  };
 }
 
 XrResult VirtualControllerSink::xrSyncActions(
@@ -76,6 +86,51 @@ XrResult VirtualControllerSink::xrSyncActions(
   }
 
   return mOpenXR->xrSyncActions(session, syncInfo);
+}
+
+XrResult VirtualControllerSink::xrPollEvent(
+  XrInstance instance,
+  XrEventDataBuffer* eventData) {
+  if (
+    mHaveSuggestedBindings && (
+    mLeftHand.present != mLeftHand.presentLastPollEvent
+    || mRightHand.present != mRightHand.presentLastPollEvent)) {
+    mLeftHand.presentLastPollEvent = mLeftHand.present;
+    mRightHand.presentLastPollEvent = mRightHand.present;
+    *reinterpret_cast<XrEventDataInteractionProfileChanged*>(eventData) = {
+      .type = XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED,
+      .session = mSession,
+    };
+    return XR_SUCCESS;
+  }
+
+  return mOpenXR->xrPollEvent(instance, eventData);
+}
+
+XrResult VirtualControllerSink::xrGetCurrentInteractionProfile(
+  XrSession session,
+  XrPath topLevelUserPath,
+  XrInteractionProfileState* interactionProfile) {
+  if (!mHaveSuggestedBindings) {
+    return mOpenXR->xrGetCurrentInteractionProfile(
+      session, topLevelUserPath, interactionProfile);
+  }
+  char pathBuf[XR_MAX_PATH_LENGTH];
+  uint32_t pathLen;
+  mOpenXR->xrPathToString(
+    mInstance, topLevelUserPath, sizeof(pathBuf), &pathLen, pathBuf);
+  std::string_view path {pathBuf, pathLen - 1};
+  DebugPrint("Requested interaction profile for {}", path);
+
+  if (
+    (path == gLeftHandPath && mLeftHand.present)
+    || (path == gRightHandPath && mRightHand.present)) {
+    interactionProfile->interactionProfile = mProfilePath;
+    return XR_SUCCESS;
+  }
+
+  return mOpenXR->xrGetCurrentInteractionProfile(
+    session, topLevelUserPath, interactionProfile);
 }
 
 XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
@@ -102,6 +157,7 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
         instance, suggestedBindings);
     }
     DebugPrint("Found desired profile '{}'", gInteractionProfilePath);
+    mProfilePath = suggestedBindings->interactionProfile;
   }
 
   for (uint32_t i = 0; i < suggestedBindings->countSuggestedBindings; ++i) {
@@ -135,6 +191,7 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
       continue;
     }
   }
+  mHaveSuggestedBindings = true;
 
   return mOpenXR->xrSuggestInteractionProfileBindings(
     instance, suggestedBindings);
@@ -215,11 +272,7 @@ XrResult VirtualControllerSink::xrLocateSpace(
     mOpenXR->xrLocateSpace(mViewSpace, baseSpace, time, location);
 
     const auto viewPose = location->pose;
-    // FIXME const auto handPose = hand.aimPose;
-    const XrPosef handPose = {
-      .orientation = {0.0f, 0.0f, 0.0f, 1.0f},
-      .position = {0.0f, 0.0f, -0.2f},
-    };
+    const auto handPose = hand.aimPose;
 
     const auto viewMatrix
       = Matrix::CreateFromQuaternion(

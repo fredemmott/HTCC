@@ -38,7 +38,7 @@ class VirtualTouchScreenSink;
 class APILayer final {
  public:
   APILayer() = delete;
-  APILayer(XrSession, const std::shared_ptr<OpenXRNext>&);
+  APILayer(XrInstance, XrSession, const std::shared_ptr<OpenXRNext>&);
   virtual ~APILayer();
 
   XrResult xrWaitFrame(
@@ -49,6 +49,11 @@ class APILayer final {
   XrResult xrSuggestInteractionProfileBindings(
     XrInstance instance,
     const XrInteractionProfileSuggestedBinding* suggestedBindings);
+
+  XrResult xrGetCurrentInteractionProfile(
+    XrSession session,
+    XrPath topLevelUserPath,
+    XrInteractionProfileState* interactionProfile);
 
   XrResult xrCreateActionSpace(
     XrSession session,
@@ -67,6 +72,8 @@ class APILayer final {
     XrSpaceLocation* location);
 
   XrResult xrSyncActions(XrSession session, const XrActionsSyncInfo* syncInfo);
+
+  XrResult xrPollEvent(XrInstance instance, XrEventDataBuffer* eventData);
 
  private:
   std::shared_ptr<OpenXRNext> mOpenXR;

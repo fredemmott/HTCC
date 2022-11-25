@@ -38,6 +38,8 @@ class VirtualControllerSink final {
  public:
   VirtualControllerSink(
     const std::shared_ptr<OpenXRNext>& oxr,
+    XrInstance instance,
+    XrSession session,
     XrSpace viewSpace);
 
   void Update(
@@ -67,11 +69,19 @@ class VirtualControllerSink final {
 
   XrResult xrSyncActions(XrSession session, const XrActionsSyncInfo* syncInfo);
 
+  XrResult xrPollEvent(XrInstance instance, XrEventDataBuffer* eventData);
+
+  XrResult xrGetCurrentInteractionProfile(
+    XrSession session,
+    XrPath topLevelUserPath,
+    XrInteractionProfileState* interactionProfile);
+
  private:
   // based on /interaction_profiles/oculus/touch_controller
   struct ControllerState {
     bool present {false};
     bool presentLastSync {false};
+    bool presentLastPollEvent {false};
 
     XrPosef aimPose {};
     XrSpace aimSpace {};
@@ -84,9 +94,13 @@ class VirtualControllerSink final {
     std::unordered_set<XrAction> squeezeValueActions {};
   };
 
+  bool mHaveSuggestedBindings {false};
   std::shared_ptr<OpenXRNext> mOpenXR;
+  XrInstance mInstance {};
+  XrSession mSession {};
   XrSpace mViewSpace {};
 
+  XrPath mProfilePath {};
   ControllerState mLeftHand {};
   ControllerState mRightHand {};
 

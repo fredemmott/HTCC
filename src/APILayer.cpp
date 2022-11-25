@@ -48,7 +48,10 @@ static constexpr XrPosef XR_POSEF_IDENTITY {
   .position = {0.0f, 0.0f, 0.0f},
 };
 
-APILayer::APILayer(XrSession session, const std::shared_ptr<OpenXRNext>& next)
+APILayer::APILayer(
+  XrInstance instance,
+  XrSession session,
+  const std::shared_ptr<OpenXRNext>& next)
   : mOpenXR(next) {
   DebugPrint("{}()", __FUNCTION__);
   auto oxr = next.get();
@@ -72,8 +75,8 @@ APILayer::APILayer(XrSession session, const std::shared_ptr<OpenXRNext>& next)
   mPointCtrl = std::make_unique<PointCtrlSource>();
 
   if (Config::PointerSink == PointerSink::VirtualVRController) {
-    mVirtualController
-      = std::make_unique<VirtualControllerSink>(next, mViewSpace);
+    mVirtualController = std::make_unique<VirtualControllerSink>(
+      next, instance, session, mViewSpace);
   }
 
   DebugPrint("Fully initialized.");
@@ -124,6 +127,27 @@ XrResult APILayer::xrSyncActions(
     return mVirtualController->xrSyncActions(session, syncInfo);
   }
   return mOpenXR->xrSyncActions(session, syncInfo);
+}
+
+XrResult APILayer::xrPollEvent(
+  XrInstance instance,
+  XrEventDataBuffer* eventData) {
+  if (mVirtualController) {
+    return mVirtualController->xrPollEvent(instance, eventData);
+  }
+  return mOpenXR->xrPollEvent(instance, eventData);
+}
+
+XrResult APILayer::xrGetCurrentInteractionProfile(
+  XrSession session,
+  XrPath topLevelUserPath,
+  XrInteractionProfileState* interactionProfile) {
+  if (mVirtualController) {
+    return mVirtualController->xrGetCurrentInteractionProfile(
+      session, topLevelUserPath, interactionProfile);
+  }
+  return mOpenXR->xrGetCurrentInteractionProfile(
+    session, topLevelUserPath, interactionProfile);
 }
 
 XrResult APILayer::xrCreateActionSpace(
