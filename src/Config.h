@@ -25,6 +25,13 @@
 
 #include <cinttypes>
 
+namespace DCSQuestHandTracking {
+enum class PointerSource : DWORD {
+  OculusHandTracking = 0,
+  PointCtrl = 1,
+};
+}
+
 namespace DCSQuestHandTracking::Config {
 
 // Enable or disable the entire API layer
@@ -32,6 +39,9 @@ extern bool Enabled;
 
 // Do nothing unless running inside "DCS.exe"
 extern bool CheckDCS;
+
+// 0 = Oculus hand tracking, 1 = PointCtrl
+extern DCSQuestHandTracking::PointerSource PointerSource;
 
 // 0 = off, 1 = some, 2 = more, 3 = every frame
 extern uint8_t VerboseDebug;
@@ -47,6 +57,12 @@ extern bool PinchToScroll;
 // currently requires a custom PointCtrl firmware exposing all buttons and axis
 // as a joystick instead of a mouse
 extern bool PointCtrlFCUClicks;
+
+// Run the calibration app for these :)
+extern uint16_t PointCtrlCenterX;
+extern uint16_t PointCtrlCenterY;
+extern float PointCtrlRadiansPerUnitX;
+extern float PointCtrlRadiansPerUnitY;
 
 void Load();
 

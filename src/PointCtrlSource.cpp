@@ -31,10 +31,6 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 namespace DCSQuestHandTracking {
 
 PointCtrlSource::PointCtrlSource() {
-  if (!Config::PointCtrlFCUClicks) {
-    return;
-  }
-
   winrt::check_hresult(DirectInput8Create(
     reinterpret_cast<HINSTANCE>(&__ImageBase),
     DIRECTINPUT_VERSION,
@@ -130,6 +126,17 @@ ActionState PointCtrlSource::GetActionState() const {
 std::tuple<uint16_t, uint16_t>
 PointCtrlSource::GetRawCoordinatesForCalibration() const {
   return {mX, mY};
+}
+
+std::optional<XrVector2f> PointCtrlSource::GetRXRY() const {
+  // TODO: optional: need a 'visible' flag in DirectInput
+
+  return {{
+    (static_cast<float>(mY) - Config::PointCtrlCenterY)
+      * Config::PointCtrlRadiansPerUnitY,
+    (static_cast<float>(mX) - Config::PointCtrlCenterX)
+      * Config::PointCtrlRadiansPerUnitX,
+  }};
 }
 
 }// namespace DCSQuestHandTracking

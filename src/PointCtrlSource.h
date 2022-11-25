@@ -24,6 +24,7 @@
 #pragma once
 
 #include <dinput.h>
+#include <openxr/openxr.h>
 
 #include <cinttypes>
 
@@ -38,6 +39,8 @@ class PointCtrlSource final {
   PointCtrlSource();
 
   void Update();
+
+  std::optional<XrVector2f> GetRXRY() const;
   ActionState GetActionState() const;
   std::tuple<uint16_t, uint16_t> GetRawCoordinatesForCalibration() const;
 

@@ -88,29 +88,34 @@ XrResult APILayer::xrEndFrame(
   }
 
   ActionState actionState {};
+  std::optional<XrVector2f> rotation;
 
   if (mHandTracking) {
     mHandTracking->Update(frameEndInfo->displayTime);
     actionState = mHandTracking->GetActionState();
-  }
-  if (mPointCtrl) {
-    mPointCtrl->Update();
-    const auto as = mPointCtrl->GetActionState();
-    actionState = {
-      .mLeftClick = actionState.mLeftClick || as.mLeftClick,
-      .mRightClick = actionState.mRightClick || as.mRightClick,
-      .mWheelUp = actionState.mWheelUp || as.mWheelUp,
-      .mWheelDown = actionState.mWheelDown || as.mWheelDown,
-    };
+    if (Config::PointerSource == PointerSource::OculusHandTracking) {
+      rotation = mHandTracking->GetRXRY();
+    }
   }
 
-  if (mHandTracking) {
-    const auto rotation = mHandTracking->GetRXRY();
-    if (Config::VerboseDebug >= 3 && rotation) {
-      DebugPrint("Hand tracking RX {} RY {}", rotation->x, rotation->y);
+  if (mPointCtrl) {
+    mPointCtrl->Update();
+
+    if (Config::PointCtrlFCUClicks) {
+      const auto as = mPointCtrl->GetActionState();
+      actionState = {
+        .mLeftClick = actionState.mLeftClick || as.mLeftClick,
+        .mRightClick = actionState.mRightClick || as.mRightClick,
+        .mWheelUp = actionState.mWheelUp || as.mWheelUp,
+        .mWheelDown = actionState.mWheelDown || as.mWheelDown,
+      };
     }
-    mVirtualTouchScreen->Update(rotation, actionState);
+    if (Config::PointerSource == PointerSource::PointCtrl) {
+      rotation = mPointCtrl->GetRXRY();
+    }
   }
+
+  mVirtualTouchScreen->Update(rotation, actionState);
 
   return mOpenXR->xrEndFrame(session, frameEndInfo);
 }
