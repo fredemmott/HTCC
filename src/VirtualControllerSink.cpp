@@ -57,20 +57,23 @@ void VirtualControllerSink::Update(
   if (mRightHand.present) {
     mRightHand.aimPose = *rightAimPose;
   }
+
+  // FIXME
+  mLeftHand.present = true;
+  mRightHand.present = true;
 }
 
 XrResult VirtualControllerSink::xrSyncActions(
   XrSession session,
   const XrActionsSyncInfo* syncInfo) {
-  /* FIXME
   for (auto hand: {&mLeftHand, &mRightHand}) {
     const bool presenceChanged = hand->present != hand->presentLastSync;
     hand->presentLastSync = hand->present;
 
+    hand->squeezeValue.currentState = (hand->present ? 1.0f : 0.0f);
     hand->squeezeValue.isActive = hand->present;
     hand->squeezeValue.changedSinceLastSync = presenceChanged;
   }
-  */
 
   return mOpenXR->xrSyncActions(session, syncInfo);
 }
@@ -177,14 +180,13 @@ XrResult VirtualControllerSink::xrGetActionStateFloat(
   if (mActionPaths.contains(action)) {
     DebugPrint("Requested float action: {}", mActionPaths.at(action));
   }
-  /* FIXME
+
   for (auto hand: {&mLeftHand, &mRightHand}) {
     if (hand->squeezeValueActions.contains(action)) {
       *state = hand->squeezeValue;
       return XR_SUCCESS;
     }
   }
-  */
 
   return mOpenXR->xrGetActionStateFloat(session, getInfo, state);
 }
@@ -205,11 +207,10 @@ XrResult VirtualControllerSink::xrLocateSpace(
     if (space != hand.aimSpace && space != hand.gripSpace) {
       continue;
     }
-    /* FIXME
+
     if (!hand.present) {
       break;
     }
-    */
 
     mOpenXR->xrLocateSpace(mViewSpace, baseSpace, time, location);
 
