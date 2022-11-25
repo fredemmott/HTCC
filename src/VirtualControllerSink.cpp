@@ -26,6 +26,8 @@
 
 #include <directxtk/SimpleMath.h>
 
+#include <numbers>
+
 using namespace DirectX::SimpleMath;
 
 namespace DCSQuestHandTracking {
@@ -69,7 +71,7 @@ void VirtualControllerSink::Update(
 
   mRightHand.aimPose = {
     .orientation = {0.0f, 0.0f, 0.0f, 1.0f},
-    .position = {0.0f, 0.0f, -0.2f},
+    .position = {0.0f, 0.0f, -0.5f},
   };
 }
 
@@ -234,10 +236,6 @@ XrResult VirtualControllerSink::xrGetActionStateFloat(
   XrActionStateFloat* state) {
   const auto action = getInfo->action;
 
-  if (mActionPaths.contains(action)) {
-    DebugPrint("Requested float action: {}", mActionPaths.at(action));
-  }
-
   for (auto hand: {&mLeftHand, &mRightHand}) {
     if (hand->squeezeValueActions.contains(action)) {
       *state = hand->squeezeValue;
@@ -248,18 +246,44 @@ XrResult VirtualControllerSink::xrGetActionStateFloat(
   return mOpenXR->xrGetActionStateFloat(session, getInfo, state);
 }
 
+static XrPosef operator*(const XrPosef& a, const XrPosef& b) {
+  const Quaternion ao {
+    a.orientation.x,
+    a.orientation.y,
+    a.orientation.z,
+    a.orientation.w,
+  };
+  const Quaternion bo {
+    b.orientation.x,
+    b.orientation.y,
+    b.orientation.z,
+    b.orientation.w,
+  };
+  const Vector3 ap {
+    a.position.x,
+    a.position.y,
+    a.position.z,
+  };
+  const Vector3 bp {
+    b.position.x,
+    b.position.y,
+    b.position.z,
+  };
+
+  const auto o = ao * bo;
+  const auto p = Vector3::Transform(ap, bo) + bp;
+
+  return {
+    .orientation = {o.x, o.y, o.z, o.w},
+    .position = {p.x, p.y, p.z},
+  };
+}
+
 XrResult VirtualControllerSink::xrLocateSpace(
   XrSpace space,
   XrSpace baseSpace,
   XrTime time,
   XrSpaceLocation* location) {
-  if (mActionSpaces.contains(space)) {
-    const auto action = mActionSpaces.at(space);
-    if (mActionPaths.contains(action)) {
-      DebugPrint("Locating: {}", mActionPaths.at(action));
-    }
-  }
-
   for (const ControllerState& hand: {mLeftHand, mRightHand}) {
     if (space != hand.aimSpace && space != hand.gripSpace) {
       continue;
@@ -274,44 +298,8 @@ XrResult VirtualControllerSink::xrLocateSpace(
     const auto viewPose = location->pose;
     const auto handPose = hand.aimPose;
 
-    const auto viewMatrix
-      = Matrix::CreateFromQuaternion(
-          {viewPose.orientation.x,
-           viewPose.orientation.y,
-           viewPose.orientation.z,
-           viewPose.orientation.w})
-      * Matrix::CreateTranslation(
-          viewPose.position.x, viewPose.position.y, viewPose.position.z);
+    location->pose = handPose * viewPose;
 
-    const auto handMatrix
-      = Matrix::CreateFromQuaternion(
-          {handPose.orientation.x,
-           handPose.orientation.y,
-           handPose.orientation.z,
-           handPose.orientation.w})
-      * Matrix::CreateTranslation(
-          handPose.position.x, handPose.position.y, handPose.position.z);
-    auto combinedMatrix = viewMatrix * handMatrix;
-
-    Vector3 scale;
-    Quaternion rotation;
-    Vector3 translation;
-    combinedMatrix.Decompose(scale, rotation, translation);
-
-    location->pose = {
-      .orientation = {rotation.x, rotation.y, rotation.z, rotation.w},
-      .position = {translation.x, translation.y, translation.z},
-    };
-
-    DebugPrint(
-      "({}, {}, {}) ({}, {}, {}, {})",
-      translation.x,
-      translation.y,
-      translation.z,
-      rotation.x,
-      rotation.y,
-      rotation.z,
-      rotation.w);
     return XR_SUCCESS;
   }
 
