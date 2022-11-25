@@ -70,8 +70,6 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
     DebugPrint("Found desired profile '{}'", gInteractionProfilePath);
   }
 
-  const bool DebugBindings = Config::VerboseDebug >= 1;
-
   for (uint32_t i = 0; i < suggestedBindings->countSuggestedBindings; ++i) {
     const auto& it = suggestedBindings->suggestedBindings[i];
     mOpenXR->xrPathToString(
@@ -82,40 +80,20 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
     ControllerState* state;
     if (binding.starts_with(gLeftHandPath)) {
       state = &mLeftHand;
-      if (DebugBindings) {
-        DebugPrint("Binding '{}' is on left hand", binding);
-      }
     } else if (binding.starts_with(gRightHandPath)) {
       state = &mRightHand;
-      if (DebugBindings) {
-        DebugPrint("Binding '{}' is on right hand", binding);
-      }
     } else {
-      DebugPrint("Binding '{}' is not a hand binding", binding);
       continue;
     }
 
     if (binding.ends_with(gAimPosePath)) {
-      if (DebugBindings) {
-        DebugPrint("Binding '{}' is an aim action", binding);
-      }
       state->aimAction = it.action;
       continue;
     }
 
     if (binding.ends_with(gSqueezeValuePath)) {
-      if (DebugBindings) {
-        DebugPrint(
-          "Binding '{}' is a squeeze value ({:#016x})",
-          binding,
-          reinterpret_cast<uintptr_t>(it.action));
-      }
       state->squeezeValue.insert(it.action);
       continue;
-    }
-
-    if (DebugBindings) {
-      DebugPrint("Binding '{}' is not handled by this layer", binding);
     }
   }
 
