@@ -40,6 +40,7 @@ target_link_libraries(
   System::Dinput8
   System::Dxguid
   ThirdParty::CppWinRT
+  ThirdParty::DirectXTK
   ThirdParty::OpenXR
 )
 

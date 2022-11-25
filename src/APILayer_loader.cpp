@@ -77,6 +77,26 @@ static XrResult xrGetActionStateFloat(
   return gNext->xrGetActionStateFloat(session, getInfo, state);
 }
 
+static XrResult xrLocateSpace(
+  XrSpace space,
+  XrSpace baseSpace,
+  XrTime time,
+  XrSpaceLocation* location) {
+  if (gInstance) {
+    return gInstance->xrLocateSpace(space, baseSpace, time, location);
+  }
+  return gNext->xrLocateSpace(space, baseSpace, time, location);
+}
+
+static XrResult xrSyncActions(
+  XrSession session,
+  const XrActionsSyncInfo* syncInfo) {
+  if (gInstance) {
+    return gInstance->xrSyncActions(session, syncInfo);
+  }
+  return gNext->xrSyncActions(session, syncInfo);
+}
+
 static XrResult xrCreateActionSpace(
   XrSession session,
   const XrActionSpaceCreateInfo* createInfo,
@@ -158,6 +178,14 @@ static XrResult xrGetInstanceProcAddr(
   }
   if (name == "xrGetActionStateFloat") {
     *function = reinterpret_cast<PFN_xrVoidFunction>(&xrGetActionStateFloat);
+    return XR_SUCCESS;
+  }
+  if (name == "xrLocateSpace") {
+    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrLocateSpace);
+    return XR_SUCCESS;
+  }
+  if (name == "xrSyncActions") {
+    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrSyncActions);
     return XR_SUCCESS;
   }
 

@@ -46,7 +46,8 @@
   IT(xrSuggestInteractionProfileBindings) \
   IT(xrPathToString) \
   IT(xrCreateActionSpace) \
-  IT(xrGetActionStateFloat)
+  IT(xrGetActionStateFloat) \
+  IT(xrSyncActions)
 
 namespace DCSQuestHandTracking {
 

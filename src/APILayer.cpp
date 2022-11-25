@@ -72,7 +72,8 @@ APILayer::APILayer(XrSession session, const std::shared_ptr<OpenXRNext>& next)
   mPointCtrl = std::make_unique<PointCtrlSource>();
 
   if (Config::PointerSink == PointerSink::VirtualVRController) {
-    mVirtualController = std::make_unique<VirtualControllerSink>(next);
+    mVirtualController
+      = std::make_unique<VirtualControllerSink>(next, mViewSpace);
   }
 
   DebugPrint("Fully initialized.");
@@ -103,6 +104,26 @@ XrResult APILayer::xrGetActionStateFloat(
     return mVirtualController->xrGetActionStateFloat(session, getInfo, state);
   }
   return mOpenXR->xrGetActionStateFloat(session, getInfo, state);
+}
+
+XrResult APILayer::xrLocateSpace(
+  XrSpace space,
+  XrSpace baseSpace,
+  XrTime time,
+  XrSpaceLocation* location) {
+  if (mVirtualController) {
+    return mVirtualController->xrLocateSpace(space, baseSpace, time, location);
+  }
+  return mOpenXR->xrLocateSpace(space, baseSpace, time, location);
+}
+
+XrResult APILayer::xrSyncActions(
+  XrSession session,
+  const XrActionsSyncInfo* syncInfo) {
+  if (mVirtualController) {
+    return mVirtualController->xrSyncActions(session, syncInfo);
+  }
+  return mOpenXR->xrSyncActions(session, syncInfo);
 }
 
 XrResult APILayer::xrCreateActionSpace(

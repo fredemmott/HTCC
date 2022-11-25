@@ -24,6 +24,10 @@
 
 #include "VirtualControllerSink.h"
 
+#include <directxtk/SimpleMath.h>
+
+using namespace DirectX::SimpleMath;
+
 namespace DCSQuestHandTracking {
 
 static constexpr std::string_view gInteractionProfilePath {
@@ -31,17 +35,44 @@ static constexpr std::string_view gInteractionProfilePath {
 static constexpr std::string_view gLeftHandPath {"/user/hand/left"};
 static constexpr std::string_view gRightHandPath {"/user/hand/right"};
 static constexpr std::string_view gAimPosePath {"/input/aim/pose"};
+static constexpr std::string_view gGripPosePath {"/input/grip/pose"};
 static constexpr std::string_view gSqueezeValuePath {"/input/squeeze/value"};
 
 VirtualControllerSink::VirtualControllerSink(
-  const std::shared_ptr<OpenXRNext>& openXR)
-  : mOpenXR(openXR) {
+  const std::shared_ptr<OpenXRNext>& openXR,
+  XrSpace viewSpace)
+  : mOpenXR(openXR), mViewSpace(viewSpace) {
 }
 
 void VirtualControllerSink::Update(
   const std::optional<XrPosef>& leftAimPose,
   const std::optional<XrPosef>& rightAimPose,
   const ActionState& actionState) {
+  mLeftHand.present = leftAimPose.has_value();
+  if (mLeftHand.present) {
+    mLeftHand.aimPose = *leftAimPose;
+  }
+
+  mRightHand.present = rightAimPose.has_value();
+  if (mRightHand.present) {
+    mRightHand.aimPose = *rightAimPose;
+  }
+}
+
+XrResult VirtualControllerSink::xrSyncActions(
+  XrSession session,
+  const XrActionsSyncInfo* syncInfo) {
+  /* FIXME
+  for (auto hand: {&mLeftHand, &mRightHand}) {
+    const bool presenceChanged = hand->present != hand->presentLastSync;
+    hand->presentLastSync = hand->present;
+
+    hand->squeezeValue.isActive = hand->present;
+    hand->squeezeValue.changedSinceLastSync = presenceChanged;
+  }
+  */
+
+  return mOpenXR->xrSyncActions(session, syncInfo);
 }
 
 XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
@@ -91,8 +122,13 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
       continue;
     }
 
+    if (binding.ends_with(gGripPosePath)) {
+      state->gripAction = it.action;
+      continue;
+    }
+
     if (binding.ends_with(gSqueezeValuePath)) {
-      state->squeezeValue.insert(it.action);
+      state->squeezeValueActions.insert(it.action);
       continue;
     }
   }
@@ -111,16 +147,22 @@ XrResult VirtualControllerSink::xrCreateActionSpace(
     return nextResult;
   }
 
-  if (createInfo->action == mLeftHand.aimAction) {
-    DebugPrint("Found left hand aim space");
-    mLeftHand.aimSpace = *space;
-    return XR_SUCCESS;
-  }
+  mActionSpaces[*space] = createInfo->action;
 
-  if (createInfo->action == mRightHand.aimAction) {
-    DebugPrint("Found right hand aim space");
-    mRightHand.aimSpace = *space;
-    return XR_SUCCESS;
+  for (auto hand: {&mLeftHand, &mRightHand}) {
+    if (createInfo->action == hand->aimAction) {
+      hand->aimSpace = *space;
+      DebugPrint(
+        "Found aim space: {:#016x}", reinterpret_cast<uintptr_t>(*space));
+      return XR_SUCCESS;
+    }
+
+    if (createInfo->action == hand->gripAction) {
+      DebugPrint(
+        "Found grip space: {:#016x}", reinterpret_cast<uintptr_t>(*space));
+      hand->gripSpace = *space;
+      return XR_SUCCESS;
+    }
   }
 
   return XR_SUCCESS;
@@ -131,19 +173,95 @@ XrResult VirtualControllerSink::xrGetActionStateFloat(
   const XrActionStateGetInfo* getInfo,
   XrActionStateFloat* state) {
   const auto action = getInfo->action;
-  if (
-    (mLeftHand.present && mLeftHand.squeezeValue.contains(action))
-    || (mRightHand.present && mRightHand.squeezeValue.contains(action))) {
-    *state = {
-      .type = XR_TYPE_ACTION_STATE_FLOAT,
-      .currentState = 1.0f,
-      .changedSinceLastSync = XR_FALSE,
-      .isActive = XR_TRUE,
+
+  if (mActionPaths.contains(action)) {
+    DebugPrint("Requested float action: {}", mActionPaths.at(action));
+  }
+  /* FIXME
+  for (auto hand: {&mLeftHand, &mRightHand}) {
+    if (hand->squeezeValueActions.contains(action)) {
+      *state = hand->squeezeValue;
+      return XR_SUCCESS;
+    }
+  }
+  */
+
+  return mOpenXR->xrGetActionStateFloat(session, getInfo, state);
+}
+
+XrResult VirtualControllerSink::xrLocateSpace(
+  XrSpace space,
+  XrSpace baseSpace,
+  XrTime time,
+  XrSpaceLocation* location) {
+  if (mActionSpaces.contains(space)) {
+    const auto action = mActionSpaces.at(space);
+    if (mActionPaths.contains(action)) {
+      DebugPrint("Locating: {}", mActionPaths.at(action));
+    }
+  }
+
+  for (const ControllerState& hand: {mLeftHand, mRightHand}) {
+    if (space != hand.aimSpace && space != hand.gripSpace) {
+      continue;
+    }
+    /* FIXME
+    if (!hand.present) {
+      break;
+    }
+    */
+
+    mOpenXR->xrLocateSpace(mViewSpace, baseSpace, time, location);
+
+    const auto viewPose = location->pose;
+    // FIXME const auto handPose = hand.aimPose;
+    const XrPosef handPose = {
+      .orientation = {0.0f, 0.0f, 0.0f, 1.0f},
+      .position = {0.0f, 0.0f, -0.2f},
     };
+
+    const auto viewMatrix
+      = Matrix::CreateFromQuaternion(
+          {viewPose.orientation.x,
+           viewPose.orientation.y,
+           viewPose.orientation.z,
+           viewPose.orientation.w})
+      * Matrix::CreateTranslation(
+          viewPose.position.x, viewPose.position.y, viewPose.position.z);
+
+    const auto handMatrix
+      = Matrix::CreateFromQuaternion(
+          {handPose.orientation.x,
+           handPose.orientation.y,
+           handPose.orientation.z,
+           handPose.orientation.w})
+      * Matrix::CreateTranslation(
+          handPose.position.x, handPose.position.y, handPose.position.z);
+    auto combinedMatrix = viewMatrix * handMatrix;
+
+    Vector3 scale;
+    Quaternion rotation;
+    Vector3 translation;
+    combinedMatrix.Decompose(scale, rotation, translation);
+
+    location->pose = {
+      .orientation = {rotation.x, rotation.y, rotation.z, rotation.w},
+      .position = {translation.x, translation.y, translation.z},
+    };
+
+    DebugPrint(
+      "({}, {}, {}) ({}, {}, {}, {})",
+      translation.x,
+      translation.y,
+      translation.z,
+      rotation.x,
+      rotation.y,
+      rotation.z,
+      rotation.w);
     return XR_SUCCESS;
   }
 
-  return mOpenXR->xrGetActionStateFloat(session, getInfo, state);
+  return mOpenXR->xrLocateSpace(space, baseSpace, time, location);
 }
 
 }// namespace DCSQuestHandTracking

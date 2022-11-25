@@ -60,6 +60,14 @@ class APILayer final {
     const XrActionStateGetInfo* getInfo,
     XrActionStateFloat* state);
 
+  XrResult xrLocateSpace(
+    XrSpace space,
+    XrSpace baseSpace,
+    XrTime time,
+    XrSpaceLocation* location);
+
+  XrResult xrSyncActions(XrSession session, const XrActionsSyncInfo* syncInfo);
+
  private:
   std::shared_ptr<OpenXRNext> mOpenXR;
   XrSpace mViewSpace {};

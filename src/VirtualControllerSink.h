@@ -36,7 +36,9 @@ namespace DCSQuestHandTracking {
 
 class VirtualControllerSink final {
  public:
-  VirtualControllerSink(const std::shared_ptr<OpenXRNext>& oxr);
+  VirtualControllerSink(
+    const std::shared_ptr<OpenXRNext>& oxr,
+    XrSpace viewSpace);
 
   void Update(
     const std::optional<XrPosef>& leftAimPose,
@@ -57,47 +59,40 @@ class VirtualControllerSink final {
     const XrActionStateGetInfo* getInfo,
     XrActionStateFloat* state);
 
+  XrResult xrLocateSpace(
+    XrSpace space,
+    XrSpace baseSpace,
+    XrTime time,
+    XrSpaceLocation* location);
+
+  XrResult xrSyncActions(XrSession session, const XrActionsSyncInfo* syncInfo);
+
  private:
   // based on /interaction_profiles/oculus/touch_controller
   struct ControllerState {
-    bool present {true};
+    bool present {false};
+    bool presentLastSync {false};
 
     XrPosef aimPose {};
     XrSpace aimSpace {};
     XrAction aimAction {};
 
-    XrPosef gripPose {};
     XrSpace gripSpace {};
     XrAction gripAction {};
 
-    float thumbstickX {0.0f};
-    float thumbstickY {0.0f};
-    bool thumbstickClick {false};
-    bool thumbstickTouch {true};
-    float triggerValue {0.0f};
-    bool triggerTouch {false};
-    std::unordered_set<XrAction> squeezeValue {};
-  };
-  struct LeftControllerState final : public ControllerState {
-    bool menuClick {false};
-    bool xClick {false};
-    bool xTouch {false};
-    bool yClick {false};
-    bool yTouch {false};
-  };
-  struct RightControllerState final : public ControllerState {
-    bool aClick {false};
-    bool aTouch {false};
-    bool bClick {false};
-    bool bTouch {false};
+    XrActionStateFloat squeezeValue {XR_TYPE_ACTION_STATE_FLOAT};
+    std::unordered_set<XrAction> squeezeValueActions {};
   };
 
   std::shared_ptr<OpenXRNext> mOpenXR;
+  XrSpace mViewSpace {};
 
-  LeftControllerState mLeftHand {};
-  RightControllerState mRightHand {};
+  ControllerState mLeftHand {};
+  ControllerState mRightHand {};
 
+  // For debugging
   std::unordered_map<XrAction, std::string> mActionPaths;
+  std::unordered_map<XrSpace, XrAction> mActionSpaces;
 };
 
 }// namespace DCSQuestHandTracking
