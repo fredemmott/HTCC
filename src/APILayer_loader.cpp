@@ -46,13 +46,14 @@ static APILayer* gInstance = nullptr;
 static bool gIsDCS = true;
 static bool gHaveHandTracking = false;
 
-static XrResult xrEndFrame(
+static XrResult xrWaitFrame(
   XrSession session,
-  const XrFrameEndInfo* frameEndInfo) {
+  const XrFrameWaitInfo* info,
+  XrFrameState* state) {
   if (gInstance) {
-    return gInstance->xrEndFrame(session, frameEndInfo);
+    return gInstance->xrWaitFrame(session, info, state);
   }
-  return gNext->xrEndFrame(session, frameEndInfo);
+  return gNext->xrWaitFrame(session, info, state);
 }
 
 static XrResult xrCreateSession(
@@ -111,8 +112,8 @@ static XrResult xrGetInstanceProcAddr(
     *function = reinterpret_cast<PFN_xrVoidFunction>(&xrDestroyInstance);
     return XR_SUCCESS;
   }
-  if (name == "xrEndFrame") {
-    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrEndFrame);
+  if (name == "xrWaitFrame") {
+    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrWaitFrame);
     return XR_SUCCESS;
   }
 

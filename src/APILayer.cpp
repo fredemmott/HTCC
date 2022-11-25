@@ -79,19 +79,25 @@ APILayer::~APILayer() {
   }
 }
 
-XrResult APILayer::xrEndFrame(
+XrResult APILayer::xrWaitFrame(
   XrSession session,
-  const XrFrameEndInfo* frameEndInfo) {
+  const XrFrameWaitInfo* frameWaitInfo,
+  XrFrameState* state) {
+  const auto nextResult = mOpenXR->xrWaitFrame(session, frameWaitInfo, state);
+  if (nextResult != XR_SUCCESS) {
+    return nextResult;
+  }
+
   if (!mVirtualTouchScreen) [[unlikely]] {
     mVirtualTouchScreen = std::make_unique<VirtualTouchScreen>(
-      mOpenXR, session, frameEndInfo->displayTime, mViewSpace);
+      mOpenXR, session, state->predictedDisplayTime, mViewSpace);
   }
 
   ActionState actionState {};
   std::optional<XrVector2f> rotation;
 
   if (mHandTracking) {
-    mHandTracking->Update(frameEndInfo->displayTime);
+    mHandTracking->Update(state->predictedDisplayTime);
     actionState = mHandTracking->GetActionState();
     if (Config::PointerSource == PointerSource::OculusHandTracking) {
       rotation = mHandTracking->GetRXRY();
@@ -100,7 +106,6 @@ XrResult APILayer::xrEndFrame(
 
   if (mPointCtrl) {
     mPointCtrl->Update();
-
     if (Config::PointCtrlFCUClicks) {
       const auto as = mPointCtrl->GetActionState();
       actionState = {
@@ -117,7 +122,7 @@ XrResult APILayer::xrEndFrame(
 
   mVirtualTouchScreen->Update(rotation, actionState);
 
-  return mOpenXR->xrEndFrame(session, frameEndInfo);
+  return XR_SUCCESS;
 }
 
 }// namespace DCSQuestHandTracking

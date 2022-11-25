@@ -40,7 +40,10 @@ class APILayer final {
   APILayer(XrSession, const std::shared_ptr<OpenXRNext>&);
   virtual ~APILayer();
 
-  XrResult xrEndFrame(XrSession session, const XrFrameEndInfo* frameEndInfo);
+  XrResult xrWaitFrame(
+    XrSession session,
+    const XrFrameWaitInfo* frameWaitInfo,
+    XrFrameState* state);
 
  private:
   std::shared_ptr<OpenXRNext> mOpenXR;

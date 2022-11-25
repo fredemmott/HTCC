@@ -38,7 +38,7 @@
   IT(xrDestroySpace) \
   IT(xrLocateSpace) \
   IT(xrEnumerateInstanceExtensionProperties) \
-  IT(xrEndFrame) \
+  IT(xrWaitFrame) \
   IT(xrCreateHandTrackerEXT) \
   IT(xrDestroyHandTrackerEXT) \
   IT(xrLocateHandJointsEXT) \
