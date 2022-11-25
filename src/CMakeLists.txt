@@ -55,6 +55,8 @@ target_link_libraries(
   ThirdParty::OpenXRLoader
 )
 
+target_link_options(PointCtrlCalibration PRIVATE "/MANIFESTUAC:level='requireAdministrator'")
+
 add_custom_command(
   TARGET PointCtrlCalibration POST_BUILD
   COMMAND "${CMAKE_COMMAND}" -E copy

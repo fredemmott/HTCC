@@ -86,6 +86,38 @@ static winrt::com_ptr<IDXGIAdapter1> GetDXGIAdapter(LUID luid) {
   return {nullptr};
 }
 
+constexpr wchar_t RegistrySubKey[] {L"SOFTWARE\\FredEmmott\\DCSHandTracking"};
+
+void SaveDWordToRegistry(const wchar_t* valueName, DWORD value) {
+  const auto result = RegSetKeyValueW(
+    HKEY_LOCAL_MACHINE,
+    RegistrySubKey,
+    valueName,
+    REG_DWORD,
+    &value,
+    sizeof(value));
+  if (result != ERROR_SUCCESS) {
+    auto message = std::format("Saving to registry failed: error {}", result);
+    throw std::runtime_error(message);
+  }
+}
+
+void SaveStringToRegistry(const wchar_t* valueName, float value) {
+  const auto data = std::format(L"{}", value);
+
+  const auto result = RegSetKeyValueW(
+    HKEY_LOCAL_MACHINE,
+    RegistrySubKey,
+    valueName,
+    REG_SZ,
+    data.data(),
+    data.size() * sizeof(data[0]));
+  if (result != ERROR_SUCCESS) {
+    auto message = std::format("Saving to registry failed: error {}", result);
+    throw std::runtime_error(message);
+  }
+}
+
 XrInstance gInstance {};
 
 void check_xr(XrResult result) {
@@ -103,7 +135,7 @@ void check_xr(XrResult result) {
     message = std::format("OpenXR call failed: {}", static_cast<int>(result));
   }
   OutputDebugStringA(message.c_str());
-  throw new std::runtime_error(message);
+  throw std::runtime_error(message);
 }
 
 struct DrawingResources {
@@ -450,6 +482,12 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
       auto [x, y] = pointCtrl.GetRawCoordinatesForCalibration();
       const auto newActions = pointCtrl.GetActionState();
 
+      const auto click2 = newActions.mRightClick && !actionState.mRightClick;
+      if (click2) {
+        state = CalibrationState::WaitForCenter;
+        actionState = newActions;
+      }
+
       const auto click1 = newActions.mLeftClick && !actionState.mLeftClick;
       if (click1) {
         switch (state) {
@@ -488,7 +526,6 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
           (static_cast<float>(y) - centerPoint.y) * radiansPerUnit.y,
           (static_cast<float>(x) - centerPoint.x) * radiansPerUnit.x,
         };
-        DebugPrint("{} {}", calibratedRotation.x, calibratedRotation.y);
       }
 
       DrawLayer(
@@ -511,4 +548,9 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
       check_xr(xrEndFrame(session, &endInfo));
     }
   }
+
+  SaveDWordToRegistry(L"PointCtrlCenterX", centerPoint.x);
+  SaveDWordToRegistry(L"PointCtrlCenterY", centerPoint.y);
+  SaveStringToRegistry(L"PointCtrlRadiansPerUnitX", radiansPerUnit.x);
+  SaveStringToRegistry(L"PointCtrlRadiansPerUnitY", radiansPerUnit.y);
 }
