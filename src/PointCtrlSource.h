@@ -26,6 +26,7 @@
 #include <dinput.h>
 #include <openxr/openxr.h>
 
+#include <chrono>
 #include <cinttypes>
 
 #include "ActionState.h"
@@ -66,6 +67,7 @@ class PointCtrlSource final {
 
   uint16_t mX {};
   uint16_t mY {};
+  std::chrono::steady_clock::time_point mLastMovedAt {};
 };
 
 }// namespace DCSQuestHandTracking

@@ -100,8 +100,11 @@ void PointCtrlSource::Update() {
     return;
   }
 
-  mX = joystate.lX;
-  mY = joystate.lY;
+  if (mX != joystate.lX || mY != joystate.lY) {
+    mLastMovedAt = std::chrono::steady_clock::now();
+    mX = joystate.lX;
+    mY = joystate.lY;
+  }
 
   constexpr auto pressedBit = 1 << 7;
   const auto& buttons = joystate.rgbButtons;
@@ -135,7 +138,11 @@ PointCtrlSource::GetRawCoordinatesForCalibration() const {
 }
 
 std::optional<XrVector2f> PointCtrlSource::GetRXRY() const {
-  // TODO: optional: need a 'visible' flag in DirectInput
+  if (
+    std::chrono::steady_clock::now() - mLastMovedAt
+    >= std::chrono::seconds(1)) {
+    return {};
+  }
 
   return {{
     (static_cast<float>(mY) - Config::PointCtrlCenterY)
