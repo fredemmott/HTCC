@@ -31,6 +31,12 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 namespace DCSQuestHandTracking {
 
 PointCtrlSource::PointCtrlSource() {
+  DebugPrint(
+    "Initializing PointCtrlSource with calibration ({}, {}) delta ({}, {})",
+    Config::PointCtrlCenterX,
+    Config::PointCtrlCenterY,
+    Config::PointCtrlRadiansPerUnitX,
+    Config::PointCtrlRadiansPerUnitY);
   winrt::check_hresult(DirectInput8Create(
     reinterpret_cast<HINSTANCE>(&__ImageBase),
     DIRECTINPUT_VERSION,
