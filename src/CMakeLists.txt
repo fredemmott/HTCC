@@ -16,8 +16,7 @@ function(add_version_metadata TARGET)
     "-P${CMAKE_CURRENT_SOURCE_DIR}/version.cmake"
     DEPENDS version.rc.in version.cmake
   )
-  target_sources(${TARGET} PRIVATE "${VERSION_RC_FILE}")
-  message(STATUS "Making ${VERSION_RC_FILE} v${CMAKE_PROJECT_VERSION_BUILD}")
+  target_sources("${TARGET}" PRIVATE "${VERSION_RC_FILE}")
 endfunction()
 
 add_library(
