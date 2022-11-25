@@ -26,6 +26,36 @@ target_precompile_headers(
   pch.h
 )
 
+add_executable(
+  PointCtrlCalibration
+  WIN32
+  PointCtrlCalibration.cpp
+)
+
+target_precompile_headers(
+  PointCtrlCalibration
+  PRIVATE
+  pch.h
+)
+
+target_link_libraries(
+  PointCtrlCalibration
+  PRIVATE
+  System::D3D11
+  System::Dinput8
+  System::Dxguid
+  System::DXGI
+  ThirdParty::CppWinRT
+  ThirdParty::OpenXRLoader
+)
+
+add_custom_command(
+  TARGET PointCtrlCalibration POST_BUILD
+  COMMAND "${CMAKE_COMMAND}" -E copy
+  "$<TARGET_RUNTIME_DLLS:PointCtrlCalibration>"
+  "$<TARGET_FILE_DIR:PointCtrlCalibration>"
+)
+
 file(
   GENERATE
   OUTPUT "$<TARGET_FILE_DIR:XR_APILAYER_FREDEMMOTT_DCSQuestHandTracking>/XR_APILAYER_FREDEMMOTT_DCSQuestHandTracking.json"

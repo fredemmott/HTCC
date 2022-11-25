@@ -1,7 +1,9 @@
 set(
   SYSTEM_LIBRARIES
+  D3D11
   Dinput8
   Dxguid
+  DXGI
 )
 
 foreach(LIBRARY ${SYSTEM_LIBRARIES})
