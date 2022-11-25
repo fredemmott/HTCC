@@ -71,7 +71,7 @@ void VirtualControllerSink::Update(
 
   mRightHand.aimPose = {
     .orientation = {0.0f, 0.0f, 0.0f, 1.0f},
-    .position = {0.0f, 0.0f, -0.5f},
+    .position = {0.0f, -0.1f, -0.5f},
   };
 }
 
@@ -296,7 +296,16 @@ XrResult VirtualControllerSink::xrLocateSpace(
     mOpenXR->xrLocateSpace(mViewSpace, baseSpace, time, location);
 
     const auto viewPose = location->pose;
-    const auto handPose = hand.aimPose;
+
+    // Just experimentation
+    auto aimToGripQ = Quaternion::CreateFromYawPitchRoll(
+      -std::numbers::pi_v<float> / 8, std::numbers::pi_v<float> / 4, 0.0f);
+
+    XrPosef aimToGrip {
+      .orientation = {aimToGripQ.x, aimToGripQ.y, aimToGripQ.z, aimToGripQ.w},
+    };
+
+    const auto handPose = aimToGrip * hand.aimPose;
 
     location->pose = handPose * viewPose;
 
