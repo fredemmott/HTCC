@@ -1,5 +1,6 @@
 set(
   SYSTEM_LIBRARIES
+  D2D1
   D3D11
   Dinput8
   Dxguid

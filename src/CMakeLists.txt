@@ -41,6 +41,7 @@ target_precompile_headers(
 target_link_libraries(
   PointCtrlCalibration
   PRIVATE
+  System::D2D1
   System::D3D11
   System::Dinput8
   System::Dxguid

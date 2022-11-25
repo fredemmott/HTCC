@@ -25,6 +25,7 @@
 #define XR_USE_PLATFORM_WIN32
 #define XR_USE_GRAPHICS_API_D3D11
 
+#include <d2d1.h>
 #include <d3d11.h>
 #include <openxr/openxr.h>
 #include <openxr/openxr_platform.h>
@@ -98,15 +99,62 @@ void check_xr(XrResult result) {
 void DrawLayer(
   CalibrationState state,
   ID3D11DeviceContext* context,
-  ID3D11RenderTargetView* rtv,
+  ID3D11Texture2D* texture,
   XrPosef* pose) {
-  constexpr FLOAT white[] {1.0f, 1.0f, 1.0f, 1.0f};
-  context->ClearRenderTargetView(rtv, white);
+  winrt::com_ptr<ID3D11Device> device;
+  texture->GetDevice(device.put());
+
+  winrt::com_ptr<ID3D11Texture2D> temporaryTexture;
+  D3D11_TEXTURE2D_DESC desc {
+    .Width = TextureWidth,
+    .Height = TextureHeight,
+    .MipLevels = 1,
+    .ArraySize = 1,
+    .Format = DXGI_FORMAT_B8G8R8A8_UNORM,// needed for Direct2D
+    .SampleDesc = {1, 0},
+    .BindFlags = D3D11_BIND_RENDER_TARGET,
+  };
+  winrt::check_hresult(
+    device->CreateTexture2D(&desc, nullptr, temporaryTexture.put()));
+  auto surface = temporaryTexture.as<IDXGISurface>();
+
+  winrt::com_ptr<ID2D1Factory> d2d;
+  winrt::check_hresult(
+    D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, d2d.put()));
+
+  winrt::com_ptr<ID2D1RenderTarget> rt;
+  winrt::check_hresult(d2d->CreateDxgiSurfaceRenderTarget(
+    surface.get(),
+    D2D1::RenderTargetProperties(
+      D2D1_RENDER_TARGET_TYPE_HARDWARE,
+      D2D1::PixelFormat(
+        DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED)),
+    rt.put()));
+  rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+
+  winrt::com_ptr<ID2D1SolidColorBrush> brush;
+  winrt::check_hresult(rt->CreateSolidColorBrush(
+    D2D1::ColorF(D2D1::ColorF::Black, 1.0f), brush.put()));
+
+  rt->BeginDraw();
+  rt->Clear(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
+  rt->DrawLine(
+    {TextureWidth / 2.0, 0},
+    {TextureWidth / 2.0, TextureHeight},
+    brush.get(),
+    5.0f);
+  rt->DrawLine(
+    {0, TextureHeight / 2.0},
+    {TextureWidth, TextureHeight / 2.0},
+    brush.get(),
+    5.0f);
 
   *pose = {
     .orientation = XR_POSEF_IDENTITY.orientation,
-    .position = {0.0f, 0.0f, -1.0f},
+    .position = {0.0f, 0.0f, -1.5f},
   };
+  winrt::check_hresult(rt->EndDraw());
+  context->CopyResource(texture, temporaryTexture.get());
 }
 
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
@@ -154,11 +202,16 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     auto adapter = GetDXGIAdapter(d3dRequirements.adapterLuid);
     D3D_FEATURE_LEVEL featureLevels[] = {d3dRequirements.minFeatureLevel};
 
+    UINT flags {D3D11_CREATE_DEVICE_BGRA_SUPPORT};
+#ifndef NDEBUG
+    flags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
     winrt::check_hresult(D3D11CreateDevice(
       adapter.get(),
       D3D_DRIVER_TYPE_UNKNOWN,
       0,
-      0,
+      flags,
       featureLevels,
       _countof(featureLevels),
       D3D11_SDK_VERSION,
@@ -194,7 +247,6 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   bool xrRunning = false;
   XrSwapchain swapchain {};
   std::vector<XrSwapchainImageD3D11KHR> swapchainImages;
-  std::vector<winrt::com_ptr<ID3D11RenderTargetView>> renderTargetViews;
   CalibrationState state {CalibrationState::WaitForCenter};
 
   while (true) {
@@ -220,8 +272,9 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
 
                 XrSwapchainCreateInfo createInfo {
                   .type = XR_TYPE_SWAPCHAIN_CREATE_INFO,
-                  .usageFlags = XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT,
-                  .format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB,
+                  .usageFlags = XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT
+                    | XR_SWAPCHAIN_USAGE_MUTABLE_FORMAT_BIT,
+                  .format = DXGI_FORMAT_B8G8R8A8_UNORM,
                   .sampleCount = 1,
                   .width = TextureWidth,
                   .height = TextureHeight,
@@ -241,18 +294,6 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
                   &swapchainLength,
                   reinterpret_cast<XrSwapchainImageBaseHeader*>(
                     swapchainImages.data())));
-                for (auto image: swapchainImages) {
-                  auto texture = image.texture;
-                  D3D11_RENDER_TARGET_VIEW_DESC rtvd {
-                    .Format = DXGI_FORMAT_B8G8R8A8_UNORM,
-                    .ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D,
-                    .Texture2D = {.MipSlice = 0},
-                  };
-                  winrt::com_ptr<ID3D11RenderTargetView> rtv;
-                  winrt::check_hresult(
-                    device->CreateRenderTargetView(texture, &rtvd, rtv.put()));
-                  renderTargetViews.push_back(rtv);
-                }
                 break;
               }
               case XR_SESSION_STATE_STOPPING:
@@ -289,7 +330,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
         .imageRect = {{0, 0}, {TextureWidth, TextureHeight}},
         .imageArrayIndex = 0,
       },
-      .size = {0.1f, 0.1f},
+      .size = {0.5f, 0.5f},
     };
 
     {
@@ -304,7 +345,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
       DrawLayer(
         state,
         context.get(),
-        renderTargetViews.at(imageIndex).get(),
+        swapchainImages.at(imageIndex).texture,
         &layer.pose);
       check_xr(xrReleaseSwapchainImage(swapchain, nullptr));
     }
