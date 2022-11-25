@@ -94,6 +94,9 @@ void Load() {
   LOAD_DWORD(CheckDCS);
   LOAD_DWORD(VerboseDebug);
   LOAD_DWORD(MirrorEye);
+
+  LOAD_DWORD(PointerSource);
+
   LOAD_DWORD(PinchToClick);
   LOAD_DWORD(PinchToScroll);
 
@@ -101,8 +104,8 @@ void Load() {
 
   LOAD_DWORD(PointCtrlCenterX);
   LOAD_DWORD(PointCtrlCenterY);
-  LOAD_DWORD(PointCtrlRadiansPerUnitX);
-  LOAD_DWORD(PointCtrlRadiansPerUnitY);
+  LOAD_FLOAT(PointCtrlRadiansPerUnitX);
+  LOAD_FLOAT(PointCtrlRadiansPerUnitY);
 }
 
 }// namespace DCSQuestHandTracking::Config

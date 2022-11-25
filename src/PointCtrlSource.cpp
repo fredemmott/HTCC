@@ -146,7 +146,7 @@ std::optional<XrVector2f> PointCtrlSource::GetRXRY() const {
 
   return {{
     (static_cast<float>(mY) - Config::PointCtrlCenterY)
-      * Config::PointCtrlRadiansPerUnitY,
+      * -Config::PointCtrlRadiansPerUnitY,
     (static_cast<float>(mX) - Config::PointCtrlCenterX)
       * Config::PointCtrlRadiansPerUnitX,
   }};
