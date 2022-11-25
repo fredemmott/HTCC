@@ -31,9 +31,9 @@
 
 namespace DCSQuestHandTracking {
 
-class VirtualTouchScreen final {
+class VirtualTouchScreenSink final {
  public:
-  VirtualTouchScreen(
+  VirtualTouchScreenSink(
     const std::shared_ptr<OpenXRNext>& oxr,
     XrSession session,
     XrTime nextDisplayTime,

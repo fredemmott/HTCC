@@ -29,7 +29,7 @@ add_library(
   HandTrackingSource.cpp
   OpenXRNext.cpp
   PointCtrlSource.cpp
-  VirtualTouchScreen.cpp
+  VirtualTouchScreenSink.cpp
 )
 add_version_metadata(XR_APILAYER_FREDEMMOTT_DCSQuestHandTracking)
 

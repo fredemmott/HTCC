@@ -35,7 +35,7 @@
 #include "HandTrackingSource.h"
 #include "OpenXRNext.h"
 #include "PointCtrlSource.h"
-#include "VirtualTouchScreen.h"
+#include "VirtualTouchScreenSink.h"
 
 template <class CharT>
 struct std::formatter<XrResult, CharT> : std::formatter<int, CharT> {};
@@ -120,7 +120,7 @@ XrResult APILayer::xrWaitFrame(
   }
 
   if (!mVirtualTouchScreen) [[unlikely]] {
-    mVirtualTouchScreen = std::make_unique<VirtualTouchScreen>(
+    mVirtualTouchScreen = std::make_unique<VirtualTouchScreenSink>(
       mOpenXR, session, state->predictedDisplayTime, mViewSpace);
   }
 

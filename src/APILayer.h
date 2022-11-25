@@ -32,7 +32,7 @@ namespace DCSQuestHandTracking {
 class HandTrackingSource;
 class OpenXRNext;
 class PointCtrlSource;
-class VirtualTouchScreen;
+class VirtualTouchScreenSink;
 
 class APILayer final {
  public:
@@ -55,7 +55,7 @@ class APILayer final {
 
   std::unique_ptr<HandTrackingSource> mHandTracking;
   std::unique_ptr<PointCtrlSource> mPointCtrl;
-  std::unique_ptr<VirtualTouchScreen> mVirtualTouchScreen;
+  std::unique_ptr<VirtualTouchScreenSink> mVirtualTouchScreen;
 };
 
 }// namespace DCSQuestHandTracking

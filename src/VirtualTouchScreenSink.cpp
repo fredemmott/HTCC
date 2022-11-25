@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include "VirtualTouchScreen.h"
+#include "VirtualTouchScreenSink.h"
 
 #include <cmath>
 
@@ -30,7 +30,7 @@
 
 namespace DCSQuestHandTracking {
 
-VirtualTouchScreen::VirtualTouchScreen(
+VirtualTouchScreenSink::VirtualTouchScreenSink(
   const std::shared_ptr<OpenXRNext>& oxr,
   XrSession session,
   XrTime nextDisplayTime,
@@ -80,16 +80,18 @@ VirtualTouchScreen::VirtualTouchScreen(
   UpdateMainWindow();
 }
 
-void VirtualTouchScreen::UpdateMainWindow() {
+void VirtualTouchScreenSink::UpdateMainWindow() {
   mThisProcess = GetCurrentProcessId();
   mConsoleWindow = GetConsoleWindow();
   EnumWindows(
-    &VirtualTouchScreen::EnumWindowCallback, reinterpret_cast<LPARAM>(this));
+    &VirtualTouchScreenSink::EnumWindowCallback,
+    reinterpret_cast<LPARAM>(this));
   mLastWindowCheck = std::chrono::steady_clock::now();
 }
 
-BOOL CALLBACK VirtualTouchScreen::EnumWindowCallback(HWND hwnd, LPARAM lparam) {
-  auto this_ = reinterpret_cast<VirtualTouchScreen*>(lparam);
+BOOL CALLBACK
+VirtualTouchScreenSink::EnumWindowCallback(HWND hwnd, LPARAM lparam) {
+  auto this_ = reinterpret_cast<VirtualTouchScreenSink*>(lparam);
   DWORD processID {};
   GetWindowThreadProcessId(hwnd, &processID);
   if (processID != this_->mThisProcess) {
@@ -145,7 +147,7 @@ static constexpr bool HasFlags(Actual actual, Wanted wanted) {
   return (actual & wanted) == wanted;
 }
 
-bool VirtualTouchScreen::RotationToCartesian(
+bool VirtualTouchScreenSink::RotationToCartesian(
   const XrVector2f& rotation,
   XrVector2f* cartesian) {
   // Flipped because screen X is left-to-right, which is a rotation around the Y
@@ -164,7 +166,7 @@ bool VirtualTouchScreen::RotationToCartesian(
   return true;
 }
 
-void VirtualTouchScreen::Update(
+void VirtualTouchScreenSink::Update(
   const std::optional<XrVector2f>& rotation,
   const ActionState& actionState) {
   XrVector2f xy {};
