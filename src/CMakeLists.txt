@@ -44,6 +44,7 @@ target_link_libraries(
   System::D2D1
   System::D3D11
   System::Dinput8
+  System::DWrite
   System::Dxguid
   System::DXGI
   ThirdParty::CppWinRT

@@ -27,6 +27,7 @@
 
 #include <d2d1.h>
 #include <d3d11.h>
+#include <dwrite.h>
 #include <openxr/openxr.h>
 #include <openxr/openxr_platform.h>
 #include <winrt/base.h>
@@ -96,15 +97,23 @@ void check_xr(XrResult result) {
   throw new std::runtime_error(message);
 }
 
-void DrawLayer(
-  CalibrationState state,
-  ID3D11DeviceContext* context,
-  ID3D11Texture2D* texture,
-  XrPosef* pose) {
-  winrt::com_ptr<ID3D11Device> device;
-  texture->GetDevice(device.put());
+struct DrawingResources {
+  winrt::com_ptr<ID3D11Texture2D> mTexture;
+  winrt::com_ptr<ID2D1RenderTarget> mRT;
+  winrt::com_ptr<ID2D1SolidColorBrush> mBrush;
+  winrt::com_ptr<IDWriteTextFormat> mTextFormat;
+};
 
-  winrt::com_ptr<ID3D11Texture2D> temporaryTexture;
+static DrawingResources sDrawingResources;
+
+void InitDrawingResources(ID3D11DeviceContext* context) {
+  auto& res = sDrawingResources;
+  if (res.mRT) [[likely]] {
+    return;
+  }
+
+  winrt::com_ptr<ID3D11Device> device;
+  context->GetDevice(device.put());
   D3D11_TEXTURE2D_DESC desc {
     .Width = TextureWidth,
     .Height = TextureHeight,
@@ -115,46 +124,80 @@ void DrawLayer(
     .BindFlags = D3D11_BIND_RENDER_TARGET,
   };
   winrt::check_hresult(
-    device->CreateTexture2D(&desc, nullptr, temporaryTexture.put()));
-  auto surface = temporaryTexture.as<IDXGISurface>();
+    device->CreateTexture2D(&desc, nullptr, res.mTexture.put()));
+  auto surface = res.mTexture.as<IDXGISurface>();
 
   winrt::com_ptr<ID2D1Factory> d2d;
   winrt::check_hresult(
     D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, d2d.put()));
 
-  winrt::com_ptr<ID2D1RenderTarget> rt;
   winrt::check_hresult(d2d->CreateDxgiSurfaceRenderTarget(
     surface.get(),
     D2D1::RenderTargetProperties(
       D2D1_RENDER_TARGET_TYPE_HARDWARE,
       D2D1::PixelFormat(
         DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED)),
-    rt.put()));
-  rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+    res.mRT.put()));
+  res.mRT->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+  // Don't use cleartype as subpixels won't line up in headset
+  res.mRT->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
 
-  winrt::com_ptr<ID2D1SolidColorBrush> brush;
-  winrt::check_hresult(rt->CreateSolidColorBrush(
-    D2D1::ColorF(D2D1::ColorF::Black, 1.0f), brush.put()));
+  winrt::check_hresult(res.mRT->CreateSolidColorBrush(
+    D2D1::ColorF(D2D1::ColorF::Black, 1.0f), res.mBrush.put()));
+
+  winrt::com_ptr<IDWriteFactory> dwrite;
+  winrt::check_hresult(DWriteCreateFactory(
+    DWRITE_FACTORY_TYPE_ISOLATED,
+    __uuidof(dwrite),
+    reinterpret_cast<IUnknown**>(dwrite.put())));
+
+  winrt::check_hresult(dwrite->CreateTextFormat(
+    L"Calibri",
+    nullptr,
+    DWRITE_FONT_WEIGHT_NORMAL,
+    DWRITE_FONT_STYLE_NORMAL,
+    DWRITE_FONT_STRETCH_NORMAL,
+    64.0f,
+    L"",
+    res.mTextFormat.put()));
+}
+
+void DrawLayer(
+  CalibrationState state,
+  ID3D11DeviceContext* context,
+  ID3D11Texture2D* texture,
+  XrPosef* pose) {
+  InitDrawingResources(context);
+
+  auto& res = sDrawingResources;
+  auto rt = res.mRT.get();
+  auto brush = res.mBrush.get();
 
   rt->BeginDraw();
   rt->Clear(D2D1::ColorF(D2D1::ColorF::White, 1.0f));
-  rt->DrawLine(
-    {TextureWidth / 2.0, 0},
-    {TextureWidth / 2.0, TextureHeight},
-    brush.get(),
-    5.0f);
-  rt->DrawLine(
-    {0, TextureHeight / 2.0},
-    {TextureWidth, TextureHeight / 2.0},
-    brush.get(),
-    5.0f);
 
+  // draw crosshairs
+  rt->DrawLine(
+    {TextureWidth / 2.0, 0}, {TextureWidth / 2.0, TextureHeight}, brush, 5.0f);
+  rt->DrawLine(
+    {0, TextureHeight / 2.0}, {TextureWidth, TextureHeight / 2.0}, brush, 5.0f);
+
+  std::wstring_view message;
   *pose = {
     .orientation = XR_POSEF_IDENTITY.orientation,
     .position = {0.0f, 0.0f, -1.5f},
   };
+  message = L"Reach for the center of the crosshair, then press FCU button 1";
+
+  rt->DrawTextW(
+    message.data(),
+    message.size(),
+    res.mTextFormat.get(),
+    {5.0f, 5.0f, (TextureWidth / 2.0f) - 7.5f, (TextureHeight / 2.0f) - 7.5f},
+    brush);
+
   winrt::check_hresult(rt->EndDraw());
-  context->CopyResource(texture, temporaryTexture.get());
+  context->CopyResource(texture, res.mTexture.get());
 }
 
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {

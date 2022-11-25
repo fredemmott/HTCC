@@ -3,6 +3,7 @@ set(
   D2D1
   D3D11
   Dinput8
+  DWrite
   Dxguid
   DXGI
 )
