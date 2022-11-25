@@ -79,6 +79,37 @@ APILayer::~APILayer() {
   }
 }
 
+XrResult APILayer::xrSuggestInteractionProfileBindings(
+  XrInstance instance,
+  const XrInteractionProfileSuggestedBinding* suggestedBindings) {
+  auto nextResult
+    = mOpenXR->xrSuggestInteractionProfileBindings(instance, suggestedBindings);
+  if (nextResult != XR_SUCCESS) {
+    return nextResult;
+  }
+  if (!suggestedBindings) {
+    return XR_SUCCESS;
+  }
+  char pathBuf[XR_MAX_PATH_LENGTH];
+  uint32_t pathLen = XR_MAX_PATH_LENGTH;
+  mOpenXR->xrPathToString(
+    instance,
+    suggestedBindings->interactionProfile,
+    sizeof(pathBuf),
+    &pathLen,
+    pathBuf);
+
+  DebugPrint(
+    "Received suggested bindings for {}", std::string_view {pathBuf, pathLen});
+  for (uint32_t i = 0; i < suggestedBindings->countSuggestedBindings; ++i) {
+    const auto& it = suggestedBindings->suggestedBindings[i];
+    mOpenXR->xrPathToString(
+      instance, it.binding, sizeof(pathBuf), &pathLen, pathBuf);
+    DebugPrint("  '{}'", std::string_view {pathBuf, pathLen});
+  }
+  return XR_SUCCESS;
+}
+
 XrResult APILayer::xrWaitFrame(
   XrSession session,
   const XrFrameWaitInfo* frameWaitInfo,

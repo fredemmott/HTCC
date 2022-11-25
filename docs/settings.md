@@ -12,10 +12,17 @@ DWORD 0 (disabled) or 1 (enabled); do nothing in games other than DCS
 
 ## PointerSource
 
-DWORD: what device is used to set the cursor location
+DWORD: which device is used to set the cursor location
 
 - 0: Oculus hand tracking
 - 1: PointCtrl
+
+## PointerSink
+
+DWORD: which device is emulated
+
+- 0: touch screen (classic PointCtrl)
+- 1: VR controllers
 
 ## VerboseDebug
 

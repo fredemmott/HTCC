@@ -45,6 +45,10 @@ class APILayer final {
     const XrFrameWaitInfo* frameWaitInfo,
     XrFrameState* state);
 
+  XrResult xrSuggestInteractionProfileBindings(
+    XrInstance instance,
+    const XrInteractionProfileSuggestedBinding* suggestedBindings);
+
  private:
   std::shared_ptr<OpenXRNext> mOpenXR;
   XrSpace mViewSpace {};

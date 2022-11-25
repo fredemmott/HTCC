@@ -56,6 +56,17 @@ static XrResult xrWaitFrame(
   return gNext->xrWaitFrame(session, info, state);
 }
 
+static XrResult xrSuggestInteractionProfileBindings(
+  XrInstance instance,
+  const XrInteractionProfileSuggestedBinding* suggestedBindings) {
+  if (gInstance) {
+    return gInstance->xrSuggestInteractionProfileBindings(
+      instance, suggestedBindings);
+  }
+  return gNext->xrSuggestInteractionProfileBindings(
+    instance, suggestedBindings);
+}
+
 static XrResult xrCreateSession(
   XrInstance instance,
   const XrSessionCreateInfo* createInfo,
@@ -114,6 +125,11 @@ static XrResult xrGetInstanceProcAddr(
   }
   if (name == "xrWaitFrame") {
     *function = reinterpret_cast<PFN_xrVoidFunction>(&xrWaitFrame);
+    return XR_SUCCESS;
+  }
+  if (name == "xrSuggestInteractionProfileBindings") {
+    *function = reinterpret_cast<PFN_xrVoidFunction>(
+      &xrSuggestInteractionProfileBindings);
     return XR_SUCCESS;
   }
 

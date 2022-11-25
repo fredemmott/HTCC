@@ -42,7 +42,9 @@
   IT(xrCreateHandTrackerEXT) \
   IT(xrDestroyHandTrackerEXT) \
   IT(xrLocateHandJointsEXT) \
-  IT(xrLocateViews)
+  IT(xrLocateViews) \
+  IT(xrSuggestInteractionProfileBindings) \
+  IT(xrPathToString)
 
 namespace DCSQuestHandTracking {
 
