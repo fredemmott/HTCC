@@ -32,38 +32,34 @@ enum class PointerSource : DWORD {
 };
 }
 
+#define DCSQUESTHANDTRACKING_DWORD_SETTINGS \
+  IT(bool, Enabled, true) \
+  IT(bool, CheckDCS, true) \
+  IT(uint8_t, VerboseDebug, 0) \
+  IT(uint8_t, MirrorEye, 1) \
+  IT( \
+    DCSQuestHandTracking::PointerSource, \
+    PointerSource, \
+    DCSQuestHandTracking::PointerSource::OculusHandTracking) \
+  IT(bool, PinchToClick, true) \
+  IT(bool, PinchToScroll, true) \
+  IT(bool, PointCtrlFCUClicks, true) \
+  IT(uint16_t, PointCtrlCenterX, 32767) \
+  IT(uint16_t, PointCtrlCenterY, 32767)
+#define DCSQUESTHANDTRACKING_FLOAT_SETTINGS \
+  IT(PointCtrlRadiansPerUnitX, 2.65e-5f) \
+  IT(PointCtrlRadiansPerUnitY, 2.65e-5f)
+
 namespace DCSQuestHandTracking::Config {
 
-// Enable or disable the entire API layer
-extern bool Enabled;
-
-// Do nothing unless running inside "DCS.exe"
-extern bool CheckDCS;
-
-// 0 = Oculus hand tracking, 1 = PointCtrl
-extern DCSQuestHandTracking::PointerSource PointerSource;
-
-// 0 = off, 1 = some, 2 = more, 3 = every frame
-extern uint8_t VerboseDebug;
-
-// 0 = left, 1 == right
-extern uint8_t MirrorEye;
-// Use Quest hand tracking pinch gestures for mouse clicks (index and middle
-// finger)
-extern bool PinchToClick;
-// Use Quest hand tracking pinch gestures for wheel events (ring and little
-// finger)
-extern bool PinchToScroll;
-// currently requires a custom PointCtrl firmware exposing all buttons and axis
-// as a joystick instead of a mouse
-extern bool PointCtrlFCUClicks;
-
-// Run the calibration app for these :)
-extern uint16_t PointCtrlCenterX;
-extern uint16_t PointCtrlCenterY;
-extern float PointCtrlRadiansPerUnitX;
-extern float PointCtrlRadiansPerUnitY;
+#define IT(native_type, name, default) extern native_type name;
+DCSQUESTHANDTRACKING_DWORD_SETTINGS
+#undef IT
+#define IT(name, default) extern float name;
+DCSQUESTHANDTRACKING_FLOAT_SETTINGS
+#undef IT
 
 void Load();
+void Save();
 
 }// namespace DCSQuestHandTracking::Config

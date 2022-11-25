@@ -27,28 +27,17 @@
 
 namespace DCSQuestHandTracking::Config {
 
-bool Enabled = true;
-bool CheckDCS = true;
-uint8_t VerboseDebug = 0;
-uint8_t MirrorEye = 1;
-
-DCSQuestHandTracking::PointerSource PointerSource
-  = DCSQuestHandTracking::PointerSource::OculusHandTracking;
-
-bool PinchToClick = true;
-bool PinchToScroll = true;
-
-bool PointCtrlFCUClicks = true;
-
-uint16_t PointCtrlCenterX = 32767;
-uint16_t PointCtrlCenterY = 32767;
-float PointCtrlRadiansPerUnitX = 2.65e-5f;
-float PointCtrlRadiansPerUnitY = 2.65e-5f;
+#define IT(native_type, name, default) native_type name {default};
+DCSQUESTHANDTRACKING_DWORD_SETTINGS
+#undef IT
+#define IT(name, default) float name {default};
+DCSQUESTHANDTRACKING_FLOAT_SETTINGS
+#undef IT
 
 static constexpr wchar_t SubKey[] {L"SOFTWARE\\FredEmmott\\DCSHandTracking"};
 
 template <class T>
-void LoadDWord(T& value, const wchar_t* valueName) {
+static void LoadDWord(T& value, const wchar_t* valueName) {
   DWORD data {};
   DWORD dataSize = sizeof(data);
   const auto hklmResult = RegGetValueW(
@@ -63,7 +52,8 @@ void LoadDWord(T& value, const wchar_t* valueName) {
     value = static_cast<T>(data);
   }
 }
-void LoadFloat(float& value, const wchar_t* valueName) {
+
+static void LoadFloat(float& value, const wchar_t* valueName) {
   DWORD dataSize = 0;
   RegGetValueW(
     HKEY_LOCAL_MACHINE,
@@ -85,27 +75,51 @@ void LoadFloat(float& value, const wchar_t* valueName) {
   value = static_cast<float>(_wtof(buffer.data()));
 }
 
-#define LOAD_DWORD(x) LoadDWord(Config::x, L#x);
-#define LOAD_FLOAT(x) LoadFloat(Config::x, L#x);
-
 void Load() {
   DebugPrint(L"Loading settings from HKLM\\{}", SubKey);
-  LOAD_DWORD(Enabled);
-  LOAD_DWORD(CheckDCS);
-  LOAD_DWORD(VerboseDebug);
-  LOAD_DWORD(MirrorEye);
 
-  LOAD_DWORD(PointerSource);
+#define IT(native_type, name, default) LoadDWord(Config::name, L#name);
+  DCSQUESTHANDTRACKING_DWORD_SETTINGS
+#undef IT
+#define IT(name, default) LoadFloat(Config::name, L#name);
+  DCSQUESTHANDTRACKING_FLOAT_SETTINGS
+#undef IT
+}
 
-  LOAD_DWORD(PinchToClick);
-  LOAD_DWORD(PinchToScroll);
+template <class T>
+static void SaveDWord(const wchar_t* valueName, T value) {
+  auto data = static_cast<DWORD>(value);
+  const auto result = RegSetKeyValueW(
+    HKEY_LOCAL_MACHINE, SubKey, valueName, REG_DWORD, &data, sizeof(data));
+  if (result != ERROR_SUCCESS) {
+    auto message = std::format("Saving to registry failed: error {}", result);
+    throw std::runtime_error(message);
+  }
+}
 
-  LOAD_DWORD(PointCtrlFCUClicks);
+static void SaveFloat(const wchar_t* valueName, float value) {
+  const auto data = std::format(L"{}", value);
 
-  LOAD_DWORD(PointCtrlCenterX);
-  LOAD_DWORD(PointCtrlCenterY);
-  LOAD_FLOAT(PointCtrlRadiansPerUnitX);
-  LOAD_FLOAT(PointCtrlRadiansPerUnitY);
+  const auto result = RegSetKeyValueW(
+    HKEY_LOCAL_MACHINE,
+    SubKey,
+    valueName,
+    REG_SZ,
+    data.data(),
+    data.size() * sizeof(data[0]));
+  if (result != ERROR_SUCCESS) {
+    auto message = std::format("Saving to registry failed: error {}", result);
+    throw std::runtime_error(message);
+  }
+}
+
+void Save() {
+#define IT(native_type, name, default) SaveDWord(L#name, Config::name);
+  DCSQUESTHANDTRACKING_DWORD_SETTINGS
+#undef IT
+#define IT(name, default) SaveFloat(L#name, Config::name);
+  DCSQUESTHANDTRACKING_FLOAT_SETTINGS
+#undef IT
 }
 
 }// namespace DCSQuestHandTracking::Config

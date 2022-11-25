@@ -37,12 +37,11 @@
 #include <numbers>
 #include <thread>
 
+#include "Config.h"
 #include "DebugPrint.h"
 #include "PointCtrlSource.h"
 
-using DCSQuestHandTracking::ActionState;
-using DCSQuestHandTracking::DebugPrint;
-using DCSQuestHandTracking::PointCtrlSource;
+using namespace DCSQuestHandTracking;
 
 #define EXTENSION_FUNCTIONS IT(xrGetD3D11GraphicsRequirementsKHR)
 
@@ -84,38 +83,6 @@ static winrt::com_ptr<IDXGIAdapter1> GetDXGIAdapter(LUID luid) {
   }
 
   return {nullptr};
-}
-
-constexpr wchar_t RegistrySubKey[] {L"SOFTWARE\\FredEmmott\\DCSHandTracking"};
-
-void SaveDWordToRegistry(const wchar_t* valueName, DWORD value) {
-  const auto result = RegSetKeyValueW(
-    HKEY_LOCAL_MACHINE,
-    RegistrySubKey,
-    valueName,
-    REG_DWORD,
-    &value,
-    sizeof(value));
-  if (result != ERROR_SUCCESS) {
-    auto message = std::format("Saving to registry failed: error {}", result);
-    throw std::runtime_error(message);
-  }
-}
-
-void SaveStringToRegistry(const wchar_t* valueName, float value) {
-  const auto data = std::format(L"{}", value);
-
-  const auto result = RegSetKeyValueW(
-    HKEY_LOCAL_MACHINE,
-    RegistrySubKey,
-    valueName,
-    REG_SZ,
-    data.data(),
-    data.size() * sizeof(data[0]));
-  if (result != ERROR_SUCCESS) {
-    auto message = std::format("Saving to registry failed: error {}", result);
-    throw std::runtime_error(message);
-  }
 }
 
 XrInstance gInstance {};
@@ -284,6 +251,7 @@ void DrawLayer(
 
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   winrt::init_apartment(winrt::apartment_type::single_threaded);
+  Config::Load();
 
   PointCtrlSource pointCtrl;
 
@@ -549,8 +517,9 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     }
   }
 
-  SaveDWordToRegistry(L"PointCtrlCenterX", centerPoint.x);
-  SaveDWordToRegistry(L"PointCtrlCenterY", centerPoint.y);
-  SaveStringToRegistry(L"PointCtrlRadiansPerUnitX", radiansPerUnit.x);
-  SaveStringToRegistry(L"PointCtrlRadiansPerUnitY", radiansPerUnit.y);
+  Config::PointCtrlCenterX = centerPoint.x;
+  Config::PointCtrlCenterY = centerPoint.y;
+  Config::PointCtrlRadiansPerUnitX = radiansPerUnit.x;
+  Config::PointCtrlRadiansPerUnitY = radiansPerUnit.y;
+  Config::Save();
 }
