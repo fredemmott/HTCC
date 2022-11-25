@@ -29,7 +29,10 @@ target_precompile_headers(
 add_executable(
   PointCtrlCalibration
   WIN32
+  Config.cpp
+  DebugPrint.cpp
   PointCtrlCalibration.cpp
+  PointCtrlSource.cpp
 )
 
 target_precompile_headers(
@@ -48,6 +51,7 @@ target_link_libraries(
   System::Dxguid
   System::DXGI
   ThirdParty::CppWinRT
+  ThirdParty::DirectXTK
   ThirdParty::OpenXRLoader
 )
 

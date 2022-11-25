@@ -98,6 +98,9 @@ void PointCtrlSource::Update() {
     return;
   }
 
+  mX = joystate.lX;
+  mY = joystate.lY;
+
   constexpr auto pressedBit = 1 << 7;
   const auto& buttons = joystate.rgbButtons;
 
@@ -122,6 +125,11 @@ void PointCtrlSource::Update() {
 
 ActionState PointCtrlSource::GetActionState() const {
   return mActionState;
+}
+
+std::tuple<uint16_t, uint16_t>
+PointCtrlSource::GetRawCoordinatesForCalibration() const {
+  return {mX, mY};
 }
 
 }// namespace DCSQuestHandTracking

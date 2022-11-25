@@ -27,15 +27,22 @@
 
 #include <d2d1.h>
 #include <d3d11.h>
+#include <directxtk/SimpleMath.h>
 #include <dwrite.h>
 #include <openxr/openxr.h>
 #include <openxr/openxr_platform.h>
 #include <winrt/base.h>
 
 #include <chrono>
+#include <numbers>
 #include <thread>
 
+#include "DebugPrint.h"
 #include "PointCtrlSource.h"
+
+using DCSQuestHandTracking::ActionState;
+using DCSQuestHandTracking::DebugPrint;
+using DCSQuestHandTracking::PointCtrlSource;
 
 #define EXTENSION_FUNCTIONS IT(xrGetD3D11GraphicsRequirementsKHR)
 
@@ -50,12 +57,14 @@ static constexpr XrPosef XR_POSEF_IDENTITY {
 
 constexpr uint32_t TextureHeight = 1024;
 constexpr uint32_t TextureWidth = 1024;
+// 2 pi radians in a circle, so pi / 18 radians is 10 degrees
+constexpr float OffsetInRadians = std::numbers::pi_v<float> / 18;
+constexpr float DistanceInMeters = 1.0f;
+constexpr float SizeInMeters = 0.25f;
 
 enum class CalibrationState {
   WaitForCenter,
-  WaitForCenterRelease,
   WaitForOffset,
-  WaitForOffsetRelease,
   Test,
 };
 
@@ -166,7 +175,8 @@ void DrawLayer(
   CalibrationState state,
   ID3D11DeviceContext* context,
   ID3D11Texture2D* texture,
-  XrPosef* pose) {
+  XrPosef* layerPose,
+  const XrVector2f& calibratedRXRY) {
   InitDrawingResources(context);
 
   auto& res = sDrawingResources;
@@ -183,17 +193,57 @@ void DrawLayer(
     {0, TextureHeight / 2.0}, {TextureWidth, TextureHeight / 2.0}, brush, 5.0f);
 
   std::wstring_view message;
-  *pose = {
-    .orientation = XR_POSEF_IDENTITY.orientation,
-    .position = {0.0f, 0.0f, -1.5f},
-  };
-  message = L"Reach for the center of the crosshair, then press FCU button 1";
+  switch (state) {
+    case CalibrationState::WaitForCenter:
+      *layerPose = {
+        .orientation = XR_POSEF_IDENTITY.orientation,
+        .position = {0.0f, 0.0f, -DistanceInMeters},
+      };
+      message
+        = L"Reach for the center of the crosshair, then press FCU button 1";
+      break;
+    case CalibrationState::WaitForOffset: {
+      const auto o = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(
+        -OffsetInRadians, OffsetInRadians, 0);
+      const auto p = DirectX::SimpleMath::Vector3::Transform(
+        {0.0f, 0.0f, -DistanceInMeters}, o);
+
+      *layerPose = {
+        .orientation = {o.x, o.y, o.z, o.w},
+        .position = {p.x, p.y, p.z},
+      };
+
+      message
+        = L"Reach for the center of the crosshair, then press FCU button 1";
+      break;
+    }
+    case CalibrationState::Test: {
+      auto o = DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(
+        -calibratedRXRY.y, -calibratedRXRY.x, 0);
+      const auto p = DirectX::SimpleMath::Vector3::Transform(
+        {0.0f, 0.0f, -DistanceInMeters}, o);
+
+      *layerPose = {
+        .orientation = {o.x, o.y, o.z, o.w},
+        .position = {p.x, p.y, p.z},
+      };
+      message = L"Press FCU button 1 to confirm, or button 2 to restart";
+      break;
+    }
+    default:
+      DebugBreak();
+  }
 
   rt->DrawTextW(
     message.data(),
     message.size(),
     res.mTextFormat.get(),
-    {5.0f, 5.0f, (TextureWidth / 2.0f) - 7.5f, (TextureHeight / 2.0f) - 7.5f},
+    {
+      0.0f,
+      (TextureHeight / 2.0f) + 7.5f,
+      (TextureWidth / 2.0f) - 7.5f,
+      TextureHeight - 5.0f,
+    },
     brush);
 
   winrt::check_hresult(rt->EndDraw());
@@ -201,6 +251,10 @@ void DrawLayer(
 }
 
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
+  winrt::init_apartment(winrt::apartment_type::single_threaded);
+
+  PointCtrlSource pointCtrl;
+
   XrInstance instance {};
   {
     const std::vector<const char*> enabledExtensions = {
@@ -291,8 +345,14 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   XrSwapchain swapchain {};
   std::vector<XrSwapchainImageD3D11KHR> swapchainImages;
   CalibrationState state {CalibrationState::WaitForCenter};
+  ActionState actionState {};
+  D2D1_POINT_2U centerPoint {};
+  D2D1_POINT_2U offsetPoint {};
+  XrVector2f radiansPerUnit;
 
-  while (true) {
+  bool saveAndExit = false;
+
+  while (!saveAndExit) {
     {
       XrEventDataBuffer event {XR_TYPE_EVENT_DATA_BUFFER};
       while (xrPollEvent(instance, &event) == XR_SUCCESS) {
@@ -367,13 +427,14 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
 
     XrCompositionLayerQuad layer {
       .type = XR_TYPE_COMPOSITION_LAYER_QUAD,
+      .layerFlags = XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT,
       .space = viewSpace,
       .subImage = {
         .swapchain = swapchain,
         .imageRect = {{0, 0}, {TextureWidth, TextureHeight}},
         .imageArrayIndex = 0,
       },
-      .size = {0.5f, 0.5f},
+      .size = {SizeInMeters, SizeInMeters},
     };
 
     {
@@ -385,24 +446,69 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
       };
       check_xr(xrWaitSwapchainImage(swapchain, &waitInfo));
 
+      pointCtrl.Update();
+      auto [x, y] = pointCtrl.GetRawCoordinatesForCalibration();
+      const auto newActions = pointCtrl.GetActionState();
+
+      const auto click1 = newActions.mLeftClick && !actionState.mLeftClick;
+      if (click1) {
+        switch (state) {
+          case CalibrationState::WaitForCenter:
+            centerPoint = {x, y};
+            DebugPrint("Center at ({}, {})", x, y);
+            state = CalibrationState::WaitForOffset;
+            break;
+          case CalibrationState::WaitForOffset:
+            offsetPoint = {x, y};
+            radiansPerUnit = {
+              OffsetInRadians / (static_cast<float>(x) - centerPoint.x),
+              OffsetInRadians / (centerPoint.y - static_cast<float>(y)),
+            };
+            DebugPrint(
+              "Offset point at ({}, {}); radians per unit: ({}, {}); degrees "
+              "per unit: ({}, {})",
+              x,
+              y,
+              radiansPerUnit.x,
+              radiansPerUnit.y,
+              (radiansPerUnit.x * 180) / std::numbers::pi_v<float>,
+              (radiansPerUnit.y * 180) / std::numbers::pi_v<float>);
+            state = CalibrationState::Test;
+            break;
+          case CalibrationState::Test:
+            saveAndExit = true;
+            break;
+        }
+      }
+      actionState = newActions;
+      XrVector2f calibratedRotation {};
+
+      if (state == CalibrationState::Test) {
+        calibratedRotation = {
+          (static_cast<float>(y) - centerPoint.y) * radiansPerUnit.y,
+          (static_cast<float>(x) - centerPoint.x) * radiansPerUnit.x,
+        };
+        DebugPrint("{} {}", calibratedRotation.x, calibratedRotation.y);
+      }
+
       DrawLayer(
         state,
         context.get(),
         swapchainImages.at(imageIndex).texture,
-        &layer.pose);
+        &layer.pose,
+        calibratedRotation);
       check_xr(xrReleaseSwapchainImage(swapchain, nullptr));
+
+      XrCompositionLayerQuad* layerPtr = &layer;
+      XrFrameEndInfo endInfo {
+        .type = XR_TYPE_FRAME_END_INFO,
+        .displayTime = frameState.predictedDisplayTime,
+        .environmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_OPAQUE,
+        .layerCount = 1,
+        .layers = reinterpret_cast<XrCompositionLayerBaseHeader**>(&layerPtr),
+      };
+
+      check_xr(xrEndFrame(session, &endInfo));
     }
-
-    XrCompositionLayerQuad* layerPtr = &layer;
-
-    XrFrameEndInfo endInfo {
-      .type = XR_TYPE_FRAME_END_INFO,
-      .displayTime = frameState.predictedDisplayTime,
-      .environmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_OPAQUE,
-      .layerCount = 1,
-      .layers = reinterpret_cast<XrCompositionLayerBaseHeader**>(&layerPtr),
-    };
-
-    check_xr(xrEndFrame(session, &endInfo));
   }
 }

@@ -39,6 +39,7 @@ class PointCtrlSource final {
 
   void Update();
   ActionState GetActionState() const;
+  std::tuple<uint16_t, uint16_t> GetRawCoordinatesForCalibration() const;
 
  private:
   static BOOL EnumDevicesCallbackStatic(
@@ -59,6 +60,9 @@ class PointCtrlSource final {
   winrt::com_ptr<IDirectInputDevice8W> mDevice;
 
   ActionState mActionState {};
+
+  uint16_t mX {};
+  uint16_t mY {};
 };
 
 }// namespace DCSQuestHandTracking
