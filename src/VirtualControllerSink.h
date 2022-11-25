@@ -25,26 +25,23 @@
 
 #include <openxr/openxr.h>
 
-#include <memory>
+#include <unordered_map>
+#include <unordered_set>
+
+#include "ActionState.h"
+#include "Config.h"
+#include "OpenXRNext.h"
 
 namespace DCSQuestHandTracking {
 
-class HandTrackingSource;
-class OpenXRNext;
-class PointCtrlSource;
-class VirtualControllerSink;
-class VirtualTouchScreenSink;
-
-class APILayer final {
+class VirtualControllerSink final {
  public:
-  APILayer() = delete;
-  APILayer(XrSession, const std::shared_ptr<OpenXRNext>&);
-  virtual ~APILayer();
+  VirtualControllerSink(const std::shared_ptr<OpenXRNext>& oxr);
 
-  XrResult xrWaitFrame(
-    XrSession session,
-    const XrFrameWaitInfo* frameWaitInfo,
-    XrFrameState* state);
+  void Update(
+    const std::optional<XrPosef>& leftAimPose,
+    const std::optional<XrPosef>& rightAimPose,
+    const ActionState& actionState);
 
   XrResult xrSuggestInteractionProfileBindings(
     XrInstance instance,
@@ -61,13 +58,46 @@ class APILayer final {
     XrActionStateFloat* state);
 
  private:
-  std::shared_ptr<OpenXRNext> mOpenXR;
-  XrSpace mViewSpace {};
+  // based on /interaction_profiles/oculus/touch_controller
+  struct ControllerState {
+    bool present {true};
 
-  std::unique_ptr<HandTrackingSource> mHandTracking;
-  std::unique_ptr<PointCtrlSource> mPointCtrl;
-  std::unique_ptr<VirtualTouchScreenSink> mVirtualTouchScreen;
-  std::unique_ptr<VirtualControllerSink> mVirtualController;
+    XrPosef aimPose {};
+    XrSpace aimSpace {};
+    XrAction aimAction {};
+
+    XrPosef gripPose {};
+    XrSpace gripSpace {};
+    XrAction gripAction {};
+
+    float thumbstickX {0.0f};
+    float thumbstickY {0.0f};
+    bool thumbstickClick {false};
+    bool thumbstickTouch {true};
+    float triggerValue {0.0f};
+    bool triggerTouch {false};
+    std::unordered_set<XrAction> squeezeValue {};
+  };
+  struct LeftControllerState final : public ControllerState {
+    bool menuClick {false};
+    bool xClick {false};
+    bool xTouch {false};
+    bool yClick {false};
+    bool yTouch {false};
+  };
+  struct RightControllerState final : public ControllerState {
+    bool aClick {false};
+    bool aTouch {false};
+    bool bClick {false};
+    bool bTouch {false};
+  };
+
+  std::shared_ptr<OpenXRNext> mOpenXR;
+
+  LeftControllerState mLeftHand {};
+  RightControllerState mRightHand {};
+
+  std::unordered_map<XrAction, std::string> mActionPaths;
 };
 
 }// namespace DCSQuestHandTracking

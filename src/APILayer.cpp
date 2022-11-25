@@ -35,6 +35,7 @@
 #include "HandTrackingSource.h"
 #include "OpenXRNext.h"
 #include "PointCtrlSource.h"
+#include "VirtualControllerSink.h"
 #include "VirtualTouchScreenSink.h"
 
 template <class CharT>
@@ -70,6 +71,10 @@ APILayer::APILayer(XrSession session, const std::shared_ptr<OpenXRNext>& next)
     = std::make_unique<HandTrackingSource>(next, session, mViewSpace);
   mPointCtrl = std::make_unique<PointCtrlSource>();
 
+  if (Config::PointerSink == PointerSink::VirtualVRController) {
+    mVirtualController = std::make_unique<VirtualControllerSink>(next);
+  }
+
   DebugPrint("Fully initialized.");
 }
 
@@ -82,32 +87,32 @@ APILayer::~APILayer() {
 XrResult APILayer::xrSuggestInteractionProfileBindings(
   XrInstance instance,
   const XrInteractionProfileSuggestedBinding* suggestedBindings) {
-  auto nextResult
-    = mOpenXR->xrSuggestInteractionProfileBindings(instance, suggestedBindings);
-  if (nextResult != XR_SUCCESS) {
-    return nextResult;
+  if (mVirtualController) {
+    return mVirtualController->xrSuggestInteractionProfileBindings(
+      instance, suggestedBindings);
   }
-  if (!suggestedBindings) {
-    return XR_SUCCESS;
-  }
-  char pathBuf[XR_MAX_PATH_LENGTH];
-  uint32_t pathLen = XR_MAX_PATH_LENGTH;
-  mOpenXR->xrPathToString(
-    instance,
-    suggestedBindings->interactionProfile,
-    sizeof(pathBuf),
-    &pathLen,
-    pathBuf);
+  return mOpenXR->xrSuggestInteractionProfileBindings(
+    instance, suggestedBindings);
+}
 
-  DebugPrint(
-    "Received suggested bindings for {}", std::string_view {pathBuf, pathLen});
-  for (uint32_t i = 0; i < suggestedBindings->countSuggestedBindings; ++i) {
-    const auto& it = suggestedBindings->suggestedBindings[i];
-    mOpenXR->xrPathToString(
-      instance, it.binding, sizeof(pathBuf), &pathLen, pathBuf);
-    DebugPrint("  '{}'", std::string_view {pathBuf, pathLen});
+XrResult APILayer::xrGetActionStateFloat(
+  XrSession session,
+  const XrActionStateGetInfo* getInfo,
+  XrActionStateFloat* state) {
+  if (mVirtualController) {
+    return mVirtualController->xrGetActionStateFloat(session, getInfo, state);
   }
-  return XR_SUCCESS;
+  return mOpenXR->xrGetActionStateFloat(session, getInfo, state);
+}
+
+XrResult APILayer::xrCreateActionSpace(
+  XrSession session,
+  const XrActionSpaceCreateInfo* createInfo,
+  XrSpace* space) {
+  if (mVirtualController) {
+    return mVirtualController->xrCreateActionSpace(session, createInfo, space);
+  }
+  return mOpenXR->xrCreateActionSpace(session, createInfo, space);
 }
 
 XrResult APILayer::xrWaitFrame(
@@ -119,19 +124,26 @@ XrResult APILayer::xrWaitFrame(
     return nextResult;
   }
 
-  if (!mVirtualTouchScreen) [[unlikely]] {
+  if (
+    Config::PointerSink == PointerSink::VirtualTouchScreen
+    && !mVirtualTouchScreen) {
     mVirtualTouchScreen = std::make_unique<VirtualTouchScreenSink>(
       mOpenXR, session, state->predictedDisplayTime, mViewSpace);
   }
 
   ActionState actionState {};
   std::optional<XrVector2f> rotation;
+  std::optional<XrPosef> leftAimPose;
+  std::optional<XrPosef> rightAimPose;
 
   if (mHandTracking) {
     mHandTracking->Update(state->predictedDisplayTime);
     actionState = mHandTracking->GetActionState();
     if (Config::PointerSource == PointerSource::OculusHandTracking) {
       rotation = mHandTracking->GetRXRY();
+      auto [left, right] = mHandTracking->GetPoses();
+      leftAimPose = left;
+      rightAimPose = right;
     }
   }
 
@@ -151,7 +163,13 @@ XrResult APILayer::xrWaitFrame(
     }
   }
 
-  mVirtualTouchScreen->Update(rotation, actionState);
+  if (mVirtualTouchScreen) {
+    mVirtualTouchScreen->Update(rotation, actionState);
+  }
+
+  if (mVirtualController) {
+    mVirtualController->Update(leftAimPose, rightAimPose, actionState);
+  }
 
   return XR_SUCCESS;
 }
