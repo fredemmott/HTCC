@@ -42,7 +42,6 @@ ExternalProject_Get_property(OpenXRLoaderSource SOURCE_DIR)
 
 add_library(OpenXRLoader SHARED IMPORTED GLOBAL)
 add_dependencies(OpenXRLoader OpenXRLoaderSource)
-target_link_libraries(OpenXRLoader INTERFACE ThirdParty::OpenXR)
 set_target_properties(
   OpenXRLoader
   PROPERTIES

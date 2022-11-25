@@ -52,6 +52,7 @@ target_link_libraries(
   System::DXGI
   ThirdParty::CppWinRT
   ThirdParty::DirectXTK
+  ThirdParty::OpenXR
   ThirdParty::OpenXRLoader
 )
 
