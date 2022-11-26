@@ -38,6 +38,25 @@ jobs:
           Copy-Item installer.iss install-prefix
           cd install-prefix
           iscc installer.iss
+      - name: Create debug symbols zip
+        working-directory: build
+        run: |
+          cmake --install . `
+            --config ${{matrix.config}} `
+            --prefix symbols `
+            --component DebugSymbols
+      - name: Attach installer to build
+        if: ${{matrix.config != 'Debug' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: installer
+          path: build/install-prefix/HandTrackedCockpitClicking-v*.exe
+      - name: Attach debug symbols to build
+        if: ${{matrix.config != 'Debug' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: symbols
+          path: build/symbols/*.pdb
     strategy:
       matrix:
         config: [RelWithDebInfo, Debug]
