@@ -41,6 +41,19 @@ jobs:
         with:
           name: HandTrackedCockpitClicking-GHA-${{github.run_number}}-Binaries
           path: build/install-prefix/**
+      - name: Create debug symbols zip
+        working-directory: build
+        run: |
+          cmake --install . `
+            --config ${{matrix.config}} `
+            --prefix symbols `
+            --component DebugSymbols
+			- name: Attach debug symbols to build
+				if: ${{matrix.config != 'Debug' }}
+				uses: actions/upload-artifact@v2
+				with:
+					name: HandTrackedCockpitClicking-GHA-${{github.run_number}}-Symbols
+					path: build/symbols/*.pdb
       - name: Fetch code-signing key
         env:
           CODE_SIGNING_PFX_BASE64: ${{ secrets.CODE_SIGNING_KEY_PFX_BASE64 }}
@@ -57,25 +70,12 @@ jobs:
             $args += "/Ssigntool=signtool.exe /f;${{runner.temp}}/MyCert.pfx /t http://timestamp.digicert.com /fd sha256"
           }
           iscc installer.iss @args
-      - name: Create debug symbols zip
-        working-directory: build
-        run: |
-          cmake --install . `
-            --config ${{matrix.config}} `
-            --prefix symbols `
-            --component DebugSymbols
       - name: Attach installer to build
         if: ${{matrix.config != 'Debug' }}
         uses: actions/upload-artifact@v2
         with:
           name: HandTrackedCockpitClicking-GHA-${{github.run_number}}-Setup
           path: build/install-prefix/HandTrackedCockpitClicking-v*.exe
-      - name: Attach debug symbols to build
-        if: ${{matrix.config != 'Debug' }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: HandTrackedCockpitClicking-GHA-${{github.run_number}}-Symbols
-          path: build/symbols/*.pdb
     strategy:
       matrix:
         config: [RelWithDebInfo, Debug]
