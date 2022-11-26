@@ -41,6 +41,8 @@ static constexpr std::string_view gGripPosePath {"/input/grip/pose"};
 static constexpr std::string_view gSqueezeValuePath {"/input/squeeze/value"};
 static constexpr std::string_view gThumbstickTouchPath {
   "/input/thumbstick/touch"};
+static constexpr std::string_view gThumbstickXPath {"/input/thumbstick/x"};
+static constexpr std::string_view gThumbstickYPath {"/input/thumbstick/y"};
 
 VirtualControllerSink::VirtualControllerSink(
   const std::shared_ptr<OpenXRNext>& openXR,
@@ -61,10 +63,33 @@ void VirtualControllerSink::Update(
   if (mLeftHand.present) {
     mLeftHand.aimPose = *leftAimPose;
   }
-
   mRightHand.present = rightAimPose.has_value();
   if (mRightHand.present) {
     mRightHand.aimPose = *rightAimPose;
+  }
+
+  for (auto* hand: {&mLeftHand, &mRightHand}) {
+    if (!hand->present) {
+      continue;
+    }
+    hand->thumbstickX.changedSinceLastSync = true;
+    hand->thumbstickY.changedSinceLastSync = true;
+
+    if (actionState.mLeftClick) {
+      hand->thumbstickY.currentState = -1.0f;
+    } else if (actionState.mRightClick) {
+      hand->thumbstickY.currentState = 1.0f;
+    } else {
+      hand->thumbstickY.currentState = 0.0f;
+    }
+
+    if (actionState.mWheelUp) {
+      hand->thumbstickX.currentState = -1.0f;
+    } else if (actionState.mWheelDown) {
+      hand->thumbstickX.currentState = 1.0f;
+    } else {
+      hand->thumbstickX.currentState = 0.0f;
+    }
   }
 }
 
@@ -82,6 +107,9 @@ XrResult VirtualControllerSink::xrSyncActions(
     hand->thumbstickTouch.currentState = (hand->present ? XR_TRUE : XR_FALSE);
     hand->thumbstickTouch.isActive = hand->present;
     hand->thumbstickTouch.changedSinceLastSync = presenceChanged;
+
+    hand->thumbstickX.isActive = hand->present;
+    hand->thumbstickY.isActive = hand->present;
   }
 
   return mOpenXR->xrSyncActions(session, syncInfo);
@@ -194,6 +222,16 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
       state->thumbstickTouchActions.insert(it.action);
       continue;
     }
+
+    if (binding.ends_with(gThumbstickXPath)) {
+      state->thumbstickXActions.insert(it.action);
+      continue;
+    }
+
+    if (binding.ends_with(gThumbstickYPath)) {
+      state->thumbstickYActions.insert(it.action);
+      continue;
+    }
   }
   mHaveSuggestedBindings = true;
 
@@ -257,6 +295,16 @@ XrResult VirtualControllerSink::xrGetActionStateFloat(
   for (auto hand: {&mLeftHand, &mRightHand}) {
     if (hand->squeezeValueActions.contains(action)) {
       *state = hand->squeezeValue;
+      return XR_SUCCESS;
+    }
+
+    if (hand->thumbstickXActions.contains(action)) {
+      *state = hand->thumbstickX;
+      return XR_SUCCESS;
+    }
+
+    if (hand->thumbstickYActions.contains(action)) {
+      *state = hand->thumbstickY;
       return XR_SUCCESS;
     }
   }

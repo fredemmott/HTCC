@@ -102,6 +102,12 @@ class VirtualControllerSink final {
 
     XrActionStateBoolean thumbstickTouch {XR_TYPE_ACTION_STATE_BOOLEAN};
     std::unordered_set<XrAction> thumbstickTouchActions {};
+
+    XrActionStateFloat thumbstickX {XR_TYPE_ACTION_STATE_FLOAT};
+    std::unordered_set<XrAction> thumbstickXActions {};
+
+    XrActionStateFloat thumbstickY {XR_TYPE_ACTION_STATE_FLOAT};
+    std::unordered_set<XrAction> thumbstickYActions {};
   };
 
   bool mHaveSuggestedBindings {false};
