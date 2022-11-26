@@ -67,7 +67,7 @@ jobs:
           cd install-prefix
           $args = $()
           if (Test-Path -Path "${{runner.temp}}/MyCert.pfx") {
-            $args += "/Ssigntool=signtool.exe /f;${{runner.temp}}/MyCert.pfx /t http://timestamp.digicert.com /fd sha256"
+            $args += '/Ssigntool="signtool.exe /f;${{runner.temp}}/MyCert.pfx /t http://timestamp.digicert.com /fd sha256"'
           }
           iscc @args installer.iss
       - name: Attach installer to build
