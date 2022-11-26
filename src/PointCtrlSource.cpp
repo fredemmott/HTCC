@@ -49,7 +49,13 @@ PointCtrlSource::PointCtrlSource() {
     IID_IDirectInput8W,
     mDI.put_void(),
     nullptr));
+  ConnectDevice();
+}
 
+void PointCtrlSource::ConnectDevice() {
+  if (mDevice) {
+    return;
+  }
   winrt::check_hresult(mDI->EnumDevices(
     DI8DEVCLASS_GAMECTRL,
     &PointCtrlSource::EnumDevicesCallbackStatic,
@@ -92,12 +98,14 @@ BOOL PointCtrlSource::EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi) {
 }
 
 void PointCtrlSource::Update() {
+  ConnectDevice();
   if (!mDevice) {
     return;
   }
 
   const auto polled = mDevice->Poll();
   if (polled != DI_OK && polled != DI_NOEFFECT) {
+    mDevice = {nullptr};
     return;
   }
 
@@ -141,6 +149,10 @@ ActionState PointCtrlSource::GetActionState() const {
 std::tuple<uint16_t, uint16_t>
 PointCtrlSource::GetRawCoordinatesForCalibration() const {
   return {mX, mY};
+}
+
+bool PointCtrlSource::IsConnected() const {
+  return static_cast<bool>(mDevice);
 }
 
 bool PointCtrlSource::IsStale() const {

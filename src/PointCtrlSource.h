@@ -46,7 +46,10 @@ class PointCtrlSource final {
   std::tuple<uint16_t, uint16_t> GetRawCoordinatesForCalibration() const;
   std::tuple<std::optional<XrPosef>, std::optional<XrPosef>> GetPoses() const;
 
+  bool IsConnected() const;
+
  private:
+  void ConnectDevice();
   bool IsStale() const;
   static BOOL EnumDevicesCallbackStatic(
     LPCDIDEVICEINSTANCE lpddi,
