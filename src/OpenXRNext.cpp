@@ -23,7 +23,7 @@
  */
 #include "OpenXRNext.h"
 
-namespace DCSQuestHandTracking {
+namespace HandTrackedCockpitClicking {
 
 OpenXRNext::OpenXRNext(XrInstance instance, PFN_xrGetInstanceProcAddr getNext) {
   mInstance = instance;
@@ -35,4 +35,4 @@ OpenXRNext::OpenXRNext(XrInstance instance, PFN_xrGetInstanceProcAddr getNext) {
 #undef IT
 }
 
-}// namespace DCSQuestHandTracking
+}// namespace HandTrackedCockpitClicking

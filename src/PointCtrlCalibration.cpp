@@ -41,8 +41,8 @@
 #include "DebugPrint.h"
 #include "PointCtrlSource.h"
 
-using namespace DCSQuestHandTracking;
-namespace Config = DCSQuestHandTracking::Config;
+using namespace HandTrackedCockpitClicking;
+namespace Config = HandTrackedCockpitClicking::Config;
 
 #define EXTENSION_FUNCTIONS IT(xrGetD3D11GraphicsRequirementsKHR)
 

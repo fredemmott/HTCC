@@ -30,7 +30,7 @@
 
 using namespace DirectX::SimpleMath;
 
-namespace DCSQuestHandTracking {
+namespace HandTrackedCockpitClicking {
 
 static constexpr std::string_view gInteractionProfilePath {
   "/interaction_profiles/oculus/touch_controller"};
@@ -387,4 +387,4 @@ XrResult VirtualControllerSink::xrLocateSpace(
   return mOpenXR->xrLocateSpace(space, baseSpace, time, location);
 }
 
-}// namespace DCSQuestHandTracking
+}// namespace HandTrackedCockpitClicking

@@ -29,7 +29,7 @@
 #include "Config.h"
 #include "OpenXRNext.h"
 
-namespace DCSQuestHandTracking {
+namespace HandTrackedCockpitClicking {
 
 class VirtualTouchScreenSink final {
  public:
@@ -67,4 +67,4 @@ class VirtualTouchScreenSink final {
   std::chrono::steady_clock::time_point mLastWheelDown {};
 };
 
-}// namespace DCSQuestHandTracking
+}// namespace HandTrackedCockpitClicking

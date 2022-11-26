@@ -58,8 +58,8 @@ else()
   )
 endif()
 
-project(com.fredemmott.dcsquesthandtracking VERSION 0.0.1.${VERSION_BUILD} LANGUAGES CXX C)
-message(STATUS "Building DCS Quest Hand Tracking v${CMAKE_PROJECT_VERSION}")
+project(XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking VERSION 0.0.1.${VERSION_BUILD} LANGUAGES CXX C)
+message(STATUS "${CMAKE_PROJECT_NAME} v${CMAKE_PROJECT_VERSION}")
 
 if(MSVC AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CLANG_CL 1 CACHE BOOL "Whether we're using clang-cl")

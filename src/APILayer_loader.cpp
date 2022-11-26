@@ -36,12 +36,12 @@
 template <class CharT>
 struct std::formatter<XrResult, CharT> : std::formatter<int, CharT> {};
 
-namespace Environment = DCSQuestHandTracking::Environment;
+namespace Environment = HandTrackedCockpitClicking::Environment;
 
-namespace DCSQuestHandTracking::Loader {
+namespace HandTrackedCockpitClicking::Loader {
 
 constexpr std::string_view OpenXRLayerName {
-  "XR_APILAYER_FREDEMMOTT_DCSQuestHandTracking"};
+  "XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking"};
 static_assert(OpenXRLayerName.size() <= XR_MAX_API_LAYER_NAME_SIZE);
 
 static std::shared_ptr<OpenXRNext> gNext;
@@ -350,25 +350,25 @@ static XrResult xrCreateApiLayerInstance(
   return XR_SUCCESS;
 }
 
-}// namespace DCSQuestHandTracking::Loader
+}// namespace HandTrackedCockpitClicking::Loader
 
-using DCSQuestHandTracking::DebugPrint;
+using HandTrackedCockpitClicking::DebugPrint;
 
 extern "C" {
 XrResult __declspec(dllexport) XRAPI_CALL
-  DCSQuestHandTracking_xrNegotiateLoaderApiLayerInterface(
+  HandTrackedCockpitClicking_xrNegotiateLoaderApiLayerInterface(
     const XrNegotiateLoaderInfo* loaderInfo,
     const char* layerName,
     XrNegotiateApiLayerRequest* apiLayerRequest) {
-  if (layerName != DCSQuestHandTracking::Loader::OpenXRLayerName) {
+  if (layerName != HandTrackedCockpitClicking::Loader::OpenXRLayerName) {
     DebugPrint(
       "Layer name mismatch:\n -{}\n +{}",
-      DCSQuestHandTracking::Loader::OpenXRLayerName,
+      HandTrackedCockpitClicking::Loader::OpenXRLayerName,
       layerName);
     return XR_ERROR_INITIALIZATION_FAILED;
   }
 
-  DCSQuestHandTracking::Config::Load();
+  HandTrackedCockpitClicking::Config::Load();
 
   wchar_t executablePath[MAX_PATH];
   const auto executablePathLen
@@ -382,7 +382,7 @@ XrResult __declspec(dllexport) XRAPI_CALL
     Environment::IsMSFS = true;
   } else {
     DebugPrint(L"'{}' is not a supported game", exeName.wstring());
-    if (!DCSQuestHandTracking::Config::CheckGameSupported) {
+    if (!HandTrackedCockpitClicking::Config::CheckGameSupported) {
       DebugPrint("Loading anyway, Config::CheckGameSupported is false");
     } else {
       DebugPrint("Skipping.");
@@ -394,9 +394,9 @@ XrResult __declspec(dllexport) XRAPI_CALL
   apiLayerRequest->layerInterfaceVersion = XR_CURRENT_LOADER_API_LAYER_VERSION;
   apiLayerRequest->layerApiVersion = XR_CURRENT_API_VERSION;
   apiLayerRequest->getInstanceProcAddr
-    = &DCSQuestHandTracking::Loader::xrGetInstanceProcAddr;
+    = &HandTrackedCockpitClicking::Loader::xrGetInstanceProcAddr;
   apiLayerRequest->createApiLayerInstance
-    = &DCSQuestHandTracking::Loader::xrCreateApiLayerInstance;
+    = &HandTrackedCockpitClicking::Loader::xrCreateApiLayerInstance;
   return XR_SUCCESS;
 }
 }

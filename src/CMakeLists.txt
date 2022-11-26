@@ -20,7 +20,7 @@ function(add_version_metadata TARGET)
 endfunction()
 
 add_library(
-  XR_APILAYER_FREDEMMOTT_DCSQuestHandTracking
+  XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking
   MODULE
   APILayer.cpp
   APILayer_loader.cpp
@@ -33,10 +33,10 @@ add_library(
   VirtualControllerSink.cpp
   VirtualTouchScreenSink.cpp
 )
-add_version_metadata(XR_APILAYER_FREDEMMOTT_DCSQuestHandTracking)
+add_version_metadata(XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking)
 
 target_link_libraries(
-  XR_APILAYER_FREDEMMOTT_DCSQuestHandTracking
+  XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking
   PRIVATE
   System::Dinput8
   System::Dxguid
@@ -46,7 +46,7 @@ target_link_libraries(
 )
 
 target_precompile_headers(
-  XR_APILAYER_FREDEMMOTT_DCSQuestHandTracking
+  XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking
   PRIVATE
   pch.h
 )
@@ -93,7 +93,7 @@ add_custom_command(
 
 file(
   GENERATE
-  OUTPUT "$<TARGET_FILE_DIR:XR_APILAYER_FREDEMMOTT_DCSQuestHandTracking>/XR_APILAYER_FREDEMMOTT_DCSQuestHandTracking.json"
+  OUTPUT "$<TARGET_FILE_DIR:XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking>/XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking.json"
   INPUT "APILayer.json.in"
   NEWLINE_STYLE UNIX
 )

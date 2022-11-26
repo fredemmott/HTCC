@@ -25,16 +25,17 @@
 
 #include "DebugPrint.h"
 
-namespace DCSQuestHandTracking::Config {
+namespace HandTrackedCockpitClicking::Config {
 
 #define IT(native_type, name, default) native_type name {default};
-DCSQUESTHANDTRACKING_DWORD_SETTINGS
+HandTrackedCockpitClicking_DWORD_SETTINGS
 #undef IT
 #define IT(name, default) float name {default};
-DCSQUESTHANDTRACKING_FLOAT_SETTINGS
+  HandTrackedCockpitClicking_FLOAT_SETTINGS
 #undef IT
 
-static constexpr wchar_t SubKey[] {L"SOFTWARE\\FredEmmott\\DCSHandTracking"};
+  static constexpr wchar_t SubKey[] {
+    L"SOFTWARE\\FredEmmott\\HandTrackedCockpitClicking"};
 
 template <class T>
 static void LoadDWord(T& value, const wchar_t* valueName) {
@@ -83,10 +84,10 @@ void Load() {
   DebugPrint(L"Loading settings from HKLM\\{}", SubKey);
 
 #define IT(native_type, name, default) LoadDWord(Config::name, L#name);
-  DCSQUESTHANDTRACKING_DWORD_SETTINGS
+  HandTrackedCockpitClicking_DWORD_SETTINGS
 #undef IT
 #define IT(name, default) LoadFloat(Config::name, L#name);
-  DCSQUESTHANDTRACKING_FLOAT_SETTINGS
+    HandTrackedCockpitClicking_FLOAT_SETTINGS
 #undef IT
 }
 
@@ -119,11 +120,11 @@ static void SaveFloat(const wchar_t* valueName, float value) {
 
 void Save() {
 #define IT(native_type, name, default) SaveDWord(L#name, Config::name);
-  DCSQUESTHANDTRACKING_DWORD_SETTINGS
+  HandTrackedCockpitClicking_DWORD_SETTINGS
 #undef IT
 #define IT(name, default) SaveFloat(L#name, Config::name);
-  DCSQUESTHANDTRACKING_FLOAT_SETTINGS
+    HandTrackedCockpitClicking_FLOAT_SETTINGS
 #undef IT
 }
 
-}// namespace DCSQuestHandTracking::Config
+}// namespace HandTrackedCockpitClicking::Config

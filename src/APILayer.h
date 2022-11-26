@@ -27,7 +27,7 @@
 
 #include <memory>
 
-namespace DCSQuestHandTracking {
+namespace HandTrackedCockpitClicking {
 
 class HandTrackingSource;
 class OpenXRNext;
@@ -90,4 +90,4 @@ class APILayer final {
   std::unique_ptr<VirtualControllerSink> mVirtualController;
 };
 
-}// namespace DCSQuestHandTracking
+}// namespace HandTrackedCockpitClicking

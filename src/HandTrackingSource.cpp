@@ -35,7 +35,7 @@ using namespace DirectX::SimpleMath;
 template <class CharT>
 struct std::formatter<XrResult, CharT> : std::formatter<int, CharT> {};
 
-namespace DCSQuestHandTracking {
+namespace HandTrackedCockpitClicking {
 
 HandTrackingSource::HandTrackingSource(
   const std::shared_ptr<OpenXRNext>& next,
@@ -242,4 +242,4 @@ ActionState HandTrackingSource::GetActionState() const {
   return mActionState;
 }
 
-}// namespace DCSQuestHandTracking
+}// namespace HandTrackedCockpitClicking

@@ -52,7 +52,7 @@
   IT(xrGetCurrentInteractionProfile) \
   IT(xrPollEvent)
 
-namespace DCSQuestHandTracking {
+namespace HandTrackedCockpitClicking {
 
 class OpenXRNext final {
  public:
@@ -85,4 +85,4 @@ class OpenXRNext final {
 #undef IT
 };
 
-}// namespace DCSQuestHandTracking
+}// namespace HandTrackedCockpitClicking

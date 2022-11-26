@@ -42,7 +42,7 @@
 template <class CharT>
 struct std::formatter<XrResult, CharT> : std::formatter<int, CharT> {};
 
-namespace DCSQuestHandTracking {
+namespace HandTrackedCockpitClicking {
 
 static constexpr XrPosef XR_POSEF_IDENTITY {
   .orientation = {0.0f, 0.0f, 0.0f, 1.0f},
@@ -240,4 +240,4 @@ XrResult APILayer::xrWaitFrame(
   return XR_SUCCESS;
 }
 
-}// namespace DCSQuestHandTracking
+}// namespace HandTrackedCockpitClicking

@@ -26,12 +26,13 @@
 
 #include <debugapi.h>
 
-namespace DCSQuestHandTracking::detail {
+namespace HandTrackedCockpitClicking::detail {
 
 void DebugPrintString(std::wstring_view message) {
-  const auto formatted = std::format(L"[DCSQuestHandTracking] {}\n", message);
+  const auto formatted
+    = std::format(L"[HandTrackedCockpitClicking] {}\n", message);
 
   OutputDebugStringW(formatted.c_str());
 }
 
-}// namespace DCSQuestHandTracking::detail
+}// namespace HandTrackedCockpitClicking::detail

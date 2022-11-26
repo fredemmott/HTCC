@@ -1,6 +1,6 @@
 # Registry Settings
 
-All settings are in the registry, in `HKEY_LOCAL_MACHINE\SOFTWARE\FredEmmott\DCSHandTracking`.
+All settings are in the registry, in `HKEY_LOCAL_MACHINE\SOFTWARE\FredEmmott\HandTrackedCockpitClicking`.
 
 ## Enabled
 

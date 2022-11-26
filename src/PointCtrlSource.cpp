@@ -34,7 +34,7 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 using namespace DirectX::SimpleMath;
 
-namespace DCSQuestHandTracking {
+namespace HandTrackedCockpitClicking {
 
 PointCtrlSource::PointCtrlSource() {
   DebugPrint(
@@ -190,4 +190,4 @@ PointCtrlSource::GetPoses() const {
   return {{}, {pose}};
 }
 
-}// namespace DCSQuestHandTracking
+}// namespace HandTrackedCockpitClicking

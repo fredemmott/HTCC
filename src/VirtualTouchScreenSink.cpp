@@ -28,7 +28,7 @@
 #include "Config.h"
 #include "DebugPrint.h"
 
-namespace DCSQuestHandTracking {
+namespace HandTrackedCockpitClicking {
 
 VirtualTouchScreenSink::VirtualTouchScreenSink(
   const std::shared_ptr<OpenXRNext>& oxr,
@@ -253,4 +253,4 @@ void VirtualTouchScreenSink::Update(
   SendInput(events.size(), events.data(), sizeof(INPUT));
 }
 
-}// namespace DCSQuestHandTracking
+}// namespace HandTrackedCockpitClicking

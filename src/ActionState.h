@@ -23,7 +23,7 @@
  */
 #pragma once
 
-namespace DCSQuestHandTracking {
+namespace HandTrackedCockpitClicking {
 
 struct ActionState {
   bool mLeftClick {};
@@ -34,4 +34,4 @@ struct ActionState {
   constexpr auto operator<=>(const ActionState&) const noexcept = default;
 };
 
-}// namespace DCSQuestHandTracking
+}// namespace HandTrackedCockpitClicking

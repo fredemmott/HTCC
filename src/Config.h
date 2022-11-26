@@ -27,7 +27,7 @@
 
 #include <cinttypes>
 
-namespace DCSQuestHandTracking {
+namespace HandTrackedCockpitClicking {
 enum class PointerSource : DWORD {
   OculusHandTracking = 0,
   PointCtrl = 1,
@@ -36,9 +36,9 @@ enum class PointerSink : DWORD {
   VirtualTouchScreen = 0,
   VirtualVRController = 1,
 };
-}// namespace DCSQuestHandTracking
+}// namespace HandTrackedCockpitClicking
 
-#define DCSQUESTHANDTRACKING_DWORD_SETTINGS \
+#define HandTrackedCockpitClicking_DWORD_SETTINGS \
   IT(bool, Enabled, true) \
   IT(bool, CheckGameSupported, true) \
   IT(uint8_t, VerboseDebug, 0) \
@@ -53,32 +53,33 @@ enum class PointerSink : DWORD {
   IT(uint16_t, PointCtrlCenterY, 32767) \
   IT(bool, EnableFBOpenXRExtensions, true) \
   IT( \
-    DCSQuestHandTracking::PointerSource, \
+    HandTrackedCockpitClicking::PointerSource, \
     PointerSource, \
-    DCSQuestHandTracking::PointerSource::OculusHandTracking) \
+    HandTrackedCockpitClicking::PointerSource::OculusHandTracking) \
   IT( \
-    DCSQuestHandTracking::PointerSink, \
+    HandTrackedCockpitClicking::PointerSink, \
     PointerSink, \
-    DCSQuestHandTracking::PointerSink::VirtualTouchScreen)
-#define DCSQUESTHANDTRACKING_FLOAT_SETTINGS \
+    HandTrackedCockpitClicking::PointerSink::VirtualTouchScreen)
+#define HandTrackedCockpitClicking_FLOAT_SETTINGS \
   IT(PointCtrlRadiansPerUnitX, 3.009e-5f) \
   IT(PointCtrlRadiansPerUnitY, 3.009e-5f) \
   IT(PointCtrlProjectionDistance, 0.60f)
 
-namespace DCSQuestHandTracking::Config {
+namespace HandTrackedCockpitClicking::Config {
 
 #define IT(native_type, name, default) \
   extern native_type name; \
   constexpr native_type name##Default {default};
-DCSQUESTHANDTRACKING_DWORD_SETTINGS
+HandTrackedCockpitClicking_DWORD_SETTINGS
 #undef IT
 #define IT(name, default) \
   extern float name; \
   constexpr float name##Default {default};
-DCSQUESTHANDTRACKING_FLOAT_SETTINGS
+  HandTrackedCockpitClicking_FLOAT_SETTINGS
 #undef IT
 
-void Load();
+  void
+  Load();
 void Save();
 
-}// namespace DCSQuestHandTracking::Config
+}// namespace HandTrackedCockpitClicking::Config

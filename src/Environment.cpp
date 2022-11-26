@@ -23,14 +23,15 @@
  */
 #include "Environment.h"
 
-namespace DCSQuestHandTracking::Environment {
+namespace HandTrackedCockpitClicking::Environment {
 
 #define IT(native_type, name, default) native_type name {default};
-DCSQUESTHANDTRACKING_ENVIRONMENT_INFO
+HandTrackedCockpitClicking_ENVIRONMENT_INFO
 #undef IT
 
-bool IsSupportedGame() {
+  bool
+  IsSupportedGame() {
   return IsDCS;// || IsMSFS;
 }
 
-}// namespace DCSQuestHandTracking::Environment
+}// namespace HandTrackedCockpitClicking::Environment

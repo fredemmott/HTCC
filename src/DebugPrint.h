@@ -25,7 +25,7 @@
 
 #include <format>
 
-namespace DCSQuestHandTracking {
+namespace HandTrackedCockpitClicking {
 
 namespace detail {
 void DebugPrintString(std::wstring_view);
@@ -42,4 +42,4 @@ void DebugPrint(std::_Fmt_string<Args...> fmt, Args&&... args) {
     winrt::to_hstring(std::format(fmt, std::forward<Args>(args)...)));
 }
 
-}// namespace DCSQuestHandTracking
+}// namespace HandTrackedCockpitClicking

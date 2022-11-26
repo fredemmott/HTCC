@@ -28,7 +28,7 @@
 #include "ActionState.h"
 #include "OpenXRNext.h"
 
-namespace DCSQuestHandTracking {
+namespace HandTrackedCockpitClicking {
 
 class HandTrackingSource final {
  public:
@@ -67,4 +67,4 @@ class HandTrackingSource final {
   ActionState mActionState {};
 };
 
-}// namespace DCSQuestHandTracking
+}// namespace HandTrackedCockpitClicking

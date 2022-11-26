@@ -32,7 +32,7 @@
 #include "Config.h"
 #include "OpenXRNext.h"
 
-namespace DCSQuestHandTracking {
+namespace HandTrackedCockpitClicking {
 
 class VirtualControllerSink final {
  public:
@@ -125,4 +125,4 @@ class VirtualControllerSink final {
   std::unordered_map<XrSpace, XrAction> mActionSpaces;
 };
 
-}// namespace DCSQuestHandTracking
+}// namespace HandTrackedCockpitClicking

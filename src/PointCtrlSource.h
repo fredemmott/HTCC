@@ -31,7 +31,7 @@
 
 #include "ActionState.h"
 
-namespace DCSQuestHandTracking {
+namespace HandTrackedCockpitClicking {
 
 // Wrapper for PointCtrl joystick devices. This currently requires a custom
 // firmware.
@@ -72,4 +72,4 @@ class PointCtrlSource final {
   std::chrono::steady_clock::time_point mLastMovedAt {};
 };
 
-}// namespace DCSQuestHandTracking
+}// namespace HandTrackedCockpitClicking
