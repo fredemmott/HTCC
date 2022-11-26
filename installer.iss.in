@@ -12,7 +12,6 @@ ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 DisableDirPage=yes
 DisableProgramGroupPage=yes
-Compression=zip
 
 [Files]
 Source: "PointCtrlCalibration.exe"; DestDir: "{app}"; Flags: sign
