@@ -28,6 +28,7 @@
 #include <cmath>
 
 #include "Config.h"
+#include "Environment.h"
 
 using namespace DirectX::SimpleMath;
 
@@ -106,10 +107,12 @@ void HandTrackingSource::Update(XrTime displayTime) {
   std::array<XrHandJointLocationEXT, XR_HAND_JOINT_COUNT_EXT> jointData;
   XrHandJointLocationsEXT joints {
     .type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT,
-    .next = &aimState,
     .jointCount = jointData.size(),
     .jointLocations = jointData.data(),
   };
+  if (Environment::Have_XR_FB_HandTracking_Aim) {
+    joints.next = &aimState;
+  }
 
   auto nextResult
     = mOpenXR->xrLocateHandJointsEXT(mLeftHand, &locateInfo, &joints);

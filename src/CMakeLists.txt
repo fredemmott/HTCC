@@ -26,6 +26,7 @@ add_library(
   APILayer_loader.cpp
   Config.cpp
   DebugPrint.cpp
+  Environment.cpp
   HandTrackingSource.cpp
   OpenXRNext.cpp
   PointCtrlSource.cpp

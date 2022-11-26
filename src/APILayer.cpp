@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "DebugPrint.h"
+#include "Environment.h"
 #include "HandTrackingSource.h"
 #include "OpenXRNext.h"
 #include "PointCtrlSource.h"
@@ -70,8 +71,10 @@ APILayer::APILayer(
     return;
   }
 
-  mHandTracking
-    = std::make_unique<HandTrackingSource>(next, session, mViewSpace);
+  if (Environment::Have_XR_EXT_HandTracking) {
+    mHandTracking
+      = std::make_unique<HandTrackingSource>(next, session, mViewSpace);
+  }
   mPointCtrl = std::make_unique<PointCtrlSource>();
 
   if (Config::PointerSink == PointerSink::VirtualVRController) {

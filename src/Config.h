@@ -51,6 +51,7 @@ enum class PointerSink : DWORD {
   IT(bool, PointCtrlFCUClicks, true) \
   IT(uint16_t, PointCtrlCenterX, 32767) \
   IT(uint16_t, PointCtrlCenterY, 32767) \
+  IT(bool, EnableFBOpenXRExtensions, true) \
   IT( \
     DCSQuestHandTracking::PointerSource, \
     PointerSource, \

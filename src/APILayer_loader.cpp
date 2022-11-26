@@ -30,10 +30,13 @@
 #include "APILayer.h"
 #include "Config.h"
 #include "DebugPrint.h"
+#include "Environment.h"
 #include "OpenXRNext.h"
 
 template <class CharT>
 struct std::formatter<XrResult, CharT> : std::formatter<int, CharT> {};
+
+namespace Environment = DCSQuestHandTracking::Environment;
 
 namespace DCSQuestHandTracking::Loader {
 
@@ -43,8 +46,6 @@ static_assert(OpenXRLayerName.size() <= XR_MAX_API_LAYER_NAME_SIZE);
 
 static std::shared_ptr<OpenXRNext> gNext;
 static APILayer* gInstance = nullptr;
-static bool gIsDCS = true;
-static bool gHaveHandTracking = false;
 
 static XrResult xrWaitFrame(
   XrSession session,
@@ -151,7 +152,7 @@ static XrResult xrCreateSession(
     return XR_SUCCESS;
   }
 
-  if (!gIsDCS) {
+  if (!Environment::IsDCS) {
     DebugPrint("Not DCS, doing nothing");
     return XR_SUCCESS;
   }
@@ -247,21 +248,21 @@ static XrResult xrGetInstanceProcAddr(
   return XR_ERROR_FUNCTION_UNSUPPORTED;
 }
 
-static bool HaveHandTracking(OpenXRNext* oxr) {
+static void EnumerateExtensions(OpenXRNext* oxr) {
   uint32_t extensionCount = 0;
 
   auto nextResult = oxr->xrEnumerateInstanceExtensionProperties(
     nullptr, 0, &extensionCount, nullptr);
   if (nextResult != XR_SUCCESS) {
     DebugPrint("Getting extension count failed: {}", nextResult);
-    return false;
+    return;
   }
 
   if (extensionCount == 0) {
     DebugPrint(
       "Runtime supports no extensions, so definitely doesn't support hand "
       "tracking. Reporting success but doing nothing.");
-    return false;
+    return;
   }
 
   std::vector<XrExtensionProperties> extensions(
@@ -270,11 +271,9 @@ static bool HaveHandTracking(OpenXRNext* oxr) {
     nullptr, extensionCount, &extensionCount, extensions.data());
   if (nextResult != XR_SUCCESS) {
     DebugPrint("Enumerating extensions failed: {}", nextResult);
-    return false;
+    return;
   }
 
-  bool foundHandTracking = false;
-  bool foundHandTrackingAim = false;
   for (const auto& it: extensions) {
     const std::string_view name {it.extensionName};
     if (Config::VerboseDebug) {
@@ -282,30 +281,25 @@ static bool HaveHandTracking(OpenXRNext* oxr) {
     }
 
     if (name == XR_EXT_HAND_TRACKING_EXTENSION_NAME) {
-      foundHandTracking = true;
+      Environment::Have_XR_EXT_HandTracking = true;
       continue;
     }
-    if (name == XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME) {
-      foundHandTrackingAim = true;
+    if (
+      name == XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME
+      && Config::EnableFBOpenXRExtensions) {
+      Environment::Have_XR_FB_HandTracking_Aim = true;
       continue;
     }
   }
 
-  if (!foundHandTracking) {
-    DebugPrint(
-      "Did not find {}, doing nothing.", XR_EXT_HAND_TRACKING_EXTENSION_NAME);
-    return false;
-  }
-
-  if (!foundHandTrackingAim) {
-    DebugPrint(
-      "Did not find {}, doing nothing.",
-      XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME);
-    return false;
-  }
-
-  DebugPrint("Hand tracking extensions are available");
-  return true;
+  DebugPrint(
+    "{}: {}",
+    XR_EXT_HAND_TRACKING_EXTENSION_NAME,
+    Environment::Have_XR_EXT_HandTracking);
+  DebugPrint(
+    "{}: {}",
+    XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME,
+    Environment::Have_XR_FB_HandTracking_Aim);
 }
 
 static XrResult xrCreateApiLayerInstance(
@@ -324,23 +318,14 @@ static XrResult xrCreateApiLayerInstance(
   OpenXRNext next(NULL, layerInfo->nextInfo->nextGetInstanceProcAddr);
 
   std::vector<const char*> enabledExtensions;
-  gHaveHandTracking = HaveHandTracking(&next);
-  if (gIsDCS && gHaveHandTracking && Config::Enabled) {
+  EnumerateExtensions(&next);
+  if (Environment::IsDCS && Environment::Have_XR_EXT_HandTracking) {
     for (auto i = 0; i < originalInfo->enabledExtensionCount; ++i) {
       enabledExtensions.push_back(originalInfo->enabledExtensionNames[i]);
     }
-    if (
-      std::ranges::find(
-        enabledExtensions,
-        std::string_view {XR_EXT_HAND_TRACKING_EXTENSION_NAME})
-      == enabledExtensions.end()) {
-      enabledExtensions.push_back(XR_EXT_HAND_TRACKING_EXTENSION_NAME);
-    }
-    if (
-      std::ranges::find(
-        enabledExtensions,
-        std::string_view {XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME})
-      == enabledExtensions.end()) {
+
+    enabledExtensions.push_back(XR_EXT_HAND_TRACKING_EXTENSION_NAME);
+    if (Environment::Have_XR_FB_HandTracking_Aim) {
       enabledExtensions.push_back(XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME);
     }
     info.enabledExtensionCount = enabledExtensions.size();
@@ -389,13 +374,14 @@ XrResult __declspec(dllexport) XRAPI_CALL
   const auto exeName = std::filesystem::path(
                          std::wstring_view {executablePath, executablePathLen})
                          .filename();
-  if (exeName != L"DCS.exe") {
+  if (exeName == L"DCS.exe") {
+    Environment::IsDCS = true;
+  } else {
     DebugPrint(L"'{}' is not 'DCS.exe'", exeName.wstring());
     if (!DCSQuestHandTracking::Config::CheckDCS) {
       DebugPrint("Loading anyway, Config::CheckDCS is false");
     } else {
       DebugPrint("Skipping.");
-      DCSQuestHandTracking::Loader::gIsDCS = false;
     }
   }
 

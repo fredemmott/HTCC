@@ -79,3 +79,9 @@ DWORD: joint index for aim joint. See the OpenXR specification.
 # RaycastHandTrackingPose (developers only)
 
 DWORD 0 (disabled) or 1 (enabled): Discard the orientation/rotation of your hand, and instead rotate it to fit a laser pointer from the center of your headset. This will improve accuracy and stability, but if controller models are enabled in-game, it may feel weird. Leaving this on is recommended.
+
+# EnableFBOpenXRExtensions (developers only)
+
+DWORD 0 (disabled) or 1 (enabled): Enable the use of Facebook/Meta/Oculus-specific OpenXR extensions for hand tracking. This is required for the pinch gestures.
+
+To disable pinch gestures, use the `PinchToClick` and `PinchToScroll` settings instead. This is primarily intended for checking that this project can function without them.
