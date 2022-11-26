@@ -41,12 +41,22 @@ jobs:
         with:
           name: HandTrackedCockpitClicking-GHA-${{github.run_number}}-Binaries
           path: build/install-prefix/**
+      - name: Fetch code-signing key
+        env:
+          CODE_SIGNING_PFX_BASE64: ${{ secrets.CODE_SIGNING_KEY_PFX_BASE64 }}
+        if: ${{ (matrix.config != 'Debug') && (github.repository == 'fredemmott/hand-tracked-cockpit-clicking') && (github.event_name == 'push')}}
+        run:
+          '[System.Convert]::FromBase64String($Env:CODE_SIGNING_PFX_BASE64) | Set-Content ${{runner.temp}}/MyCert.pfx -AsByteStream'
       - name: Create installer
         working-directory: build
         run: |
           Copy-Item installer.iss install-prefix
           cd install-prefix
-          iscc installer.iss
+          $args = $()
+          if (Test-Path -Path "${{runner.temp}}/MyCert.pfx) {
+            $args += "/Ssigntool=signtool.exe /f;${{runner.temp}}/MyCert.pfx /t http://timestamp.digicert.com /fd sha256"
+          }
+          iscc installer.iss @args
       - name: Create debug symbols zip
         working-directory: build
         run: |
