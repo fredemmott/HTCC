@@ -36,7 +36,7 @@ jobs:
             --prefix install `
             --component Default
           cd install
-          iscc ..\setup.iss
+          iscc ..\installer.iss
     strategy:
       matrix:
         config: [RelWithDebInfo, Debug]
