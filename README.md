@@ -26,7 +26,7 @@ Game support is provided either with:
 
 The virtual touch screen feels fairly close to a PointCTRL with default firmware; the key limitations are that it only works with DCS, and it is not possible to click on things at the bottom of your field of view.
 
-The virtual Oculus Touch controller is designed to be used as a 'laser pointer', and intentionally does not line up precisely with your hand: instead, the pointing direction is in a straight line between the center of your view and the PointCTRL or the first knuckle of your hand. This gives much better precision and stability, however you are likely to want to disable in-game controller models.
+The virtual Oculus Touch controller is designed to be used as a 'laser pointer', and intentionally does not line up precisely with your hand: instead, the pointing direction is in a straight line between the center of your view and the PointCTRL or the first knuckle of your index finger. This gives much better precision and stability, however you are likely to want to disable in-game controller models.
 
 ## DCS
 
