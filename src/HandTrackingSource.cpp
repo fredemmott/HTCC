@@ -23,7 +23,13 @@
  */
 #include "HandTrackingSource.h"
 
+#include <directxtk/SimpleMath.h>
+
+#include <cmath>
+
 #include "Config.h"
+
+using namespace DirectX::SimpleMath;
 
 template <class CharT>
 struct std::formatter<XrResult, CharT> : std::formatter<int, CharT> {};
@@ -77,6 +83,16 @@ static void DumpHandState(
     state.pinchStrengthLittle);
 }
 
+static void RaycastPose(XrPosef& pose) {
+  const auto& p = pose.position;
+  const auto rx = std::atan2f(p.y, -p.z);
+  const auto ry = std::atan2f(p.x, -p.z);
+
+  const auto o = Quaternion::CreateFromAxisAngle(Vector3::UnitX, rx)
+    * Quaternion::CreateFromAxisAngle(Vector3::UnitY, -ry);
+  pose.orientation = {o.x, o.y, o.z, o.w};
+}
+
 void HandTrackingSource::Update(XrTime displayTime) {
   InitHandTrackers();
 
@@ -87,27 +103,30 @@ void HandTrackingSource::Update(XrTime displayTime) {
   };
 
   XrHandTrackingAimStateFB aimState {XR_TYPE_HAND_TRACKING_AIM_STATE_FB};
-  XrHandJointLocationEXT jointData[XR_HAND_JOINT_COUNT_EXT];
+  std::array<XrHandJointLocationEXT, XR_HAND_JOINT_COUNT_EXT> jointData;
   XrHandJointLocationsEXT joints {
     .type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT,
     .next = &aimState,
-    .jointCount = XR_HAND_JOINT_COUNT_EXT,
-    .jointLocations = jointData,
+    .jointCount = jointData.size(),
+    .jointLocations = jointData.data(),
   };
 
   auto nextResult
     = mOpenXR->xrLocateHandJointsEXT(mLeftHand, &locateInfo, &joints);
   if (nextResult != XR_SUCCESS) {
     aimState.status = {};
-    DebugPrint("Failed to get left hand position: {}", nextResult);
   }
-  const auto left = aimState;
+  const auto leftValid = joints.isActive;
+  const auto leftAim = aimState;
+  const auto leftJoints = jointData;
+
   nextResult = mOpenXR->xrLocateHandJointsEXT(mRightHand, &locateInfo, &joints);
   if (nextResult != XR_SUCCESS) {
     aimState.status = {};
-    DebugPrint("Failed to get right hand position: {}", nextResult);
   }
-  const auto right = aimState;
+  const auto rightValid = joints.isActive;
+  const auto rightAim = aimState;
+  const auto rightJoints = jointData;
 
   static std::chrono::steady_clock::time_point lastPrint {};
   const auto now = std::chrono::steady_clock::now();
@@ -115,24 +134,45 @@ void HandTrackingSource::Update(XrTime displayTime) {
     (Config::VerboseDebug >= 2)
     && (now - lastPrint > std::chrono::seconds(1))) {
     lastPrint = now;
-    DumpHandState("Left", left);
-    DumpHandState("Right", right);
+    DumpHandState("Left", leftAim);
+    DumpHandState("Right", rightAim);
   }
 
-  if (HasFlags(left.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
-    mLeftHandPose = {left.aimPose};
-  } else {
-    mLeftHandPose = {};
+  mLeftHandPose = {};
+  if (leftValid && !Config::UseHandTrackingAimPointFB) {
+    const auto joint = leftJoints[Config::HandTrackingAimJoint];
+    if (
+      HasFlags(joint.locationFlags, XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)
+      && HasFlags(joint.locationFlags, XR_SPACE_LOCATION_POSITION_VALID_BIT)) {
+      mLeftHandPose = joint.pose;
+    }
+  } else if (HasFlags(leftAim.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
+    mLeftHandPose = {leftAim.aimPose};
   }
 
-  if (HasFlags(right.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
-    mRightHandPose = {right.aimPose};
-  } else {
-    mRightHandPose = {};
+  mRightHandPose = {};
+  if (rightValid && !Config::UseHandTrackingAimPointFB) {
+    const auto joint = rightJoints[Config::HandTrackingAimJoint];
+    if (
+      HasFlags(joint.locationFlags, XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)
+      && HasFlags(joint.locationFlags, XR_SPACE_LOCATION_POSITION_VALID_BIT)) {
+      mRightHandPose = joint.pose;
+    }
+  } else if (HasFlags(rightAim.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
+    mRightHandPose = {rightAim.aimPose};
+  }
+
+  if (Config::RaycastHandTrackingPose) {
+    if (mLeftHandPose) {
+      RaycastPose(*mLeftHandPose);
+    }
+    if (mRightHandPose) {
+      RaycastPose(*mRightHandPose);
+    }
   }
 
 #define EITHER_HAS(flag) \
-  (HasFlags(left.status, flag) || HasFlags(right.status, flag))
+  (HasFlags(leftAim.status, flag) || HasFlags(rightAim.status, flag))
 
   mActionState = {
     .mLeftClick = Config::PinchToClick

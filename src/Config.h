@@ -23,6 +23,8 @@
  */
 #pragma once
 
+#include <openxr/openxr.h>
+
 #include <cinttypes>
 
 namespace DCSQuestHandTracking {
@@ -41,6 +43,9 @@ enum class PointerSink : DWORD {
   IT(bool, CheckDCS, true) \
   IT(uint8_t, VerboseDebug, 0) \
   IT(uint8_t, MirrorEye, 1) \
+  IT(bool, UseHandTrackingAimPointFB, false) \
+  IT(XrHandJointEXT, HandTrackingAimJoint, XR_HAND_JOINT_INDEX_PROXIMAL_EXT) \
+  IT(bool, RaycastHandTrackingPose, true) \
   IT(bool, PinchToClick, true) \
   IT(bool, PinchToScroll, true) \
   IT(bool, PointCtrlFCUClicks, true) \
@@ -66,8 +71,9 @@ namespace DCSQuestHandTracking::Config {
   constexpr native_type name##Default {default};
 DCSQUESTHANDTRACKING_DWORD_SETTINGS
 #undef IT
-#define IT(name, default) extern float name; \
-constexpr float name##Default {default};
+#define IT(name, default) \
+  extern float name; \
+  constexpr float name##Default {default};
 DCSQUESTHANDTRACKING_FLOAT_SETTINGS
 #undef IT
 

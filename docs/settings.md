@@ -6,10 +6,6 @@ All settings are in the registry, in `HKEY_LOCAL_MACHINE\SOFTWARE\FredEmmott\DCS
 
 DWORD 0 (disabled) or 1 (enabled); enable or disable the entire API layer.
 
-## CheckDCS
-
-DWORD 0 (disabled) or 1 (enabled); do nothing in games other than DCS
-
 ## PointerSource
 
 DWORD: which device is used to set the cursor location
@@ -67,3 +63,19 @@ CenterX and Y are DWORD 0..65535
 PointCtrlRadiansPerUnitX and Y are floats as strings.
 
 These values should be set with the included `PointCtrlCalibration.exe` program.
+
+## CheckDCS (developers only)
+
+DWORD 0 (disabled) or 1 (enabled); do nothing in games other than DCS
+
+# UseHandTrackingAimPointFB (developers only)
+
+DWORD 0 (disabled) or 1 (enabled): Use the FB-provided 'aim' point instead of a skeletal joint
+
+# HandTrackingAimJoint (developers only)
+
+DWORD: joint index for aim joint. See the OpenXR specification.
+
+# RaycastHandTrackingPose (developers only)
+
+DWORD 0 (disabled) or 1 (enabled): Discard the orientation/rotation of your hand, and instead rotate it to fit a laser pointer from the center of your headset. This will improve accuracy and stability, but if controller models are enabled in-game, it may feel weird. Leaving this on is recommended.
