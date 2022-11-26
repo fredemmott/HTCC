@@ -15,6 +15,7 @@ function(add_version_metadata TARGET)
     "-DPRODUCT_NAME=${CMAKE_PROJECT_NAME}"
     "-P${CMAKE_CURRENT_SOURCE_DIR}/version.cmake"
     DEPENDS version.rc.in version.cmake
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   )
   target_sources("${TARGET}" PRIVATE "${VERSION_RC_FILE}")
 endfunction()
