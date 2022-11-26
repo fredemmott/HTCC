@@ -57,6 +57,10 @@ DWORD 0 (disabled) or 1 (enabled): use Oculus hand tracking pinch gestures to sc
 
 DWORD 0 (disabled) or 1 (enabled): use PointCtrl FCU button clicks to click or scroll
 
+## PointCtrlProjectionDistance
+
+String (SZ) containing a distance (in meters) to project virtual hands when using a PointCtrl. For example, "0.6" for 60cm.
+
 ## PointCtrlCenterX, PointCtrlCenterY, PointCtrlRadiansPerUnitX, PointCtrlRadiansPerUnitY
 
 CenterX and Y are DWORD 0..65535
