@@ -321,7 +321,7 @@ XrResult VirtualControllerSink::xrLocateSpace(
 
     // Just experimentation
     auto aimToGripQ = Quaternion::CreateFromAxisAngle(
-                        Vector3::UnitX, std::numbers::pi_v<float> / 6)
+                        Vector3::UnitX, std::numbers::pi_v<float> / 8)
       * Quaternion::CreateFromAxisAngle(Vector3::UnitY, ry)
       * Quaternion::CreateFromAxisAngle(
                         Vector3::UnitZ, std::numbers::pi_v<float> / 2);
