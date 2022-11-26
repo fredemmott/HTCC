@@ -5,7 +5,7 @@
     "library_path": ".\\$<TARGET_FILE_NAME:XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking>",
     "api_version": "1.0",
     "implementation_version": "1",
-    "description": "Hand tracked controller emulation for DCS - https://github.com/fredemmott/HandTrackedCockpitClicking",
+    "description": "Hand-tracked cockpit clicking for flight simulators - https://github.com/fredemmott/hand-tracked-cockpit-clicking",
     "functions": {
       "xrNegotiateLoaderApiLayerInterface": "HandTrackedCockpitClicking_xrNegotiateLoaderApiLayerInterface"
     },
