@@ -224,10 +224,8 @@ void VirtualTouchScreenSink::Update(
        }});
   }
 
-  const auto wheelUp = actionState.mWheelUp;
-  const auto wheelDown = actionState.mWheelDown;
   if (
-    wheelUp && (!wheelDown)
+    actionState.mWheelUp
     && (now - mLastWheelUp > std::chrono::milliseconds(250))) {
     mLastWheelUp = now;
     events.push_back({
@@ -240,7 +238,7 @@ void VirtualTouchScreenSink::Update(
   }
 
   if (
-    wheelDown && (!wheelUp)
+    actionState.mWheelDown
     && (now - mLastWheelDown > std::chrono::milliseconds(250))) {
     mLastWheelDown = now;
     events.push_back({

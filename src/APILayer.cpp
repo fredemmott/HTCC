@@ -221,6 +221,11 @@ XrResult APILayer::xrWaitFrame(
     }
   }
 
+  if (actionState.mWheelUp && actionState.mWheelDown) {
+    actionState.mWheelUp = false;
+    actionState.mWheelDown = false;
+  }
+
   if (mVirtualTouchScreen) {
     mVirtualTouchScreen->Update(rotation, actionState);
   }
