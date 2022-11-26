@@ -60,6 +60,11 @@ class APILayer final {
     const XrActionSpaceCreateInfo* createInfo,
     XrSpace* space);
 
+  XrResult xrGetActionStateBoolean(
+    XrSession session,
+    const XrActionStateGetInfo* getInfo,
+    XrActionStateBoolean* state);
+
   XrResult xrGetActionStateFloat(
     XrSession session,
     const XrActionStateGetInfo* getInfo,

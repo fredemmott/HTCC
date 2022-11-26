@@ -67,6 +67,16 @@ static XrResult xrSuggestInteractionProfileBindings(
     instance, suggestedBindings);
 }
 
+static XrResult xrGetActionStateBoolean(
+  XrSession session,
+  const XrActionStateGetInfo* getInfo,
+  XrActionStateBoolean* state) {
+  if (gInstance) {
+    return gInstance->xrGetActionStateBoolean(session, getInfo, state);
+  }
+  return gNext->xrGetActionStateBoolean(session, getInfo, state);
+}
+
 static XrResult xrGetActionStateFloat(
   XrSession session,
   const XrActionStateGetInfo* getInfo,
@@ -193,6 +203,10 @@ static XrResult xrGetInstanceProcAddr(
   }
   if (name == "xrCreateActionSpace") {
     *function = reinterpret_cast<PFN_xrVoidFunction>(&xrCreateActionSpace);
+    return XR_SUCCESS;
+  }
+  if (name == "xrGetActionStateBoolean") {
+    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrGetActionStateBoolean);
     return XR_SUCCESS;
   }
   if (name == "xrGetActionStateFloat") {

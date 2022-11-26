@@ -56,6 +56,11 @@ class VirtualControllerSink final {
     const XrActionSpaceCreateInfo* createInfo,
     XrSpace* space);
 
+  XrResult xrGetActionStateBoolean(
+    XrSession session,
+    const XrActionStateGetInfo* getInfo,
+    XrActionStateBoolean* state);
+
   XrResult xrGetActionStateFloat(
     XrSession session,
     const XrActionStateGetInfo* getInfo,
@@ -92,6 +97,9 @@ class VirtualControllerSink final {
 
     XrActionStateFloat squeezeValue {XR_TYPE_ACTION_STATE_FLOAT};
     std::unordered_set<XrAction> squeezeValueActions {};
+
+    XrActionStateBoolean thumbstickTouch {XR_TYPE_ACTION_STATE_BOOLEAN};
+    std::unordered_set<XrAction> thumbstickTouchActions {};
   };
 
   bool mHaveSuggestedBindings {false};

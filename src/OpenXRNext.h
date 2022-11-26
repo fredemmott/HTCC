@@ -46,6 +46,7 @@
   IT(xrSuggestInteractionProfileBindings) \
   IT(xrPathToString) \
   IT(xrCreateActionSpace) \
+  IT(xrGetActionStateBoolean) \
   IT(xrGetActionStateFloat) \
   IT(xrSyncActions) \
   IT(xrGetCurrentInteractionProfile) \

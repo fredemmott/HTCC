@@ -99,6 +99,16 @@ XrResult APILayer::xrSuggestInteractionProfileBindings(
     instance, suggestedBindings);
 }
 
+XrResult APILayer::xrGetActionStateBoolean(
+  XrSession session,
+  const XrActionStateGetInfo* getInfo,
+  XrActionStateBoolean* state) {
+  if (mVirtualController) {
+    return mVirtualController->xrGetActionStateBoolean(session, getInfo, state);
+  }
+  return mOpenXR->xrGetActionStateBoolean(session, getInfo, state);
+}
+
 XrResult APILayer::xrGetActionStateFloat(
   XrSession session,
   const XrActionStateGetInfo* getInfo,
