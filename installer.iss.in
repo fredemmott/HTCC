@@ -1,3 +1,5 @@
+#define ConfigSubkey "SOFTWARE\FredEmmott\HandTrackedCockpitClicking"
+
 [Setup]
 AppName=Hand Tracked Cockpit Clicking
 AppPublisher=Fred Emmott
@@ -17,3 +19,104 @@ Source: "docs\*"; DestDir: "{app}\docs"
 
 [Registry]
 Root: HKLM; Subkey: "SOFTWARE\Khronos\OpenXR\1\ApiLayers\Implicit"; ValueType: dword; ValueName: "{app}\ApiLayer.json"; ValueData: 0; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "{#ConfigSubkey}"; ValueType: dword; ValueName: "PointerSource"; ValueData: "{code:ConfigPointerSource}"
+Root: HKLM; Subkey: "{#ConfigSubkey}"; ValueType: dword; ValueName: "PointerSink"; ValueData: "{code:ConfigPointerSink}"
+Root: HKLM; Subkey: "{#ConfigSubkey}"; ValueType: dword; ValueName: "PointCtrlFCUClicks"; ValueData: "{code:ConfigPointCtrlFCUClicks}"
+Root: HKLM; Subkey: "{#ConfigSubkey}"; ValueType: dword; ValueName: "PinchToClick"; ValueData: "{code:ConfigPinchToClick}"
+Root: HKLM; Subkey: "{#ConfigSubkey}"; ValueType: dword; ValueName: "PinchToScroll"; ValueData: "{code:ConfigPinchToScroll}"
+Root: HKLM; Subkey: "{#ConfigSubkey}"; ValueType: dword; ValueName: "MirrorEye"; ValueData: "{code:ConfigMirrorEye}"
+
+[Code]
+var
+  PointerSourcePage: TInputOptionWizardPage;
+  PointerSourceHandTracking: Integer;
+  PointerSourcePointCTRL: Integer;
+  
+  ActionSourcePage: TInputOptionWizardPage;
+  ActionSourcePinchToClick: Integer;
+  ActionSourcePinchToScroll: Integer;
+  ActionSourcePointCTRL: Integer;
+
+  PointerSinkPage: TInputOptionWizardPage;
+  PointerSinkVRController: Integer;
+  PointerSinkTouchScreen: Integer;
+
+  MirrorEyePage: TInputOptionWizardPage;
+  MirrorEyeLeft: Integer;
+  MirrorEyeRight: Integer;
+
+procedure InitializeWizard;
+var
+  AfterID: Integer;
+begin
+  AfterID := wpSelectTasks
+
+  PointerSourcePage := CreateInputOptionPage(AfterID, 'Configuration', 'Pointer source', 'How do you want to point at things?', True, False)
+  PointerSourceHandTracking := PointerSourcePage.Add('OpenXR &Hand Tracking')
+  PointerSourcePointCTRL := PointerSourcePage.Add('&PointCTRL - requires custom firmware')
+  PointerSourcePage.SelectedValueIndex := PointerSourceHandTracking
+  AfterID := PointerSourcePage.ID
+
+  ActionSourcePage := CreateInputOptionPage(AfterID, 'Configuration', 'Interactions', 'How do you want to interact with cockpit controls?', False, False)
+  ActionSourcePinchToClick := ActionSourcePage.Add('Pinch to &click - requires Oculus hand tracking')
+  ActionSourcePinchToScroll := ActionSourcePage.Add('Pinch to &scroll - requires Oculus hand tracking')
+  ActionSourcePointCTRL := ActionSourcePage.Add('&PointCTRL FCU buttons - requires custom firmware')
+  ActionSourcePage.Values[ActionSourcePinchToClick] := True
+  ActionSourcePage.Values[ActionSourcePinchToScroll] := True
+  ActionSourcePage.Values[ActionSourcePointCTRL] := True
+  AfterID := ActionSourcePage.ID
+
+  PointerSinkPage := CreateInputOptionPage(AfterID, 'Configuration', 'Emulated controller', 'What kind of controller should hand tracking emulate?', True, False)
+  PointerSinkVRController := PointerSinkPage.Add('Oculus &Touch VR controller - recommended')
+  PointerSinkTouchScreen := PointerSinkPage.Add('Classic &PointCTRL or touchscreen')
+  PointerSinkPage.SelectedValueIndex := PointerSinkVRController;
+  AfterID := PointerSinkPage.ID
+
+  MirrorEyePage := CreateInputOptionPage(AfterID, 'Configuration', 'Mirror window', 'Which eye do you use for the DCS mirror window?', True, False)
+  MirrorEyeLeft := MirrorEyePage.Add('&Left eye')
+  MirrorEyeRight := MirrorEyePage.Add('&Right eye')
+  MirrorEyePage.SelectedValueIndex := MirrorEyeLeft;
+  AfterID := MirrorEyePage.ID
+end;
+
+function ConfigPointerSource(Param: String): String;
+begin
+  if PointerSourcePage.SelectedValueIndex = PointerSourceHandTracking
+  then Result := '0'
+  else Result := '1';
+end;
+
+function ConfigPointerSink(Param: String): String;
+begin
+  if PointerSinkPage.SelectedValueIndex = PointerSinkVRController
+  then Result := '1'
+  else Result := '0';
+end;
+
+function ConfigPointCtrlFCUClicks(Param: String): String;
+begin
+ if ActionSourcePage.Values[ActionSourcePointCTRL]
+ then Result := '1'
+ else Result := '0';
+end;
+
+function ConfigPinchToClick(Param: String): String;
+begin
+ if ActionSourcePage.Values[ActionSourcePinchToClick]
+ then Result := '1'
+ else Result := '0';
+end;
+
+function ConfigPinchToScroll(Param: String): String;
+begin
+ if ActionSourcePage.Values[ActionSourcePinchToScroll]
+ then Result := '1'
+ else Result := '0';
+end;
+
+function ConfigMirrorEye(Param: String): String;
+begin
+ if MirrorEyePage.SelectedValueIndex = MirrorEyeLeft
+ then Result := '0'
+ else Result := '1';
+end;
