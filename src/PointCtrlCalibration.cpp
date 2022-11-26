@@ -530,4 +530,5 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   Config::PointCtrlRadiansPerUnitX = radiansPerUnit.x;
   Config::PointCtrlRadiansPerUnitY = radiansPerUnit.y;
   Config::Save();
+  return 0;
 }
