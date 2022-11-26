@@ -5,12 +5,12 @@ jobs:
     name: Build (${{matrix.config}})
     runs-on: windows-2022
     steps:
-			- name: Fetch code-signing key
-				env:
-					CODE_SIGNING_PFX_BASE64: ${{ secrets.CODE_SIGNING_KEY_PFX_BASE64 }}
-				if: ${{ (matrix.config != 'Debug') && (github.repository == 'fredemmott/hand-tracked-cockpit-clicking') && (github.event_name == 'push')}}
-				run:
-					'[System.Convert]::FromBase64String($Env:CODE_SIGNING_PFX_BASE64) | Set-Content ${{runner.temp}}/MyCert.pfx -AsByteStream'
+      - name: Fetch code-signing key
+        env:
+          CODE_SIGNING_PFX_BASE64: ${{ secrets.CODE_SIGNING_KEY_PFX_BASE64 }}
+        if: ${{ (matrix.config != 'Debug') && (github.repository == 'fredemmott/hand-tracked-cockpit-clicking') && (github.event_name == 'push')}}
+        run:
+          '[System.Convert]::FromBase64String($Env:CODE_SIGNING_PFX_BASE64) | Set-Content ${{runner.temp}}/MyCert.pfx -AsByteStream'
       - uses: actions/checkout@v2
         with:
           path: source
