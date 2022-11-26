@@ -169,14 +169,15 @@ PointCtrlSource::GetPoses() const {
   }
 
   const auto [rx, ry] = *rotations;
-  const auto leftHand = rx < 0;
+  const auto leftHand = ry < 0;
 
-  const auto o = Quaternion::CreateFromAxisAngle(Vector3::UnitX, ry)
-    * Quaternion::CreateFromAxisAngle(Vector3::UnitY, rx)
-    * Quaternion::CreateFromAxisAngle(
-                   Vector3::UnitZ, std::numbers::pi_v<float> / -2);
-  const auto p
-    = Vector3::Transform({0.0f, 0.0f, -Config::PointCtrlProjectionDistance}, o);
+  const auto pointDirection
+    = Quaternion::CreateFromAxisAngle(Vector3::UnitX, rx)
+    * Quaternion::CreateFromAxisAngle(Vector3::UnitY, -ry);
+
+  const auto p = Vector3::Transform(
+    {0.0f, 0.0f, -Config::PointCtrlProjectionDistance}, pointDirection);
+  const auto o = pointDirection;
 
   XrPosef pose {
     .orientation = {o.x, o.y, o.z, o.w},
