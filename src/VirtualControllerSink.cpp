@@ -316,11 +316,13 @@ XrResult VirtualControllerSink::xrLocateSpace(
 
     const auto viewPose = location->pose;
 
+    const auto ry = (hand.hand == XR_HAND_LEFT_EXT ? 1 : -1)
+      * std::numbers::pi_v<float> / 8;
+
     // Just experimentation
     auto aimToGripQ = Quaternion::CreateFromAxisAngle(
                         Vector3::UnitX, std::numbers::pi_v<float> / 6)
-      * Quaternion::CreateFromAxisAngle(
-                        Vector3::UnitY, -std::numbers::pi_v<float> / 8)
+      * Quaternion::CreateFromAxisAngle(Vector3::UnitY, ry)
       * Quaternion::CreateFromAxisAngle(
                         Vector3::UnitZ, std::numbers::pi_v<float> / 2);
 
