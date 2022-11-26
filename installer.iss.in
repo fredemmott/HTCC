@@ -33,6 +33,9 @@ Root: HKLM; Subkey: "{#ConfigSubkey}"; ValueType: dword; ValueName: "MirrorEye";
 Name: "{group}\PointCTRL Calibration"; Filename: "PointCtrlCalibration.exe"
 Name: "{group}\Uninstall Hand Tracked Cockpit Clicking"; Filename: "{uninstallexe}"
 
+[Run]
+Filename: "{app}\PointCtrlCalibration.exe"; Description: "Calibrate PointCTRL - requires custom firmware"; Flags: postinstall runascurrentuser
+
 [Code]
 var
   PointerSourcePage: TInputOptionWizardPage;
@@ -56,7 +59,7 @@ procedure InitializeWizard;
 var
   AfterID: Integer;
 begin
-  AfterID := wpSelectTasks
+  AfterID := wpSelectProgramGroup
 
   PointerSourcePage := CreateInputOptionPage(AfterID, 'Configuration', 'Pointer source', 'How do you want to point at things?', True, False)
   PointerSourceHandTracking := PointerSourcePage.Add('OpenXR &Hand Tracking')
