@@ -39,7 +39,7 @@ jobs:
         if: ${{matrix.config != 'Debug' }}
         uses: actions/upload-artifact@v2
         with:
-          name: HandTrackedCockpitClicking-GHA-${{GITHUB_RUN_NUMBER}}-Binaries
+          name: HandTrackedCockpitClicking-GHA-${{github.run_number}}-Binaries
           path: build/install-prefix/**
       - name: Create installer
         working-directory: build
@@ -58,13 +58,13 @@ jobs:
         if: ${{matrix.config != 'Debug' }}
         uses: actions/upload-artifact@v2
         with:
-          name: HandTrackedCockpitClicking-GHA-${{GITHUB_RUN_NUMBER}}-Setup
+          name: HandTrackedCockpitClicking-GHA-${{github.run_number}}-Setup
           path: build/install-prefix/HandTrackedCockpitClicking-v*.exe
       - name: Attach debug symbols to build
         if: ${{matrix.config != 'Debug' }}
         uses: actions/upload-artifact@v2
         with:
-          name: HandTrackedCockpitClicking-GHA-${{GITHUB_RUN_NUMBER}}-Symbols
+          name: HandTrackedCockpitClicking-GHA-${{github.run_number}}-Symbols
           path: build/symbols/*.pdb
     strategy:
       matrix:
