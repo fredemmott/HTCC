@@ -29,4 +29,8 @@ namespace DCSQuestHandTracking::Environment {
 DCSQUESTHANDTRACKING_ENVIRONMENT_INFO
 #undef IT
 
+bool IsSupportedGame() {
+  return IsDCS;// || IsMSFS;
+}
+
 }// namespace DCSQuestHandTracking::Environment

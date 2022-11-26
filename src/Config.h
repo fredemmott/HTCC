@@ -40,7 +40,7 @@ enum class PointerSink : DWORD {
 
 #define DCSQUESTHANDTRACKING_DWORD_SETTINGS \
   IT(bool, Enabled, true) \
-  IT(bool, CheckDCS, true) \
+  IT(bool, CheckGameSupported, true) \
   IT(uint8_t, VerboseDebug, 0) \
   IT(uint8_t, MirrorEye, 1) \
   IT(bool, UseHandTrackingAimPointFB, false) \

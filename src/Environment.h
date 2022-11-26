@@ -27,6 +27,7 @@
 
 #define DCSQUESTHANDTRACKING_ENVIRONMENT_INFO \
   IT(bool, IsDCS, false) \
+  IT(bool, IsMSFS, false) \
   IT(bool, Have_XR_EXT_HandTracking, false) \
   IT(bool, Have_XR_FB_HandTracking_Aim, false)
 
@@ -37,5 +38,7 @@ namespace DCSQuestHandTracking::Environment {
   constexpr native_type name##Default {default};
 DCSQUESTHANDTRACKING_ENVIRONMENT_INFO
 #undef IT
+
+bool IsSupportedGame();
 
 }// namespace DCSQuestHandTracking::Environment

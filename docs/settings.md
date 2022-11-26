@@ -64,13 +64,13 @@ PointCtrlRadiansPerUnitX and Y are floats as strings.
 
 These values should be set with the included `PointCtrlCalibration.exe` program.
 
-## CheckDCS (developers only)
+## CheckSupportedGame (developers only)
 
-DWORD 0 (disabled) or 1 (enabled); do nothing in games other than DCS
+DWORD 0 (disabled) or 1 (enabled); do nothing in unsupported games.
 
 # UseHandTrackingAimPointFB (developers only)
 
-DWORD 0 (disabled) or 1 (enabled): Use the FB-provided 'aim' point instead of a skeletal joint
+DWORD 0 (disabled) or 1 (enabled): Use the FB-provided 'aim' point instead of a skeletal joint.
 
 # HandTrackingAimJoint (developers only)
 

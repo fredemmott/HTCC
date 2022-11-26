@@ -152,8 +152,8 @@ static XrResult xrCreateSession(
     return XR_SUCCESS;
   }
 
-  if (!Environment::IsDCS) {
-    DebugPrint("Not DCS, doing nothing");
+  if (!Environment::IsSupportedGame()) {
+    DebugPrint("Not a supported game, doing nothing");
     return XR_SUCCESS;
   }
 
@@ -318,18 +318,20 @@ static XrResult xrCreateApiLayerInstance(
   OpenXRNext next(NULL, layerInfo->nextInfo->nextGetInstanceProcAddr);
 
   std::vector<const char*> enabledExtensions;
-  EnumerateExtensions(&next);
-  if (Environment::IsDCS && Environment::Have_XR_EXT_HandTracking) {
-    for (auto i = 0; i < originalInfo->enabledExtensionCount; ++i) {
-      enabledExtensions.push_back(originalInfo->enabledExtensionNames[i]);
-    }
+  if (Environment::IsSupportedGame()) {
+    EnumerateExtensions(&next);
+    if (Environment::Have_XR_EXT_HandTracking) {
+      for (auto i = 0; i < originalInfo->enabledExtensionCount; ++i) {
+        enabledExtensions.push_back(originalInfo->enabledExtensionNames[i]);
+      }
 
-    enabledExtensions.push_back(XR_EXT_HAND_TRACKING_EXTENSION_NAME);
-    if (Environment::Have_XR_FB_HandTracking_Aim) {
-      enabledExtensions.push_back(XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME);
+      enabledExtensions.push_back(XR_EXT_HAND_TRACKING_EXTENSION_NAME);
+      if (Environment::Have_XR_FB_HandTracking_Aim) {
+        enabledExtensions.push_back(XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME);
+      }
+      info.enabledExtensionCount = enabledExtensions.size();
+      info.enabledExtensionNames = enabledExtensions.data();
     }
-    info.enabledExtensionCount = enabledExtensions.size();
-    info.enabledExtensionNames = enabledExtensions.data();
   }
 
   XrApiLayerCreateInfo nextLayerInfo = *layerInfo;
@@ -376,10 +378,12 @@ XrResult __declspec(dllexport) XRAPI_CALL
                          .filename();
   if (exeName == L"DCS.exe") {
     Environment::IsDCS = true;
+  } else if (exeName == L"FlightSimulator.exe") {
+    Environment::IsMSFS = true;
   } else {
-    DebugPrint(L"'{}' is not 'DCS.exe'", exeName.wstring());
-    if (!DCSQuestHandTracking::Config::CheckDCS) {
-      DebugPrint("Loading anyway, Config::CheckDCS is false");
+    DebugPrint(L"'{}' is not a supported game", exeName.wstring());
+    if (!DCSQuestHandTracking::Config::CheckGameSupported) {
+      DebugPrint("Loading anyway, Config::CheckGameSupported is false");
     } else {
       DebugPrint("Skipping.");
     }
