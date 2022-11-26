@@ -91,7 +91,7 @@ add_custom_command(
   "$<TARGET_FILE_DIR:PointCtrlCalibration>"
 )
 
-set(API_LAYER_JSON_FILE "$<TARGET_FILE_DIR:XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking>/XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking.json")
+set(API_LAYER_JSON_FILE "$<TARGET_FILE_DIR:XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking>/ApiLayer.json")
 file(
   GENERATE
   OUTPUT "${API_LAYER_JSON_FILE}"

@@ -107,3 +107,10 @@ install(
   DIRECTORY docs/
   TYPE DOC
 )
+
+configure_file(
+  installer.iss.in
+  "${CMAKE_CURRENT_BINARY_DIR}/installer.iss"
+  @ONLY
+  NEWLINE_STYLE UNIX
+)

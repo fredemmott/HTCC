@@ -1,0 +1,19 @@
+[Setup]
+AppName=Hand Tracked Cockpit Clicking
+AppPublisher=Fred Emmott
+AppVersion=@CMAKE_PROJECT_VERSION@
+DefaultDirName="{commonpf64}\Hand Tracked Cockpit Clicking"
+OutputBaseFilename="HandTrackedCockpitClicking-v@CMAKE_PROJECT_VERSION@"
+OutputDir="."
+ArchitecturesAllowed=x64
+ArchitecturesInstallIn64BitMode=x64
+DisableDirPage=yes
+
+[Files]
+Source: "PointCtrlCalibration.exe"; DestDir: "{app}"; Flags: sign
+Source: "XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking.dll"; DestDir: "{app}"; Flags: sign
+Source: "ApiLayer.json"; DestDir: "{app}"
+Source: "docs\*"; DestDir: "{app}\docs"
+
+[Registry]
+Root: HKLM; Subkey: "SOFTWARE\Khronos\OpenXR\1\ApiLayers\Implicit"; ValueType: dword; ValueName: "{app}\ApiLayer.json"; ValueData: 0; Flags: uninsdeletevalue
