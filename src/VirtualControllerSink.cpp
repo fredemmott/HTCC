@@ -64,15 +64,6 @@ void VirtualControllerSink::Update(
   if (mRightHand.present) {
     mRightHand.aimPose = *rightAimPose;
   }
-
-  // FIXME
-  mLeftHand.present = false;
-  mRightHand.present = true;
-
-  mRightHand.aimPose = {
-    .orientation = {0.0f, 0.0f, 0.0f, 1.0f},
-    .position = {0.0f, -0.1f, -0.5f},
-  };
 }
 
 XrResult VirtualControllerSink::xrSyncActions(
@@ -270,7 +261,8 @@ static XrPosef operator*(const XrPosef& a, const XrPosef& b) {
     b.position.z,
   };
 
-  const auto o = ao * bo;
+  auto o = ao * bo;
+  o.Normalize();
   const auto p = Vector3::Transform(ap, bo) + bp;
 
   return {
@@ -298,8 +290,12 @@ XrResult VirtualControllerSink::xrLocateSpace(
     const auto viewPose = location->pose;
 
     // Just experimentation
-    auto aimToGripQ = Quaternion::CreateFromYawPitchRoll(
-      -std::numbers::pi_v<float> / 8, std::numbers::pi_v<float> / 4, 0.0f);
+    auto aimToGripQ = Quaternion::CreateFromAxisAngle(
+                        Vector3::UnitX, std::numbers::pi_v<float> / 6)
+      * Quaternion::CreateFromAxisAngle(
+                        Vector3::UnitY, -std::numbers::pi_v<float> / 8)
+      * Quaternion::CreateFromAxisAngle(
+                        Vector3::UnitZ, std::numbers::pi_v<float> / 2);
 
     XrPosef aimToGrip {
       .orientation = {aimToGripQ.x, aimToGripQ.y, aimToGripQ.z, aimToGripQ.w},
