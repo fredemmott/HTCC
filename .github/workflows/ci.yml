@@ -67,9 +67,10 @@ jobs:
           cd install-prefix
           $args = $()
           if (Test-Path -Path "${{runner.temp}}/MyCert.pfx") {
-            $args += '/Ssigntool="signtool.exe /f;${{runner.temp}}/MyCert.pfx /t http://timestamp.digicert.com /fd sha256"'
+            iscc /S"SignTool=signtool.exe /f;${{runner.temp}}/MyCert.pfx /t http://timestamp.digicert.com /fd sha256 $f" installer.iss
+          } else {
+            iscc installer.iss
           }
-          iscc @args installer.iss
       - name: Attach installer to build
         if: ${{matrix.config != 'Debug' }}
         uses: actions/upload-artifact@v2
