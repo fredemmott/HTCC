@@ -16,6 +16,7 @@ DisableProgramGroupPage=yes
 [Files]
 Source: "PointCtrlCalibration.exe"; DestDir: "{app}"; Flags: sign
 Source: "XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking.dll"; DestDir: "{app}"; Flags: sign
+Source: "openxr_loader.dll"; DestDir: "{app}"
 Source: "ApiLayer.json"; DestDir: "{app}"
 Source: "docs\*"; DestDir: "{app}\docs"
 

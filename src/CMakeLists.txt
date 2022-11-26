@@ -107,7 +107,9 @@ install(
 )
 
 install(
-  FILES "${API_LAYER_JSON_FILE}"
+  FILES
+  "${API_LAYER_JSON_FILE}"
+  "$<TARGET_RUNTIME_DLLS:PointCtrlCalibration>"
   DESTINATION "."
 )
 
