@@ -91,9 +91,30 @@ add_custom_command(
   "$<TARGET_FILE_DIR:PointCtrlCalibration>"
 )
 
+set(API_LAYER_JSON_FILE "$<TARGET_FILE_DIR:XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking>/XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking.json")
 file(
   GENERATE
-  OUTPUT "$<TARGET_FILE_DIR:XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking>/XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking.json"
+  OUTPUT "${API_LAYER_JSON_FILE}"
   INPUT "APILayer.json.in"
   NEWLINE_STYLE UNIX
+)
+
+install(TARGETS PointCtrlCalibration)
+install(
+  TARGETS
+  XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking
+  LIBRARY DESTINATION "."
+)
+
+install(
+  FILES "${API_LAYER_JSON_FILE}"
+  DESTINATION "."
+)
+
+install(
+  FILES
+  "$<TARGET_PDB_FILE:PointCtrlCalibration>"
+  "$<TARGET_PDB_FILE:XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking>"
+  COMPONENT DebugSymbols
+  DESTINATION "."
 )

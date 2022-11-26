@@ -7,6 +7,7 @@ set(CMAKE_SYSTEM_VERSION "${MINIMUM_WINDOWS_VERSION}")
 
 # Required for XAML resources in self-contained mode
 set(CMAKE_INSTALL_BINDIR "." CACHE STRING "Path to install binaries relative to the root" FORCE)
+set(CMAKE_INSTALL_DOCDIR "docs" CACHE STRING "Path to install documentation" FORCE)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -95,3 +96,14 @@ set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME Default)
 
 add_subdirectory("third-party")
 add_subdirectory("src")
+
+install(
+  FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
+  "${CMAKE_CURRENT_SOURCE_DIR}/README.md"
+  TYPE DOC
+)
+install(
+  DIRECTORY docs/
+  TYPE DOC
+)
