@@ -44,7 +44,8 @@ class HandTrackingSource final {
   /** Rotation around the X axis, and rotation around the y Axis.
    *
    * This can be a bit counter-intuitive when mapping to the screen:
-   * - left-right movement is along the X axis, so it is rotation around the Y axis
+   * - left-right movement is along the X axis, so it is rotation around the Y
+   * axis
    * - up-down movement is along the Y axis, so it is rotation around the X axis
    */
   std::optional<XrVector2f> GetRXRY() const;

@@ -23,10 +23,16 @@
  */
 #include "PointCtrlSource.h"
 
+#include <directxtk/SimpleMath.h>
+
+#include <numbers>
+
 #include "Config.h"
 #include "DebugPrint.h"
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+
+using namespace DirectX::SimpleMath;
 
 namespace DCSQuestHandTracking {
 
@@ -137,10 +143,13 @@ PointCtrlSource::GetRawCoordinatesForCalibration() const {
   return {mX, mY};
 }
 
+bool PointCtrlSource::IsStale() const {
+  return std::chrono::steady_clock::now() - mLastMovedAt
+    >= std::chrono::seconds(1);
+}
+
 std::optional<XrVector2f> PointCtrlSource::GetRXRY() const {
-  if (
-    std::chrono::steady_clock::now() - mLastMovedAt
-    >= std::chrono::seconds(1)) {
+  if (IsStale()) {
     return {};
   }
 
@@ -150,6 +159,34 @@ std::optional<XrVector2f> PointCtrlSource::GetRXRY() const {
     (static_cast<float>(mX) - Config::PointCtrlCenterX)
       * Config::PointCtrlRadiansPerUnitX,
   }};
+}
+
+std::tuple<std::optional<XrPosef>, std::optional<XrPosef>>
+PointCtrlSource::GetPoses() const {
+  auto rotations = GetRXRY();
+  if (!rotations) {
+    return {{}, {}};
+  }
+
+  const auto [rx, ry] = *rotations;
+  const auto leftHand = rx < 0;
+
+  const auto o = Quaternion::CreateFromAxisAngle(Vector3::UnitX, ry)
+    * Quaternion::CreateFromAxisAngle(Vector3::UnitY, rx)
+    * Quaternion::CreateFromAxisAngle(
+                   Vector3::UnitZ, std::numbers::pi_v<float> / -2);
+  const auto p
+    = Vector3::Transform({0.0f, 0.0f, -Config::PointCtrlProjectionDistance}, o);
+
+  XrPosef pose {
+    .orientation = {o.x, o.y, o.z, o.w},
+    .position = {p.x, p.y, p.z},
+  };
+
+  if (leftHand) {
+    return {{pose}, {}};
+  }
+  return {{}, {pose}};
 }
 
 }// namespace DCSQuestHandTracking

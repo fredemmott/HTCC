@@ -215,6 +215,9 @@ XrResult APILayer::xrWaitFrame(
     }
     if (Config::PointerSource == PointerSource::PointCtrl) {
       rotation = mPointCtrl->GetRXRY();
+      auto [left, right] = mPointCtrl->GetPoses();
+      leftAimPose = left;
+      rightAimPose = right;
     }
   }
 

@@ -64,14 +64,18 @@ static void LoadFloat(float& value, const wchar_t* valueName) {
     nullptr,
     &dataSize);
   std::vector<wchar_t> buffer(dataSize / sizeof(wchar_t), L'\0');
-  RegGetValueW(
-    HKEY_LOCAL_MACHINE,
-    SubKey,
-    valueName,
-    RRF_RT_REG_SZ,
-    nullptr,
-    buffer.data(),
-    &dataSize);
+  if (
+    RegGetValueW(
+      HKEY_LOCAL_MACHINE,
+      SubKey,
+      valueName,
+      RRF_RT_REG_SZ,
+      nullptr,
+      buffer.data(),
+      &dataSize)
+    != ERROR_SUCCESS) {
+    return;
+  }
   value = static_cast<float>(_wtof(buffer.data()));
 }
 

@@ -44,8 +44,10 @@ class PointCtrlSource final {
   std::optional<XrVector2f> GetRXRY() const;
   ActionState GetActionState() const;
   std::tuple<uint16_t, uint16_t> GetRawCoordinatesForCalibration() const;
+  std::tuple<std::optional<XrPosef>, std::optional<XrPosef>> GetPoses() const;
 
  private:
+  bool IsStale() const;
   static BOOL EnumDevicesCallbackStatic(
     LPCDIDEVICEINSTANCE lpddi,
     LPVOID pvRef);

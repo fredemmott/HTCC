@@ -56,7 +56,8 @@ enum class PointerSink : DWORD {
     DCSQuestHandTracking::PointerSink::VirtualTouchScreen)
 #define DCSQUESTHANDTRACKING_FLOAT_SETTINGS \
   IT(PointCtrlRadiansPerUnitX, 2.65e-5f) \
-  IT(PointCtrlRadiansPerUnitY, 2.65e-5f)
+  IT(PointCtrlRadiansPerUnitY, 2.65e-5f) \
+  IT(PointCtrlProjectionDistance, 0.60f)
 
 namespace DCSQuestHandTracking::Config {
 
