@@ -12,6 +12,7 @@ ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 DisableDirPage=yes
 DisableProgramGroupPage=yes
+@INNOSETUP_SIGNTOOL_STATEMENT@
 
 [Files]
 Source: "PointCtrlCalibration.exe"; DestDir: "{app}"; Flags: sign

@@ -108,6 +108,8 @@ install(
   TYPE DOC
 )
 
+set(INNOSETUP_SIGNTOOL_STATEMENT "" CACHE STRING "Extra statement to insert into installer.iss")
+
 configure_file(
   installer.iss.in
   "${CMAKE_CURRENT_BINARY_DIR}/installer.iss"

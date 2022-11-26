@@ -19,6 +19,9 @@ jobs:
             "-DGITHUB_REF_TYPE=${{github.ref_type}}",
             "-DGITHUB_REF_NAME=${{github.ref_name}}"
           )
+          if (Test-Path -Path "${{runner.temp}}/MyCert.pfx") {
+            $args += '-DINNOSETUP_SIGNTOOL_STATEMENT="SignTool=signtool"'
+          }
           cmake ${{github.workspace}}/source @args
       - name: Compile
         working-directory: build
@@ -67,7 +70,7 @@ jobs:
           cd install-prefix
           $args = $()
           if (Test-Path -Path "${{runner.temp}}/MyCert.pfx") {
-            iscc /S"SignTool='C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\signtool.exe' /f;${{runner.temp}}/MyCert.pfx /t http://timestamp.digicert.com /fd sha256 $f" installer.iss
+            iscc /S"signtool='C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\signtool.exe' /f;${{runner.temp}}/MyCert.pfx /t http://timestamp.digicert.com /fd sha256 $f" installer.iss
           } else {
             iscc installer.iss
           }
