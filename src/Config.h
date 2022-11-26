@@ -55,16 +55,19 @@ enum class PointerSink : DWORD {
     PointerSink, \
     DCSQuestHandTracking::PointerSink::VirtualTouchScreen)
 #define DCSQUESTHANDTRACKING_FLOAT_SETTINGS \
-  IT(PointCtrlRadiansPerUnitX, 2.65e-5f) \
-  IT(PointCtrlRadiansPerUnitY, 2.65e-5f) \
+  IT(PointCtrlRadiansPerUnitX, 3.009e-5f) \
+  IT(PointCtrlRadiansPerUnitY, 3.009e-5f) \
   IT(PointCtrlProjectionDistance, 0.60f)
 
 namespace DCSQuestHandTracking::Config {
 
-#define IT(native_type, name, default) extern native_type name;
+#define IT(native_type, name, default) \
+  extern native_type name; \
+  constexpr native_type name##Default {default};
 DCSQUESTHANDTRACKING_DWORD_SETTINGS
 #undef IT
-#define IT(name, default) extern float name;
+#define IT(name, default) extern float name; \
+constexpr float name##Default {default};
 DCSQUESTHANDTRACKING_FLOAT_SETTINGS
 #undef IT
 

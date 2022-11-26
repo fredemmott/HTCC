@@ -42,6 +42,7 @@
 #include "PointCtrlSource.h"
 
 using namespace DCSQuestHandTracking;
+namespace Config = DCSQuestHandTracking::Config;
 
 #define EXTENSION_FUNCTIONS IT(xrGetD3D11GraphicsRequirementsKHR)
 
@@ -348,7 +349,10 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   ActionState actionState {};
   D2D1_POINT_2U centerPoint {};
   D2D1_POINT_2U offsetPoint {};
-  XrVector2f radiansPerUnit;
+  XrVector2f radiansPerUnit {
+    Config::PointCtrlRadiansPerUnitXDefault,
+    Config::PointCtrlRadiansPerUnitYDefault,
+  };
 
   bool saveAndExit = false;
 
@@ -462,7 +466,11 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
           case CalibrationState::WaitForCenter:
             centerPoint = {x, y};
             DebugPrint("Center at ({}, {})", x, y);
-            state = CalibrationState::WaitForOffset;
+            // Skip second calibration point as we have angular sensitivity of
+            // the sensor
+            //
+            // state = CalibrationState::WaitForOffset;
+            state = CalibrationState::Test;
             break;
           case CalibrationState::WaitForOffset:
             offsetPoint = {x, y};
