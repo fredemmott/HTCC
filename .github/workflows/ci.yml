@@ -31,7 +31,7 @@ jobs:
       - name: Create installer
         working-directory: build
         run: |
-          cmake --install .
+          cmake --install . `
             --config ${{matrix.config}} `
             --prefix install `
             --component Default
