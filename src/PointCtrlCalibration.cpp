@@ -255,6 +255,17 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   Config::Load();
 
   PointCtrlSource pointCtrl;
+  while (!pointCtrl.IsConnected()) {
+    const auto result = MessageBoxW(
+      NULL,
+      L"PointCTRL device not found; please plug it in, then click retry.",
+      L"PointCTRL Calibration",
+      MB_RETRYCANCEL | MB_ICONEXCLAMATION | MB_DEFBUTTON1);
+    if (result == IDCANCEL) {
+      return 0;
+    }
+    pointCtrl.Update();
+  }
 
   XrInstance instance {};
   {
@@ -294,7 +305,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
       }
       auto result = MessageBoxW(
         NULL,
-        L"No VR system found; connect your headset, then click retry",
+        L"No VR system found; connect your headset, then click retry.",
         L"PointCTRL Calibration",
         MB_RETRYCANCEL | MB_ICONEXCLAMATION | MB_DEFBUTTON1);
       if (result == IDCANCEL) {
