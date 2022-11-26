@@ -35,11 +35,11 @@ jobs:
             --config ${{matrix.config}} `
             --prefix install-prefix `
             --component Default
-      - name: Attach files to build
+      - name: Attach binaries to build
         if: ${{matrix.config != 'Debug' }}
         uses: actions/upload-artifact@v2
         with:
-          name: artifacts
+          name: HandTrackedCockpitClicking-GHA-${{GITHUB_RUN_NUMBER}}-Binaries
           path: build/install-prefix/**
       - name: Create installer
         working-directory: build
@@ -58,13 +58,13 @@ jobs:
         if: ${{matrix.config != 'Debug' }}
         uses: actions/upload-artifact@v2
         with:
-          name: installer
+          name: HandTrackedCockpitClicking-GHA-${{GITHUB_RUN_NUMBER}}-Setup
           path: build/install-prefix/HandTrackedCockpitClicking-v*.exe
       - name: Attach debug symbols to build
         if: ${{matrix.config != 'Debug' }}
         uses: actions/upload-artifact@v2
         with:
-          name: symbols
+          name: HandTrackedCockpitClicking-GHA-${{GITHUB_RUN_NUMBER}}-Symbols
           path: build/symbols/*.pdb
     strategy:
       matrix:
