@@ -28,6 +28,15 @@ jobs:
             --parallel `
             -- `
             /p:CL_MPCount=
+      - name: Create installer
+        working-directory: build
+        run: |
+          cmake --install .
+            --config ${{matrix.config}} `
+            --prefix install `
+            --component Default
+          cd install
+          iscc ..\setup.iss
     strategy:
       matrix:
         config: [RelWithDebInfo, Debug]
