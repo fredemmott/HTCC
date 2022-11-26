@@ -364,15 +364,14 @@ XrResult VirtualControllerSink::xrLocateSpace(
 
     const auto viewPose = location->pose;
 
-    const auto ry = (hand.hand == XR_HAND_LEFT_EXT ? 1 : -1)
-      * std::numbers::pi_v<float> / 8;
-
-    // Just experimentation
+    // Just experimentation; use PointCtrl to calibrate this: as it's
+    // a 2D source, the 'laser' should always be straight line
     auto aimToGripQ = Quaternion::CreateFromAxisAngle(
-                        Vector3::UnitX, std::numbers::pi_v<float> / 8)
-      * Quaternion::CreateFromAxisAngle(Vector3::UnitY, ry)
+                        Vector3::UnitX, std::numbers::pi_v<float> * 0.23f)
       * Quaternion::CreateFromAxisAngle(
-                        Vector3::UnitZ, std::numbers::pi_v<float> / 2);
+                        Vector3::UnitY,
+                        (hand.hand == XR_HAND_LEFT_EXT ? 1 : -1)
+                          * std::numbers::pi_v<float> * 0.1f);
 
     XrPosef aimToGrip {
       .orientation = {aimToGripQ.x, aimToGripQ.y, aimToGripQ.z, aimToGripQ.w},
