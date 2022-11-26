@@ -287,7 +287,20 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
       .type = XR_TYPE_SYSTEM_GET_INFO,
       .formFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY,
     };
-    xrGetSystem(instance, &getInfo, &system);
+    while (true) {
+      xrGetSystem(instance, &getInfo, &system);
+      if (system) {
+        break;
+      }
+      auto result = MessageBoxW(
+        NULL,
+        L"No VR system found; connect your headset, then click retry",
+        L"PointCTRL Calibration",
+        MB_RETRYCANCEL | MB_ICONEXCLAMATION | MB_DEFBUTTON1);
+      if (result == IDCANCEL) {
+        return 0;
+      }
+    }
   }
 
   winrt::com_ptr<ID3D11Device> device;
