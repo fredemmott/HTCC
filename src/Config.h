@@ -52,6 +52,7 @@ enum class PointerSink : DWORD {
   IT(uint16_t, PointCtrlCenterX, 32767) \
   IT(uint16_t, PointCtrlCenterY, 32767) \
   IT(bool, EnableFBOpenXRExtensions, true) \
+  IT(bool, OneHandOnly, true) \
   IT( \
     HandTrackedCockpitClicking::PointerSource, \
     PointerSource, \

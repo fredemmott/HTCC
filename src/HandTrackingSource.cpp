@@ -165,6 +165,36 @@ void HandTrackingSource::Update(XrTime displayTime) {
     mRightHandPose = {rightAim.aimPose};
   }
 
+  if (Config::OneHandOnly && mLeftHandPose && mRightHandPose) {
+    constexpr auto actionBits = XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB
+      | XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB
+      | XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB
+      | XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB;
+    const auto leftAction = (leftAim.status & actionBits) != 0;
+    const auto rightAction = (rightAim.status & actionBits) != 0;
+    if (leftAction && !rightAction) {
+      mRightHandPose = {};
+    } else if (rightAction && !leftAction) {
+      mLeftHandPose = {};
+    } else {
+      const auto& lp = mLeftHandPose->position;
+      const auto lrx = std::atan2f(lp.y, -lp.z);
+      const auto lry = std::atan2f(lp.x, -lp.z);
+      const auto ldiff = (lrx * lrx) + (lry * lry);
+
+      const auto& rp = mRightHandPose->position;
+      const auto rrx = std::atan2f(rp.y, -rp.z);
+      const auto rry = std::atan2f(rp.x, -rp.z);
+      const auto rdiff = (rrx * rrx) + (rry * rry);
+
+      if (ldiff > rdiff) {
+        mLeftHandPose = {};
+      } else {
+        mRightHandPose = {};
+      }
+    }
+  }
+
   if (Config::RaycastHandTrackingPose) {
     if (mLeftHandPose) {
       RaycastPose(*mLeftHandPose);
@@ -224,13 +254,12 @@ HandTrackingSource::GetPoses() const {
 }
 
 std::optional<XrVector2f> HandTrackingSource::GetRXRY() const {
-  const auto leftValid = mLeftHandPose.has_value();
-  const auto rightValid = mRightHandPose.has_value();
-  if (leftValid == rightValid) {
+  auto [left, right] = GetPoses();
+  if (!(left || right)) {
     return {};
   }
 
-  const auto& hand = leftValid ? mLeftHandPose : mRightHandPose;
+  const auto& hand = left ? left : right;
   const auto& pos = hand->position;
 
   const auto rx = std::atan2f(pos.y, -pos.z);

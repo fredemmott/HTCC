@@ -57,6 +57,16 @@ DWORD 0 (disabled) or 1 (enabled): use PointCtrl FCU button clicks to click or s
 
 String (SZ) containing a distance (in meters) to project virtual hands when using a PointCtrl. For example, "0.6" for 60cm.
 
+## OneHandOnly
+
+DWORD 0 (disabled) or 1 (enabled): only render one controller at a time.
+
+Some games (including DCS) assume that you pick up one controller at a time to point at one specific thing; with real controllers like DCS is designed for, this works well and is reasonable. For hands, its' common to have both visible, but DCS will always use the left controller for pointing if two controllers are active, even if only one is visible.
+
+With this option enabled (default), it will prefer:
+1. whichever is performing any gestures, if any
+2. whichever is currently closer to the center of the field of view
+
 ## PointCtrlCenterX, PointCtrlCenterY, PointCtrlRadiansPerUnitX, PointCtrlRadiansPerUnitY
 
 CenterX and Y are DWORD 0..65535
