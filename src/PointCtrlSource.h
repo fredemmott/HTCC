@@ -59,11 +59,22 @@ class PointCtrlSource final {
   static constexpr uint16_t VID {0x04d8};
   static constexpr uint16_t PID {0xeeec};
 
-  // 0-indexed; most visualizers are 1-indexed
-  static constexpr uint8_t LeftClickButton = 0;
-  static constexpr uint8_t RightClickButton = 1;
-  static constexpr uint8_t WheelUpButton = 9;
-  static constexpr uint8_t WheelDownButton = 10;
+  // DirectInput is 0-indexed, however most visualizers display button 0 as
+  // button 1 etc
+  struct FCUButton {
+    static constexpr uint8_t L1 = 0;
+    static constexpr uint8_t L2 = 1;
+    static constexpr uint8_t L3 = 2;
+    static constexpr uint8_t R1 = 3;
+    static constexpr uint8_t R2 = 4;
+    static constexpr uint8_t R3 = 5;
+  };
+
+  enum class ScrollDirection {
+    Up,
+    Down,
+  };
+  ScrollDirection mScrollDirection {ScrollDirection::Down};
 
   winrt::com_ptr<IDirectInput8W> mDI;
   winrt::com_ptr<IDirectInputDevice8W> mDevice;

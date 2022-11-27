@@ -122,13 +122,25 @@ void PointCtrlSource::Update() {
 
   constexpr auto pressedBit = 1 << 7;
   const auto& buttons = joystate.rgbButtons;
-
+#define HAS_BUTTON(idx) ((buttons[idx] & pressedBit) == pressedBit)
+#define HAS_EITHER_BUTTON(a, b) (HAS_BUTTON(a) || HAS_BUTTON(b))
   ActionState newState {
-    .mLeftClick = (buttons[LeftClickButton] & pressedBit) == pressedBit,
-    .mRightClick = (buttons[RightClickButton] & pressedBit) == pressedBit,
-    .mWheelUp = (buttons[WheelUpButton] & pressedBit) == pressedBit,
-    .mWheelDown = (buttons[WheelDownButton] & pressedBit) == pressedBit,
+    .mLeftClick = HAS_EITHER_BUTTON(FCUButton::L1, FCUButton::R1),
+    .mRightClick = HAS_EITHER_BUTTON(FCUButton::L2, FCUButton::R2),
   };
+  if (newState.mLeftClick && !newState.mRightClick) {
+    mScrollDirection = ScrollDirection::Down;
+  }
+  if (newState.mRightClick && !newState.mLeftClick) {
+    mScrollDirection = ScrollDirection::Up;
+  }
+
+  if (HAS_EITHER_BUTTON(FCUButton::L3, FCUButton::R3)) {
+    newState.mWheelDown = (mScrollDirection == ScrollDirection::Down);
+    newState.mWheelUp = (mScrollDirection == ScrollDirection::Up);
+  }
+#undef HAS_BUTTON
+#undef HAS_EITHER_BUTTON
 
   if (Config::VerboseDebug >= 2 && newState != mActionState) {
     DebugPrint(
@@ -201,5 +213,4 @@ PointCtrlSource::GetPoses() const {
   }
   return {{}, {pose}};
 }
-
 }// namespace HandTrackedCockpitClicking
