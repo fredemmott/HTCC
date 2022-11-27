@@ -18,11 +18,11 @@ DisableProgramGroupPage=yes
 Source: "PointCtrlCalibration.exe"; DestDir: "{app}"; Flags: sign
 Source: "XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking.dll"; DestDir: "{app}"; Flags: sign
 Source: "openxr_loader.dll"; DestDir: "{app}"
-Source: "ApiLayer.json"; DestDir: "{app}"
+Source: "APILayer.json"; DestDir: "{app}"
 Source: "docs\*"; DestDir: "{app}\docs"
 
 [Registry]
-Root: HKLM; Subkey: "SOFTWARE\Khronos\OpenXR\1\ApiLayers\Implicit"; ValueType: dword; ValueName: "{app}\ApiLayer.json"; ValueData: 0; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "SOFTWARE\Khronos\OpenXR\1\ApiLayers\Implicit"; ValueType: dword; ValueName: "{app}\APILayer.json"; ValueData: 0; Flags: uninsdeletevalue
 Root: HKLM; Subkey: "{#ConfigSubkey}"; ValueType: dword; ValueName: "PointerSource"; ValueData: "{code:ConfigPointerSource}"
 Root: HKLM; Subkey: "{#ConfigSubkey}"; ValueType: dword; ValueName: "PointerSink"; ValueData: "{code:ConfigPointerSink}"
 Root: HKLM; Subkey: "{#ConfigSubkey}"; ValueType: dword; ValueName: "PointCtrlFCUClicks"; ValueData: "{code:ConfigPointCtrlFCUClicks}"

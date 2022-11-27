@@ -68,6 +68,30 @@ void VirtualControllerSink::Update(
     mRightHand.aimPose = *rightAimPose;
   }
 
+  if (mLeftHand.present && mRightHand.present) {
+    // DCS assumes you've picked up a controller to pick up something, but if
+    // both are active, it always uses the left.
+    //
+    // Instead, deactivate whichever 'controller' is angularly furthest from the
+    // center of the field of view the field of view;
+
+    const auto& lp = mLeftHand.aimPose.position;
+    const auto lrx = std::atan2f(lp.y, -lp.z);
+    const auto lry = std::atan2f(lp.x, -lp.z);
+    const auto ldiff = (lrx * lrx) + (lry * lry);
+
+    const auto& rp = mRightHand.aimPose.position;
+    const auto rrx = std::atan2f(rp.y, -rp.z);
+    const auto rry = std::atan2f(rp.x, -rp.z);
+    const auto rdiff = (rrx * rrx) + (rry * rry);
+
+    if (ldiff > rdiff) {
+      mLeftHand.present = false;
+    } else {
+      mRightHand.present = false;
+    }
+  }
+
   for (auto* hand: {&mLeftHand, &mRightHand}) {
     if (!hand->present) {
       continue;
