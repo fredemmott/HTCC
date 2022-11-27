@@ -101,7 +101,7 @@ BOOL PointCtrlSource::EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi) {
   const auto vid = LOWORD(buf.dwData);
   const auto pid = HIWORD(buf.dwData);
 
-  if (vid != PointCtrlSource::VID || pid != PointCtrlSource::PID) {
+  if (vid != Config::PointCtrlVID || pid != Config::PointCtrlPID) {
     return DIENUM_CONTINUE;
   }
 
@@ -138,11 +138,12 @@ void PointCtrlSource::Update() {
 
   constexpr auto pressedBit = 1 << 7;
   const auto& buttons = joystate.rgbButtons;
+#define FCUB(x) Config::PointCtrlFCUButton##x
 #define HAS_BUTTON(idx) ((buttons[idx] & pressedBit) == pressedBit)
 #define HAS_EITHER_BUTTON(a, b) (HAS_BUTTON(a) || HAS_BUTTON(b))
   ActionState newState {
-    .mLeftClick = HAS_EITHER_BUTTON(FCUButton::L1, FCUButton::R1),
-    .mRightClick = HAS_EITHER_BUTTON(FCUButton::L2, FCUButton::R2),
+    .mLeftClick = HAS_EITHER_BUTTON(FCUB(L1), FCUB(R1)),
+    .mRightClick = HAS_EITHER_BUTTON(FCUB(L2), FCUB(R2)),
   };
   if (newState.mLeftClick && !newState.mRightClick) {
     mScrollDirection = ScrollDirection::Down;
@@ -151,12 +152,13 @@ void PointCtrlSource::Update() {
     mScrollDirection = ScrollDirection::Up;
   }
 
-  if (HAS_EITHER_BUTTON(FCUButton::L3, FCUButton::R3)) {
+  if (HAS_EITHER_BUTTON(FCUB(L3), FCUB(R3))) {
     newState.mWheelDown = (mScrollDirection == ScrollDirection::Down);
     newState.mWheelUp = (mScrollDirection == ScrollDirection::Up);
   }
 #undef HAS_BUTTON
 #undef HAS_EITHER_BUTTON
+#undef FCUB
 
   if (Config::VerboseDebug >= 2 && newState != mActionState) {
     DebugPrint(

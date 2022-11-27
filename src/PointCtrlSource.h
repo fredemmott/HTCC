@@ -56,20 +56,6 @@ class PointCtrlSource final {
     LPVOID pvRef);
   BOOL EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi);
 
-  static constexpr uint16_t VID {0x04d8};
-  static constexpr uint16_t PID {0xeeec};
-
-  // DirectInput is 0-indexed, however most visualizers display button 0 as
-  // button 1 etc
-  struct FCUButton {
-    static constexpr uint8_t L1 = 0;
-    static constexpr uint8_t L2 = 1;
-    static constexpr uint8_t L3 = 2;
-    static constexpr uint8_t R1 = 3;
-    static constexpr uint8_t R2 = 4;
-    static constexpr uint8_t R3 = 5;
-  };
-
   enum class ScrollDirection {
     Up,
     Down,

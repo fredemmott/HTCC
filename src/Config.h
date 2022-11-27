@@ -60,7 +60,16 @@ enum class PointerSink : DWORD {
   IT( \
     HandTrackedCockpitClicking::PointerSink, \
     PointerSink, \
-    HandTrackedCockpitClicking::PointerSink::VirtualTouchScreen)
+    HandTrackedCockpitClicking::PointerSink::VirtualTouchScreen) \
+  IT(uint16_t, PointCtrlVID, 0x04d8) \
+  IT(uint16_t, PointCtrlPID, 0xeeec) \
+  IT(uint8_t, PointCtrlFCUButtonL1, 0) \
+  IT(uint8_t, PointCtrlFCUButtonL2, 1) \
+  IT(uint8_t, PointCtrlFCUButtonL3, 2) \
+  IT(uint8_t, PointCtrlFCUButtonR1, 3) \
+  IT(uint8_t, PointCtrlFCUButtonR2, 4) \
+  IT(uint8_t, PointCtrlFCUButtonR3, 5)
+
 #define HandTrackedCockpitClicking_FLOAT_SETTINGS \
   IT(PointCtrlRadiansPerUnitX, 3.009e-5f) \
   IT(PointCtrlRadiansPerUnitY, 3.009e-5f) \

@@ -74,6 +74,18 @@ PointCtrlRadiansPerUnitX and Y are floats as strings.
 
 These values should be set with the included `PointCtrlCalibration.exe` program.
 
+## PointCtrlVID, PointCtrlPID (firmware developers and custom button boxes only)
+
+DWORDs containing 16-bit USB vendor and product IDs.
+
+Change the USB vendor ID and product ID that this project looks for when trying to find a PointCTRL device.
+
+## PointCtrlFCUButtonL1-L3, PointCtrlFCUButtonR1-R3 (firmware developers and custom button boxes only)
+
+DWORD button indices starting at 0.
+
+FCU L1 is the button farthest from your wrist on your left hand, L3 is closest. R1-R3 are the buttons on your right hand.
+
 ## CheckSupportedGame (developers only)
 
 DWORD 0 (disabled) or 1 (enabled); do nothing in unsupported games.
