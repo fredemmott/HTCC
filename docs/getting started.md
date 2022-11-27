@@ -17,7 +17,7 @@ As DCS World does not support OpenXR (regardless of headset), OpenComposite is n
 
 ## Configuring your devices
 
-- PointCTRL: Not yet supported - custom firmware is required.
+- [PointCTRL]
 - [Oculus Hand Tracking]
 
 ## Configuring your games
@@ -27,3 +27,4 @@ As DCS World does not support OpenXR (regardless of headset), OpenComposite is n
 
 [Oculus Hand Tracking]: oculus-hand-tracking/README.md
 [DCS World]: dcs-world/README.md
+[PointCtrl v2]: pointctrl/README.md
