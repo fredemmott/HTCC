@@ -9,7 +9,7 @@ This is only tested with a Quest 2 and a Quest Pro. It probably doesn't work wit
 3. Restart the Oculus PC software
 4. Enable 'Developer Runtime Features' under Settings -> Beta. If you don't see the option yet, try again later - it can take a few hours
 
-![Developer Runtime Features option](developer-runtime-features)
+![Developer Runtime Features option](developer-runtime-features.png)
 
 ## FAQ
 
