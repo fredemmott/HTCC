@@ -56,6 +56,13 @@ void PointCtrlSource::ConnectDevice() {
   if (mDevice) {
     return;
   }
+  static std::chrono::steady_clock::time_point sLastCheck {};
+  const auto now = std::chrono::steady_clock::now();
+  if (now - sLastCheck < std::chrono::seconds(1)) {
+    return;
+  }
+  sLastCheck = now;
+
   winrt::check_hresult(mDI->EnumDevices(
     DI8DEVCLASS_GAMECTRL,
     &PointCtrlSource::EnumDevicesCallbackStatic,
