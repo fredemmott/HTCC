@@ -27,4 +27,4 @@ As DCS World does not support OpenXR (regardless of headset), OpenComposite is n
 
 [Oculus Hand Tracking]: oculus-hand-tracking/README.md
 [DCS World]: dcs-world/README.md
-[PointCtrl v2]: pointctrl/README.md
+[PointCTRL]: pointctrl/README.md
