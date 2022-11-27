@@ -20,19 +20,29 @@ I make this for my own use, and I share this in the hope others find it useful; 
 
 First, check the documentation links above; if you still need help, support may be available from the community via the #hand-tracking channel in [my Discord]. I am not able to respond to 1:1 requests for help via any means, including GitHub, Discord, Twitter, Reddit, or email.
 
-## Features
+## Requirements
 
-Pointer input can either come from:
-- OpenXR hand tracking (any OpenXR-compatible hand tracking, including Quest 2 or Quest Pro headsets)
+You need a pointing device, and a 'click' device
+
+Supported pointing devices include:
 - [PointCTRL] with custom firmware
+- OpenXR hand tracking
+  - Quest 2 or Quest Pro
+  - Ultraleap or Leap Motion devices with OpenXR enabled
+  - Pimax headsets with handtracking support, with the ultraleap software with OpenXR enabled
+  - Varjo XR-3 or VR-3 headsets
+  - **The HP Reverb G2 does not have the required hardware or driver support**
+  - **The Varjo Aero does not have the required hardware support**
 
-If you already have OpenXR hand tracking, you have everything you need.
-
-A PointCTRL will work with any VR headset, and also often has better tracking when your hands are higher than your head, especially on a Quest 2. The importance here varies by aircraft - for example, it's much more important in a Ka-50 than an A-10C due to the location of the countermeasures system.
-
-Interactions (mouse clicks etc) can either come from:
+Supported click devices include:
 - Hand tracking **on Oculus headsets**, including Quest 2 or Quest pro
 - PointCTRL with custom firmware
+  - **The HP Reverb G2 does not have the required hardware or driver support**
+  - **The Varjo Aero does not have the required hardware support**
+
+If you do not have supported hardware, I recommend a [PointCTRL] - an Ultraleap device may also work.
+
+A PointCTRL will work with any VR headset, and also often has better tracking when your hands are higher than your head, especially on a Quest 2. The importance here varies by aircraft - for example, it's much more important in a Ka-50 than an A-10C due to the location of the countermeasures system.
 
 Oculus hand tracking gesture recognition does not require additional hardware, however PointCTRL clicks are more reliable, and give a better tacticle feel.
 
