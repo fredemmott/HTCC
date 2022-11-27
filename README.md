@@ -1,5 +1,3 @@
-**THIS IS AN EXPERIMENT - IT IS NOT READY FOR USE**. Do not ask for help using or installing it, etc.
-
 # EXPERIMENT: Hand-tracked cockpit clicking for VR flight simulators
 
 This project is an OpenXR API layer aimed to make it easy to click on cockpits in VR flight simulators. Currently only DCS World is supported.
@@ -15,7 +13,11 @@ This project is an OpenXR API layer aimed to make it easy to click on cockpits i
 
 ## Getting help
 
-This is an experiment, not suitable for general use. No support is available.
+**This is an experiment**; you should only use this if you're already comfortable with OpenComposite and other required projects, I have very limited time to support.
+
+I make this for my own use, and I share this in the hope others find it useful; I'm not able to commit to support, bug fixes, or feature development.
+
+First, check the documentation links above; if you still need help, support may be available from the community via the #hand-tracking channel in [my Discord]. I am not able to respond to 1:1 requests for help via any means, including GitHub, Discord, Twitter, Reddit, or email.
 
 ## Features
 
@@ -52,3 +54,4 @@ This project is licensed under the [MIT license].
 [`XR_EXT_hand_tracking`]: https://registry.khronos.org/OpenXR/specs/1.0/html/xrspec.html#XR_EXT_hand_tracking
 [MIT license]: LICENSE
 [PointCTRL]: https://pointctrl.com/
+[my Discord]: https://go.fredemmott.com/discord
