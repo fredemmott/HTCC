@@ -56,6 +56,15 @@ void PointCtrlSource::ConnectDevice() {
   if (mDevice) {
     return;
   }
+
+  // If we're not going to do anything with it, don't fetch the data.
+  if (
+    Config::PointerSource != PointerSource::PointCtrl
+    && !Config::PointCtrlFCUClicks) {
+    return;
+  }
+
+  // Don't check for device every frame
   static std::chrono::steady_clock::time_point sLastCheck {};
   const auto now = std::chrono::steady_clock::now();
   if (now - sLastCheck < std::chrono::seconds(1)) {
