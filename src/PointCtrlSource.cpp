@@ -43,6 +43,10 @@ PointCtrlSource::PointCtrlSource() {
     Config::PointCtrlCenterY,
     Config::PointCtrlRadiansPerUnitX,
     Config::PointCtrlRadiansPerUnitY);
+  DebugPrint(
+    "PointerSource: {}; ActionSource: {}",
+    Config::PointerSource == PointerSource::PointCtrl,
+    Config::PointCtrlFCUClicks);
   winrt::check_hresult(DirectInput8Create(
     reinterpret_cast<HINSTANCE>(&__ImageBase),
     DIRECTINPUT_VERSION,
@@ -136,37 +140,21 @@ void PointCtrlSource::Update() {
     mY = joystate.lY;
   }
 
-  constexpr auto pressedBit = 1 << 7;
-  const auto& buttons = joystate.rgbButtons;
-#define FCUB(x) Config::PointCtrlFCUButton##x
-#define HAS_BUTTON(idx) ((buttons[idx] & pressedBit) == pressedBit)
-#define HAS_EITHER_BUTTON(a, b) (HAS_BUTTON(a) || HAS_BUTTON(b))
-  ActionState newState {
-    .mLeftClick = HAS_EITHER_BUTTON(FCUB(L1), FCUB(R1)),
-    .mRightClick = HAS_EITHER_BUTTON(FCUB(L2), FCUB(R2)),
-  };
-  if (newState.mLeftClick && !newState.mRightClick) {
-    mScrollDirection = ScrollDirection::Down;
-  }
-  if (newState.mRightClick && !newState.mLeftClick) {
-    mScrollDirection = ScrollDirection::Up;
+  ActionState newState;
+  if (Config::PointCtrlFCUMapping == PointCtrlFCUMapping::Classic) {
+    MapActionsClassic(newState, joystate.rgbButtons);
+  } else if (Config::PointCtrlFCUMapping == PointCtrlFCUMapping::MSFS) {
+    MapActionsMSFS(newState, joystate.rgbButtons);
   }
 
-  if (HAS_EITHER_BUTTON(FCUB(L3), FCUB(R3))) {
-    newState.mWheelDown = (mScrollDirection == ScrollDirection::Down);
-    newState.mWheelUp = (mScrollDirection == ScrollDirection::Up);
-  }
-#undef HAS_BUTTON
-#undef HAS_EITHER_BUTTON
-#undef FCUB
-
-  if (Config::VerboseDebug >= 2 && newState != mActionState) {
+  if (Config::VerboseDebug >= 1 && newState != mActionState) {
     DebugPrint(
-      "PointCtrl FCU button state change: L {} R {} U {} D {}",
+      "FCU button state change: L {} R {} U {} D {}; scroll lock {}",
       newState.mLeftClick,
       newState.mRightClick,
       newState.mWheelUp,
-      newState.mWheelDown);
+      newState.mWheelDown,
+      static_cast<uint8_t>(mScrollMode));
   }
 
   mActionState = newState;
@@ -231,4 +219,110 @@ PointCtrlSource::GetPoses() const {
   }
   return {{}, {pose}};
 }
+
+///// start button mappings /////
+
+static constexpr auto pressedBit = 1 << 7;
+#define FCUB(x) Config::PointCtrlFCUButton##x
+#define HAS_BUTTON(idx) ((buttons[idx] & pressedBit) == pressedBit)
+#define HAS_EITHER_BUTTON(a, b) (HAS_BUTTON(a) || HAS_BUTTON(b))
+
+void PointCtrlSource::MapActionsClassic(
+  ActionState& newState,
+  const decltype(DIJOYSTATE2::rgbButtons)& buttons) {
+  newState = {
+    .mLeftClick = HAS_EITHER_BUTTON(FCUB(L1), FCUB(R1)),
+    .mRightClick = HAS_EITHER_BUTTON(FCUB(L2), FCUB(R2)),
+  };
+  if (newState.mLeftClick && !newState.mRightClick) {
+    mScrollDirection = ScrollDirection::Down;
+  }
+  if (newState.mRightClick && !newState.mLeftClick) {
+    mScrollDirection = ScrollDirection::Up;
+  }
+
+  if (HAS_EITHER_BUTTON(FCUB(L3), FCUB(R3))) {
+    newState.mWheelDown = (mScrollDirection == ScrollDirection::Down);
+    newState.mWheelUp = (mScrollDirection == ScrollDirection::Up);
+  }
+}
+
+void PointCtrlSource::MapActionsMSFS(
+  ActionState& newState,
+  const decltype(DIJOYSTATE2::rgbButtons)& buttons) {
+  const auto previousScrollMode = mScrollMode;
+
+  const auto fcu1 = HAS_EITHER_BUTTON(FCUB(L1), FCUB(R1));
+  const auto fcu2 = HAS_EITHER_BUTTON(FCUB(L2), FCUB(R2));
+  const auto fcu3 = HAS_EITHER_BUTTON(FCUB(L3), FCUB(R3));
+
+  const auto now = std::chrono::steady_clock::now();
+
+  // Update state
+  switch (mScrollMode) {
+    case LockState::Unlocked:
+      if (fcu1 && fcu2) {
+        mScrollMode = LockState::MaybeLocking;
+        mRightPressedAt = now;
+      }
+      break;
+    case LockState::MaybeLocking:
+      if (!fcu2) {
+        if (now - mRightPressedAt > std::chrono::milliseconds(200)) {
+          mScrollMode = LockState::LockingAfterRelease;
+        } else {
+          mScrollMode = LockState::Unlocked;
+          // will be unset on next frame
+          newState.mRightClick = true;
+        }
+      } else if (!fcu1) {
+        mScrollMode = LockState::LockingAfterRelease;
+      }
+      break;
+    case LockState::LockingAfterRelease:
+      if (!(fcu1 || fcu2)) {
+        mScrollMode = LockState::Locked;
+      }
+      break;
+    case LockState::Locked:
+      if (fcu1) {
+        mScrollMode = LockState::UnlockingAfterRelease;
+      }
+      break;
+    case LockState::UnlockingAfterRelease:
+      if (!fcu1) {
+        mScrollMode = LockState::Unlocked;
+      }
+  }
+
+  // Set actions according to state
+  switch (mScrollMode) {
+    case LockState::Unlocked:
+    case LockState::MaybeLocking:
+      newState.mLeftClick = fcu1;
+      // right click handled by state switches
+      break;
+    case LockState::Locked:
+      newState = {
+        .mLeftClick = true,
+        .mWheelUp = fcu2,
+        .mWheelDown = fcu3,
+      };
+      break;
+    case LockState::LockingAfterRelease:
+    case LockState::UnlockingAfterRelease:
+      newState.mLeftClick = true;
+      break;
+  }
+
+  if (mScrollMode != previousScrollMode && Config::VerboseDebug >= 1) {
+    DebugPrint(
+      "Scroll mode change: {} -> {}",
+      static_cast<uint8_t>(previousScrollMode),
+      static_cast<uint8_t>(mScrollMode));
+  }
+}
+
+///// end button mappings /////
+
 }// namespace HandTrackedCockpitClicking

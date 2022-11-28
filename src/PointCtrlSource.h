@@ -55,12 +55,26 @@ class PointCtrlSource final {
     LPCDIDEVICEINSTANCE lpddi,
     LPVOID pvRef);
   BOOL EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi);
+  void MapActionsClassic(
+    ActionState&,
+    const decltype(DIJOYSTATE2::rgbButtons)&);
+  void MapActionsMSFS(ActionState&, const decltype(DIJOYSTATE2::rgbButtons)&);
 
   enum class ScrollDirection {
     Up,
     Down,
   };
   ScrollDirection mScrollDirection {ScrollDirection::Down};
+
+  enum class LockState {
+    Unlocked,
+    MaybeLocking,
+    LockingAfterRelease,
+    Locked,
+    UnlockingAfterRelease,
+  };
+  LockState mScrollMode {LockState::Unlocked};
+  std::chrono::steady_clock::time_point mRightPressedAt {};
 
   winrt::com_ptr<IDirectInput8W> mDI;
   winrt::com_ptr<IDirectInputDevice8W> mDevice;

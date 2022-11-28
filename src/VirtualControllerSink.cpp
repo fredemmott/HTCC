@@ -53,6 +53,10 @@ VirtualControllerSink::VirtualControllerSink(
     mInstance(instance),
     mSession(session),
     mViewSpace(viewSpace) {
+  DebugPrint(
+    "Initialized virtual VR controller - PointerSink: {}; ActionSink: {}",
+    IsPointerSink(),
+    IsActionSink());
 }
 
 bool VirtualControllerSink::IsPointerSink() {
@@ -204,6 +208,10 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
     const std::string binding {pathBuf, pathLen - 1};
     mActionPaths[it.action] = binding;
 
+    if (Config::VerboseDebug >= 2) {
+      DebugPrint("Binding requested: {}", binding);
+    }
+
     ControllerState* state;
     if (binding.starts_with(gLeftHandPath)) {
       state = &mLeftHand;
@@ -223,14 +231,14 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
         state->gripAction = it.action;
         continue;
       }
-    }
 
-    if (IsActionSink()) {
       if (binding.ends_with(gSqueezeValuePath)) {
         state->squeezeValueActions.insert(it.action);
         continue;
       }
+    }
 
+    if (IsActionSink()) {
       if (binding.ends_with(gThumbstickTouchPath)) {
         state->thumbstickTouchActions.insert(it.action);
         continue;

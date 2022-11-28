@@ -41,12 +41,18 @@ enum class ActionSink : DWORD {
   VirtualTouchScreen = 1,
   VirtualVRController = 2,
 };
+enum class PointCtrlFCUMapping : DWORD {
+  Classic = 0,
+  MSFS = 1,
+};
 }// namespace HandTrackedCockpitClicking
 
 #define HandTrackedCockpitClicking_DWORD_SETTINGS \
   IT(bool, Enabled, false) \
   IT(uint8_t, VerboseDebug, 0) \
   IT(uint8_t, MirrorEye, 1) \
+  IT(bool, EnableFBOpenXRExtensions, true) \
+  IT(bool, OneHandOnly, true) \
   IT(bool, UseHandTrackingAimPointFB, false) \
   IT(XrHandJointEXT, HandTrackingAimJoint, XR_HAND_JOINT_INDEX_PROXIMAL_EXT) \
   IT(bool, RaycastHandTrackingPose, true) \
@@ -55,8 +61,10 @@ enum class ActionSink : DWORD {
   IT(bool, PointCtrlFCUClicks, true) \
   IT(uint16_t, PointCtrlCenterX, 32767) \
   IT(uint16_t, PointCtrlCenterY, 32767) \
-  IT(bool, EnableFBOpenXRExtensions, true) \
-  IT(bool, OneHandOnly, true) \
+  IT( \
+    HandTrackedCockpitClicking::PointCtrlFCUMapping, \
+    PointCtrlFCUMapping, \
+    HandTrackedCockpitClicking::PointCtrlFCUMapping::Classic) \
   IT( \
     HandTrackedCockpitClicking::PointerSource, \
     PointerSource, \

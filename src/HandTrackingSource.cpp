@@ -42,6 +42,12 @@ HandTrackingSource::HandTrackingSource(
   XrSession session,
   XrSpace space)
   : mOpenXR(next), mSession(session), mSpace(space) {
+  DebugPrint(
+    "HandTrackingSource - PointerSource: {}; PinchToClick: {}; PinchToScroll: "
+    "{}",
+    Config::PointerSource == PointerSource::OculusHandTracking,
+    Config::PinchToClick,
+    Config::PinchToScroll);
 }
 
 HandTrackingSource::~HandTrackingSource() {

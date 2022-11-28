@@ -35,8 +35,8 @@ DWORD: which device is emulated for clicking
 DWORD: 0..n
 
 - 0: off
-- 1: some
-- 2: more
+- 1: verbose initialization, major state changes
+- 2: periodic changes
 - 3: every frame
 - 4...n: increasingly spammy
 

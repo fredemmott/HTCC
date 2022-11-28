@@ -59,7 +59,7 @@ static std::wstring AppOverrideSubKey() {
 
 template <class T>
 static void LoadDWord(T& value, const wchar_t* valueName) {
-  for (const auto& subKey: {SubKey, AppOverrideSubKey()}) {
+  for (const auto& subKey: {AppOverrideSubKey(), SubKey}) {
     DWORD data {};
     DWORD dataSize = sizeof(data);
     const auto result = RegGetValueW(
@@ -78,7 +78,7 @@ static void LoadDWord(T& value, const wchar_t* valueName) {
 }
 
 static void LoadFloat(float& value, const wchar_t* valueName) {
-  for (const auto& subKey: {SubKey, AppOverrideSubKey()}) {
+  for (const auto& subKey: {AppOverrideSubKey(), SubKey}) {
     DWORD dataSize = 0;
     const auto sizeResult = RegGetValueW(
       HKEY_LOCAL_MACHINE,

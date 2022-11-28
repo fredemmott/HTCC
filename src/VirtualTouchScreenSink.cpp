@@ -35,6 +35,10 @@ VirtualTouchScreenSink::VirtualTouchScreenSink(
   XrSession session,
   XrTime nextDisplayTime,
   XrSpace viewSpace) {
+  DebugPrint(
+    "Initialized virtual touch screen - PointerSink: {}; ActionSink: {}",
+    IsPointerSink(),
+    IsActionSink());
   XrViewLocateInfo viewLocateInfo {
     .type = XR_TYPE_VIEW_LOCATE_INFO,
     .viewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO,
