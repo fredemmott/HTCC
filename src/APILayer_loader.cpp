@@ -22,8 +22,11 @@
  * SOFTWARE.
  */
 
+#define XR_USE_PLATFORM_WIN32
+
 #include <loader_interfaces.h>
 #include <openxr/openxr.h>
+#include <openxr/openxr_platform.h>
 
 #include <filesystem>
 
@@ -299,6 +302,10 @@ static void EnumerateExtensions(OpenXRNext* oxr) {
       Environment::Have_XR_FB_HandTracking_Aim = true;
       continue;
     }
+    if (name == XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME) {
+      Environment::Have_XR_KHR_win32_convert_performance_counter_time = true;
+      continue;
+    }
   }
 
   DebugPrint(
@@ -309,6 +316,10 @@ static void EnumerateExtensions(OpenXRNext* oxr) {
     "{}: {}",
     XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME,
     Environment::Have_XR_FB_HandTracking_Aim);
+  DebugPrint(
+    "{}: {}",
+    XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME,
+    Environment::Have_XR_KHR_win32_convert_performance_counter_time);
 }
 
 static XrResult xrCreateApiLayerInstance(
@@ -335,9 +346,14 @@ static XrResult xrCreateApiLayerInstance(
       }
 
       enabledExtensions.push_back(XR_EXT_HAND_TRACKING_EXTENSION_NAME);
+      if (Environment::Have_XR_KHR_win32_convert_performance_counter_time) {
+        enabledExtensions.push_back(
+          XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME);
+      }
       if (Environment::Have_XR_FB_HandTracking_Aim) {
         enabledExtensions.push_back(XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME);
       }
+
       info.enabledExtensionCount = enabledExtensions.size();
       info.enabledExtensionNames = enabledExtensions.data();
     }
