@@ -341,17 +341,26 @@ static XrResult xrCreateApiLayerInstance(
   if (Config::Enabled) {
     EnumerateExtensions(&next);
     if (Environment::Have_XR_EXT_HandTracking) {
+      DebugPrint("Original extensions:");
       for (auto i = 0; i < originalInfo->enabledExtensionCount; ++i) {
+        DebugPrint("- {}", originalInfo->enabledExtensionNames[i]);
         enabledExtensions.push_back(originalInfo->enabledExtensionNames[i]);
       }
 
       enabledExtensions.push_back(XR_EXT_HAND_TRACKING_EXTENSION_NAME);
+      // Required by Ultraleap
       if (Environment::Have_XR_KHR_win32_convert_performance_counter_time) {
         enabledExtensions.push_back(
           XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME);
       }
+      // Required for enhanced pinch gestures on Quest
       if (Environment::Have_XR_FB_HandTracking_Aim) {
         enabledExtensions.push_back(XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME);
+      }
+
+      DebugPrint("Requesting extensions:");
+      for (const auto& ext: enabledExtensions) {
+        DebugPrint("- {}", ext);
       }
 
       info.enabledExtensionCount = enabledExtensions.size();
