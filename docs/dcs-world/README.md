@@ -4,6 +4,8 @@
 2. If using controller emulation, you probably want to hide DCS's default gloved hands. Inside DCS's installation folder, find `CoreMods\characters\models\glove_L.chanimgpu` and `glove_R.chanimgpu` - inside these files, change the `scale` to `0`
 3. If using a PointCTRL with custom firmware, unbind the PointCTRL X and Y axes within DCS
 4. Launch DCS with the `--force_steam_VR` option, or if you're using Skatezilla's launcher, select SteamVR. You must do this even if you're not using Steam, and even if you have an Oculus headset.
+5. If using touchscreen emulation, enable DCS's option to lock the mouse cursor to the window
+6. If using a virtual VR controller, enable DCS's option to support touch controllers in VR settings
 
 ![Skatezilla's SteamVR option](skatezilla-steamvr.png).
 
