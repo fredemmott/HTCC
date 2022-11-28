@@ -39,8 +39,7 @@ enum class PointerSink : DWORD {
 }// namespace HandTrackedCockpitClicking
 
 #define HandTrackedCockpitClicking_DWORD_SETTINGS \
-  IT(bool, Enabled, true) \
-  IT(bool, CheckGameSupported, true) \
+  IT(bool, Enabled, false) \
   IT(uint8_t, VerboseDebug, 0) \
   IT(uint8_t, MirrorEye, 1) \
   IT(bool, UseHandTrackingAimPointFB, false) \

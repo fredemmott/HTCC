@@ -148,12 +148,7 @@ static XrResult xrCreateSession(
   }
 
   if (!Config::Enabled) {
-    DebugPrint("Disabled, doing nothing");
-    return XR_SUCCESS;
-  }
-
-  if (!Environment::IsSupportedGame()) {
-    DebugPrint("Not a supported game, doing nothing");
+    DebugPrint("Not enabled, doing nothing");
     return XR_SUCCESS;
   }
 
@@ -318,7 +313,7 @@ static XrResult xrCreateApiLayerInstance(
   OpenXRNext next(NULL, layerInfo->nextInfo->nextGetInstanceProcAddr);
 
   std::vector<const char*> enabledExtensions;
-  if (Environment::IsSupportedGame()) {
+  if (Config::Enabled) {
     EnumerateExtensions(&next);
     if (Environment::Have_XR_EXT_HandTracking) {
       for (auto i = 0; i < originalInfo->enabledExtensionCount; ++i) {
@@ -369,25 +364,6 @@ XrResult __declspec(dllexport) XRAPI_CALL
   }
 
   HandTrackedCockpitClicking::Config::Load();
-
-  wchar_t executablePath[MAX_PATH];
-  const auto executablePathLen
-    = GetModuleFileNameW(NULL, executablePath, MAX_PATH);
-  const auto exeName = std::filesystem::path(
-                         std::wstring_view {executablePath, executablePathLen})
-                         .filename();
-  if (exeName == L"DCS.exe") {
-    Environment::IsDCS = true;
-  } else if (exeName == L"FlightSimulator.exe") {
-    Environment::IsMSFS = true;
-  } else {
-    DebugPrint(L"'{}' is not a supported game", exeName.wstring());
-    if (!HandTrackedCockpitClicking::Config::CheckGameSupported) {
-      DebugPrint("Loading anyway, Config::CheckGameSupported is false");
-    } else {
-      DebugPrint("Skipping.");
-    }
-  }
 
   // TODO: check version fields etc in loaderInfo
 

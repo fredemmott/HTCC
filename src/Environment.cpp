@@ -29,9 +29,4 @@ namespace HandTrackedCockpitClicking::Environment {
 HandTrackedCockpitClicking_ENVIRONMENT_INFO
 #undef IT
 
-  bool
-  IsSupportedGame() {
-  return IsDCS;// || IsMSFS;
-}
-
 }// namespace HandTrackedCockpitClicking::Environment

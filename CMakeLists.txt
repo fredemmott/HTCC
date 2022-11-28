@@ -96,6 +96,7 @@ set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME Default)
 
 add_subdirectory("third-party")
 add_subdirectory("src")
+add_subdirectory("reg")
 
 install(
   FILES

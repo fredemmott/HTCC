@@ -1,10 +1,12 @@
 # Registry Settings
 
-All settings are in the registry, in `HKEY_LOCAL_MACHINE\SOFTWARE\FredEmmott\HandTrackedCockpitClicking`.
+All settings are in the registry, in `HKEY_LOCAL_MACHINE\SOFTWARE\FredEmmott\HandTrackedCockpitClicking`; per-app overrides are in `HKEY_LOCAL_MACHINE\SOFTWARE\FredEmmott\HandTrackedCockpitClicking\AppOverrides\EXECUTABLE_NAME.exe\`, e.g. `AppOverrides\DCS.exe\`
 
 ## Enabled
 
 DWORD 0 (disabled) or 1 (enabled); enable or disable the entire API layer.
+
+This should usually be 0 to disable for the majority of games, but overriden to 1 in `AppOverrides\DCS.exe`.
 
 ## PointerSource
 
@@ -85,10 +87,6 @@ Change the USB vendor ID and product ID that this project looks for when trying 
 DWORD button indices starting at 0.
 
 FCU L1 is the button farthest from your wrist on your left hand, L3 is closest. R1-R3 are the buttons on your right hand.
-
-## CheckSupportedGame (developers only)
-
-DWORD 0 (disabled) or 1 (enabled); do nothing in unsupported games.
 
 # UseHandTrackingAimPointFB (developers only)
 

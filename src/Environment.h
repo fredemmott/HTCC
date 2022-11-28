@@ -26,8 +26,6 @@
 #include <cinttypes>
 
 #define HandTrackedCockpitClicking_ENVIRONMENT_INFO \
-  IT(bool, IsDCS, false) \
-  IT(bool, IsMSFS, false) \
   IT(bool, Have_XR_EXT_HandTracking, false) \
   IT(bool, Have_XR_FB_HandTracking_Aim, false)
 
@@ -38,8 +36,5 @@ namespace HandTrackedCockpitClicking::Environment {
   constexpr native_type name##Default {default};
 HandTrackedCockpitClicking_ENVIRONMENT_INFO
 #undef IT
-
-  bool
-  IsSupportedGame();
 
 }// namespace HandTrackedCockpitClicking::Environment
