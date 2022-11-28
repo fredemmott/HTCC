@@ -161,7 +161,9 @@ XrResult VirtualControllerSink::xrGetCurrentInteractionProfile(
   mOpenXR->xrPathToString(
     mInstance, topLevelUserPath, sizeof(pathBuf), &pathLen, pathBuf);
   std::string_view path {pathBuf, pathLen - 1};
-  DebugPrint("Requested interaction profile for {}", path);
+  if (Config::VerboseDebug >= 1) {
+    DebugPrint("Requested interaction profile for {}", path);
+  }
 
   if (
     (path == gLeftHandPath && mLeftHand.present)
