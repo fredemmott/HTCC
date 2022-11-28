@@ -36,6 +36,11 @@ enum class PointerSink : DWORD {
   VirtualTouchScreen = 0,
   VirtualVRController = 1,
 };
+enum class ActionSink : DWORD {
+  MatchPointerSink = 0,
+  VirtualTouchScreen = 1,
+  VirtualVRController = 2,
+};
 }// namespace HandTrackedCockpitClicking
 
 #define HandTrackedCockpitClicking_DWORD_SETTINGS \
@@ -60,6 +65,10 @@ enum class PointerSink : DWORD {
     HandTrackedCockpitClicking::PointerSink, \
     PointerSink, \
     HandTrackedCockpitClicking::PointerSink::VirtualTouchScreen) \
+  IT( \
+    HandTrackedCockpitClicking::ActionSink, \
+    ActionSink, \
+    HandTrackedCockpitClicking::ActionSink::MatchPointerSink) \
   IT(uint16_t, PointCtrlVID, 0x04d8) \
   IT(uint16_t, PointCtrlPID, 0xeeec) \
   IT(uint8_t, PointCtrlFCUButtonL1, 0) \

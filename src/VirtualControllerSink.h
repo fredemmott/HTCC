@@ -47,6 +47,9 @@ class VirtualControllerSink final {
     const std::optional<XrPosef>& rightAimPose,
     const ActionState& actionState);
 
+  static bool IsActionSink();
+  static bool IsPointerSink();
+
   XrResult xrSuggestInteractionProfileBindings(
     XrInstance instance,
     const XrInteractionProfileSuggestedBinding* suggestedBindings);

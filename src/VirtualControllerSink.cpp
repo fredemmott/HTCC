@@ -55,6 +55,16 @@ VirtualControllerSink::VirtualControllerSink(
     mViewSpace(viewSpace) {
 }
 
+bool VirtualControllerSink::IsPointerSink() {
+  return Config::PointerSink == PointerSink::VirtualVRController;
+}
+
+bool VirtualControllerSink::IsActionSink() {
+  return (Config::ActionSink == ActionSink::VirtualVRController)
+    || ((Config::ActionSink == ActionSink::MatchPointerSink)
+        && IsPointerSink());
+}
+
 void VirtualControllerSink::Update(
   const std::optional<XrPosef>& leftAimPose,
   const std::optional<XrPosef>& rightAimPose,
@@ -203,34 +213,38 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
       continue;
     }
 
-    if (binding.ends_with(gAimPosePath)) {
-      state->aimAction = it.action;
-      continue;
+    if (IsPointerSink()) {
+      if (binding.ends_with(gAimPosePath)) {
+        state->aimAction = it.action;
+        continue;
+      }
+
+      if (binding.ends_with(gGripPosePath)) {
+        state->gripAction = it.action;
+        continue;
+      }
     }
 
-    if (binding.ends_with(gGripPosePath)) {
-      state->gripAction = it.action;
-      continue;
-    }
+    if (IsActionSink()) {
+      if (binding.ends_with(gSqueezeValuePath)) {
+        state->squeezeValueActions.insert(it.action);
+        continue;
+      }
 
-    if (binding.ends_with(gSqueezeValuePath)) {
-      state->squeezeValueActions.insert(it.action);
-      continue;
-    }
+      if (binding.ends_with(gThumbstickTouchPath)) {
+        state->thumbstickTouchActions.insert(it.action);
+        continue;
+      }
 
-    if (binding.ends_with(gThumbstickTouchPath)) {
-      state->thumbstickTouchActions.insert(it.action);
-      continue;
-    }
+      if (binding.ends_with(gThumbstickXPath)) {
+        state->thumbstickXActions.insert(it.action);
+        continue;
+      }
 
-    if (binding.ends_with(gThumbstickXPath)) {
-      state->thumbstickXActions.insert(it.action);
-      continue;
-    }
-
-    if (binding.ends_with(gThumbstickYPath)) {
-      state->thumbstickYActions.insert(it.action);
-      continue;
+      if (binding.ends_with(gThumbstickYPath)) {
+        state->thumbstickYActions.insert(it.action);
+        continue;
+      }
     }
   }
   mHaveSuggestedBindings = true;

@@ -147,6 +147,16 @@ static constexpr bool HasFlags(Actual actual, Wanted wanted) {
   return (actual & wanted) == wanted;
 }
 
+bool VirtualTouchScreenSink::IsPointerSink() {
+  return Config::PointerSink == PointerSink::VirtualTouchScreen;
+}
+
+bool VirtualTouchScreenSink::IsActionSink() {
+  return (Config::ActionSink == ActionSink::VirtualTouchScreen)
+    || ((Config::ActionSink == ActionSink::MatchPointerSink)
+        && IsPointerSink());
+}
+
 bool VirtualTouchScreenSink::RotationToCartesian(
   const XrVector2f& rotation,
   XrVector2f* cartesian) {
@@ -169,88 +179,90 @@ bool VirtualTouchScreenSink::RotationToCartesian(
 void VirtualTouchScreenSink::Update(
   const std::optional<XrVector2f>& rotation,
   const ActionState& actionState) {
-  XrVector2f xy {};
-  if (!(rotation && RotationToCartesian(*rotation, &xy))) {
-    return;
-  }
+  std::vector<INPUT> events;
 
   const auto now = std::chrono::steady_clock::now();
-  if (now - mLastWindowCheck > std::chrono::seconds(1)) {
-    UpdateMainWindow();
-  }
+  XrVector2f xy {};
+  if (IsPointerSink() && rotation && RotationToCartesian(*rotation, &xy)) {
+    if (now - mLastWindowCheck > std::chrono::seconds(1)) {
+      UpdateMainWindow();
+    }
 
-  const auto x = ((xy.x * mWindowSize.x) + mWindowRect.left) / mScreenSize.x;
-  const auto y = ((xy.y * mWindowSize.y) + mWindowRect.top) / mScreenSize.y;
+    const auto x = ((xy.x * mWindowSize.x) + mWindowRect.left) / mScreenSize.x;
+    const auto y = ((xy.y * mWindowSize.y) + mWindowRect.top) / mScreenSize.y;
 
-  if (Config::VerboseDebug >= 3) {
-    DebugPrint(
-      "Raw: ({:.02f}, {:0.2f}); adjusted for window: ({:.02f}, {:.02f})",
-      xy.x,
-      xy.y,
-      x,
-      y);
-  }
+    if (Config::VerboseDebug >= 3) {
+      DebugPrint(
+        "Raw: ({:.02f}, {:0.2f}); adjusted for window: ({:.02f}, {:.02f})",
+        xy.x,
+        xy.y,
+        x,
+        y);
+    }
 
-  std::vector<INPUT> events {
-    INPUT {
+    events.push_back({
       .type = INPUT_MOUSE,
       .mi = {
         .dx = std::lround(x * 65535),
         .dy = std::lround(y * 65535),
         .dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE,
       },
+    });
+  }
+
+  if (IsActionSink()) {
+    const auto leftClick = actionState.mLeftClick;
+    if (leftClick != mLeftClick) {
+      mLeftClick = leftClick;
+      events.push_back(
+        {.type = INPUT_MOUSE,
+         .mi = {
+           .dwFlags = static_cast<DWORD>(
+             leftClick ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP),
+         }});
     }
-  };
 
-  const auto leftClick = actionState.mLeftClick;
-  if (leftClick != mLeftClick) {
-    mLeftClick = leftClick;
-    events.push_back(
-      {.type = INPUT_MOUSE,
-       .mi = {
-         .dwFlags = static_cast<DWORD>(
-           leftClick ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP),
-       }});
-  }
+    const auto rightClick = actionState.mRightClick;
+    if (rightClick != mRightClick) {
+      mRightClick = rightClick;
+      events.push_back(
+        {.type = INPUT_MOUSE,
+         .mi = {
+           .dwFlags = static_cast<DWORD>(
+             rightClick ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_RIGHTUP),
+         }});
+    }
 
-  const auto rightClick = actionState.mRightClick;
-  if (rightClick != mRightClick) {
-    mRightClick = rightClick;
-    events.push_back(
-      {.type = INPUT_MOUSE,
-       .mi = {
-         .dwFlags = static_cast<DWORD>(
-           rightClick ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_RIGHTUP),
-       }});
-  }
-
-  if (
-    actionState.mWheelUp
-    && (now - mLastWheelUp > std::chrono::milliseconds(250))) {
-    mLastWheelUp = now;
-    events.push_back({
+    if (
+      actionState.mWheelUp
+      && (now - mLastWheelUp > std::chrono::milliseconds(250))) {
+      mLastWheelUp = now;
+      events.push_back({
       .type = INPUT_MOUSE,
       .mi = {
         .mouseData = static_cast<DWORD>(-WHEEL_DELTA),
         .dwFlags = MOUSEEVENTF_WHEEL,
       },
     });
-  }
+    }
 
-  if (
-    actionState.mWheelDown
-    && (now - mLastWheelDown > std::chrono::milliseconds(250))) {
-    mLastWheelDown = now;
-    events.push_back({
+    if (
+      actionState.mWheelDown
+      && (now - mLastWheelDown > std::chrono::milliseconds(250))) {
+      mLastWheelDown = now;
+      events.push_back({
       .type = INPUT_MOUSE,
       .mi = {
         .mouseData = static_cast<DWORD>(WHEEL_DELTA),
         .dwFlags = MOUSEEVENTF_WHEEL,
       },
     });
+    }
   }
 
-  SendInput(events.size(), events.data(), sizeof(INPUT));
+  if (!events.empty()) {
+    SendInput(events.size(), events.data(), sizeof(INPUT));
+  }
 }
 
 }// namespace HandTrackedCockpitClicking

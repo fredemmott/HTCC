@@ -77,7 +77,9 @@ APILayer::APILayer(
   }
   mPointCtrl = std::make_unique<PointCtrlSource>();
 
-  if (Config::PointerSink == PointerSink::VirtualVRController) {
+  if (
+    VirtualControllerSink::IsActionSink()
+    || VirtualControllerSink::IsPointerSink()) {
     mVirtualController = std::make_unique<VirtualControllerSink>(
       next, instance, session, mViewSpace);
   }
@@ -183,8 +185,8 @@ XrResult APILayer::xrWaitFrame(
   }
 
   if (
-    Config::PointerSink == PointerSink::VirtualTouchScreen
-    && !mVirtualTouchScreen) {
+    (!mVirtualTouchScreen)
+    && (VirtualTouchScreenSink::IsActionSink() || VirtualTouchScreenSink::IsPointerSink())) {
     mVirtualTouchScreen = std::make_unique<VirtualTouchScreenSink>(
       mOpenXR, session, state->predictedDisplayTime, mViewSpace);
   }

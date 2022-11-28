@@ -17,10 +17,18 @@ DWORD: which device is used to set the cursor location
 
 ## PointerSink
 
-DWORD: which device is emulated
+DWORD: which device is emulated for pointing
 
 - 0: touch screen (classic PointCtrl)
 - 1: VR controllers
+
+## ActionSink
+
+DWORD: which device is emulated for clicking
+
+- 0: match PointerSink
+- 1: touch screen/mouse
+- 2: VR controllers
 
 ## VerboseDebug
 

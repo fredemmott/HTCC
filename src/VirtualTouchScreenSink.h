@@ -43,6 +43,9 @@ class VirtualTouchScreenSink final {
     const std::optional<XrVector2f>& rxry,
     const ActionState& actionState);
 
+  static bool IsActionSink();
+  static bool IsPointerSink();
+
  private:
   bool RotationToCartesian(const XrVector2f& rotation, XrVector2f* cartesian);
   void UpdateMainWindow();
