@@ -342,11 +342,8 @@ XrResult VirtualControllerSink::xrGetActionStatePose(
   XrActionStatePose* state) {
   const auto action = getInfo->action;
   for (auto hand: {&mLeftHand, &mRightHand}) {
-    if (hand->aimActions.contains(action)) {
-      state->isActive = hand->present ? XR_TRUE : XR_FALSE;
-      return XR_SUCCESS;
-    }
-    if (hand->aimActions.contains(action)) {
+    if (
+      hand->aimActions.contains(action) || hand->gripActions.contains(action)) {
       state->isActive = hand->present ? XR_TRUE : XR_FALSE;
       return XR_SUCCESS;
     }
