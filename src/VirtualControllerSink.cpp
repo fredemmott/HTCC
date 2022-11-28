@@ -404,6 +404,11 @@ XrResult VirtualControllerSink::xrLocateSpace(
 
     const auto viewPose = location->pose;
 
+    if (space == hand.aimSpace) {
+      location->pose = hand.aimPose * viewPose;
+      return XR_SUCCESS;
+    }
+
     // Just experimentation; use PointCtrl to calibrate this: as it's
     // a 2D source, the 'laser' should always be straight line
     auto aimToGripQ = Quaternion::CreateFromAxisAngle(
