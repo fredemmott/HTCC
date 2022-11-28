@@ -28,9 +28,6 @@ Supported pointing devices include:
 - [PointCTRL] with custom firmware
 - OpenXR hand tracking
   - Quest 2 or Quest Pro
-  - Ultraleap or Leap Motion devices with OpenXR enabled
-  - Pimax headsets with handtracking support, with the ultraleap software with OpenXR enabled
-  - Varjo XR-3 or VR-3 headsets
   - **The HP Reverb G2 does not have the required hardware or driver support**
   - **The Varjo Aero does not have the required hardware support**
 
@@ -39,6 +36,11 @@ Supported click devices include:
 - PointCTRL with custom firmware
   - **The HP Reverb G2 does not have the required hardware or driver support**
   - **The Varjo Aero does not have the required hardware support**
+
+**Not yet supported**, but expected in the future:
+  - Ultraleap or Leap Motion devices with OpenXR enabled
+  - Pimax headsets with handtracking support, with the ultraleap software with OpenXR enabled
+  - Varjo XR-3 or VR-3 headsets
 
 If you do not have supported hardware, I recommend a [PointCTRL] - an Ultraleap device may also work.
 
