@@ -110,8 +110,11 @@ void VirtualControllerSink::Update(
 XrResult VirtualControllerSink::xrSyncActions(
   XrSession session,
   const XrActionsSyncInfo* syncInfo) {
+  static bool sFirstRun = true;
   for (auto hand: {&mLeftHand, &mRightHand}) {
-    const bool presenceChanged = hand->present != hand->presentLastSync;
+    const bool presenceChanged
+      = sFirstRun || (hand->present != hand->presentLastSync);
+    sFirstRun = false;
     hand->presentLastSync = hand->present;
 
     hand->squeezeValue.currentState = (hand->present ? 1.0f : 0.0f);
@@ -164,16 +167,40 @@ XrResult VirtualControllerSink::xrGetCurrentInteractionProfile(
   if (Config::VerboseDebug >= 1) {
     DebugPrint("Requested interaction profile for {}", path);
   }
+  if (mLeftHand.present && mRightHand.present) {
+    DebugPrint("Both hands?!");
+  }
 
-  if (
-    (path == gLeftHandPath && mLeftHand.present)
-    || (path == gRightHandPath && mRightHand.present)) {
-    interactionProfile->interactionProfile = mProfilePath;
+  if (path == gLeftHandPath) {
+    interactionProfile->interactionProfile
+      = mLeftHand.present ? mProfilePath : XR_NULL_PATH;
+    return XR_SUCCESS;
+  }
+  if (path == gRightHandPath) {
+    interactionProfile->interactionProfile
+      = mRightHand.present ? mProfilePath : XR_NULL_PATH;
     return XR_SUCCESS;
   }
 
-  return mOpenXR->xrGetCurrentInteractionProfile(
+  const auto next = mOpenXR->xrGetCurrentInteractionProfile(
     session, topLevelUserPath, interactionProfile);
+  if (
+    Config::VerboseDebug >= 1 && next == XR_SUCCESS
+    && ((path == gLeftHandPath) || path == gRightHandPath)) {
+    const auto result = mOpenXR->xrPathToString(
+      mInstance,
+      interactionProfile->interactionProfile,
+      sizeof(pathBuf),
+      &pathLen,
+      pathBuf);
+    DebugPrint(
+      "Upstream interaction profile: {:#016x} {} {} {}",
+      static_cast<uint64_t>(interactionProfile->interactionProfile),
+      static_cast<int>(result),
+      pathLen,
+      std::string_view {pathBuf, pathLen - 1});
+  }
+  return next;
 }
 
 XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
@@ -396,7 +423,8 @@ XrResult VirtualControllerSink::xrLocateSpace(
     }
 
     if (!hand.present) {
-      break;
+      *location = {XR_TYPE_SPACE_LOCATION};
+      return XR_SUCCESS;
     }
 
     mOpenXR->xrLocateSpace(mViewSpace, baseSpace, time, location);
