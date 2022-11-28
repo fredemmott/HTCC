@@ -69,6 +69,11 @@ class VirtualControllerSink final {
     const XrActionStateGetInfo* getInfo,
     XrActionStateFloat* state);
 
+  XrResult xrGetActionStatePose(
+    XrSession session,
+    const XrActionStateGetInfo* getInfo,
+    XrActionStatePose* state);
+
   XrResult xrLocateSpace(
     XrSpace space,
     XrSpace baseSpace,
@@ -95,10 +100,10 @@ class VirtualControllerSink final {
 
     XrPosef aimPose {};
     XrSpace aimSpace {};
-    XrAction aimAction {};
+    std::unordered_set<XrAction> aimActions {};
 
     XrSpace gripSpace {};
-    XrAction gripAction {};
+    std::unordered_set<XrAction> gripActions {};
 
     XrActionStateFloat squeezeValue {XR_TYPE_ACTION_STATE_FLOAT};
     std::unordered_set<XrAction> squeezeValueActions {};

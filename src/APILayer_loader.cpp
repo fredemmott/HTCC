@@ -88,6 +88,16 @@ static XrResult xrGetActionStateFloat(
   return gNext->xrGetActionStateFloat(session, getInfo, state);
 }
 
+static XrResult xrGetActionStatePose(
+  XrSession session,
+  const XrActionStateGetInfo* getInfo,
+  XrActionStatePose* state) {
+  if (gInstance) {
+    return gInstance->xrGetActionStatePose(session, getInfo, state);
+  }
+  return gNext->xrGetActionStatePose(session, getInfo, state);
+}
+
 static XrResult xrGetCurrentInteractionProfile(
   XrSession session,
   XrPath topLevelUserPath,
@@ -207,6 +217,10 @@ static XrResult xrGetInstanceProcAddr(
   }
   if (name == "xrGetActionStateFloat") {
     *function = reinterpret_cast<PFN_xrVoidFunction>(&xrGetActionStateFloat);
+    return XR_SUCCESS;
+  }
+  if (name == "xrGetActionStatePose") {
+    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrGetActionStatePose);
     return XR_SUCCESS;
   }
   if (name == "xrLocateSpace") {

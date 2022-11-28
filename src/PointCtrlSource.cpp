@@ -268,7 +268,7 @@ void PointCtrlSource::MapActionsMSFS(
       break;
     case LockState::MaybeLocking:
       if (!fcu2) {
-        if (now - mRightPressedAt > std::chrono::milliseconds(200)) {
+        if (now - mRightPressedAt > std::chrono::milliseconds(100)) {
           mScrollMode = LockState::LockingAfterRelease;
         } else {
           mScrollMode = LockState::Unlocked;

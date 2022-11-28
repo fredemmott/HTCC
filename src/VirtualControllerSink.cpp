@@ -223,12 +223,12 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
 
     if (IsPointerSink()) {
       if (binding.ends_with(gAimPosePath)) {
-        state->aimAction = it.action;
+        state->aimActions.insert(it.action);
         continue;
       }
 
       if (binding.ends_with(gGripPosePath)) {
-        state->gripAction = it.action;
+        state->gripActions.insert(it.action);
         continue;
       }
 
@@ -274,14 +274,14 @@ XrResult VirtualControllerSink::xrCreateActionSpace(
   mActionSpaces[*space] = createInfo->action;
 
   for (auto hand: {&mLeftHand, &mRightHand}) {
-    if (createInfo->action == hand->aimAction) {
+    if (hand->aimActions.contains(createInfo->action)) {
       hand->aimSpace = *space;
       DebugPrint(
         "Found aim space: {:#016x}", reinterpret_cast<uintptr_t>(*space));
       return XR_SUCCESS;
     }
 
-    if (createInfo->action == hand->gripAction) {
+    if (hand->gripActions.contains(createInfo->action)) {
       DebugPrint(
         "Found grip space: {:#016x}", reinterpret_cast<uintptr_t>(*space));
       hand->gripSpace = *space;
@@ -332,6 +332,24 @@ XrResult VirtualControllerSink::xrGetActionStateFloat(
   }
 
   return mOpenXR->xrGetActionStateFloat(session, getInfo, state);
+}
+
+XrResult VirtualControllerSink::xrGetActionStatePose(
+  XrSession session,
+  const XrActionStateGetInfo* getInfo,
+  XrActionStatePose* state) {
+  const auto action = getInfo->action;
+  for (auto hand: {&mLeftHand, &mRightHand}) {
+    if (hand->aimActions.contains(action)) {
+      state->isActive = hand->present ? XR_TRUE : XR_FALSE;
+      return XR_SUCCESS;
+    }
+    if (hand->aimActions.contains(action)) {
+      state->isActive = hand->present ? XR_TRUE : XR_FALSE;
+      return XR_SUCCESS;
+    }
+  }
+  return mOpenXR->xrGetActionStatePose(session, getInfo, state);
 }
 
 static XrPosef operator*(const XrPosef& a, const XrPosef& b) {

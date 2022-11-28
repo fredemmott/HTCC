@@ -48,6 +48,7 @@
   IT(xrCreateActionSpace) \
   IT(xrGetActionStateBoolean) \
   IT(xrGetActionStateFloat) \
+  IT(xrGetActionStatePose) \
   IT(xrSyncActions) \
   IT(xrGetCurrentInteractionProfile) \
   IT(xrPollEvent)

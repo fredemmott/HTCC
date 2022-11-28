@@ -124,6 +124,16 @@ XrResult APILayer::xrGetActionStateFloat(
   return mOpenXR->xrGetActionStateFloat(session, getInfo, state);
 }
 
+XrResult APILayer::xrGetActionStatePose(
+  XrSession session,
+  const XrActionStateGetInfo* getInfo,
+  XrActionStatePose* state) {
+  if (mVirtualController) {
+    return mVirtualController->xrGetActionStatePose(session, getInfo, state);
+  }
+  return mOpenXR->xrGetActionStatePose(session, getInfo, state);
+}
+
 XrResult APILayer::xrLocateSpace(
   XrSpace space,
   XrSpace baseSpace,

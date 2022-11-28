@@ -70,6 +70,11 @@ class APILayer final {
     const XrActionStateGetInfo* getInfo,
     XrActionStateFloat* state);
 
+  XrResult xrGetActionStatePose(
+    XrSession session,
+    const XrActionStateGetInfo* getInfo,
+    XrActionStatePose* state);
+
   XrResult xrLocateSpace(
     XrSpace space,
     XrSpace baseSpace,
