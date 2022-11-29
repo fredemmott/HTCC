@@ -102,7 +102,7 @@ The emulated VR controller is positioned slightly below your hand, and angled sl
 
 The pointing angle is based on this distance, combined with the `VRFarDistance` setting.
 
-# VRFarDistance
+## VRFarDistance
 
 String (SZ) containing a distance in meters, e.g. `0.8` (80cm away).
 
