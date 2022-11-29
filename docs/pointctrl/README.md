@@ -15,3 +15,14 @@ Requirements:
 [GitHub Releases]: https://github.com/fredemmott/hand-tracked-cockpit-clicking/releases/latest
 [my Discord]: https://go.fredemmott.com/discord
 [PointCTRL Discord]: https://discord.gg/JktNJ2ptKm
+
+## Projection distance
+
+The PointCTRL HMS only detects left/right and up/down position - not distance. You can choose what distance is used for emulated VR controllers in the registry at:
+
+- `HKEY_LOCAL_MACHINE\SOFTWARE\FredEmmott\HandTrackedCockpitClicking`: default for games
+- `HKEY_LOCAL_MACHINE\SOFTWARE\FredEmmott\HandTrackedCockpitClicking\AppOverrides\MYGAME.exe`
+
+Within these registry keys (folders), create a string value called `PointCtrlProjectionDistance`, containing a distance in meters. For example, to make the emulated controller in MSFS feel 30cm away:
+
+![set to "0.3"](projection-distance.png)
