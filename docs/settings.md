@@ -113,3 +113,7 @@ DWORD 0 (disabled) or 1 (enabled): Discard the orientation/rotation of your hand
 DWORD 0 (disabled) or 1 (enabled): Enable the use of Facebook/Meta/Oculus-specific OpenXR extensions for hand tracking. This is required for the pinch gestures.
 
 To disable pinch gestures, use the `PinchToClick` and `PinchToScroll` settings instead. This is primarily intended for checking that this project can function without them.
+
+# VirtualControllerInteractionProfilePath (developers only)
+
+STRING: OpenXR path to the interaction profile of the emulated controllers.

@@ -91,6 +91,11 @@ enum class PointCtrlFCUMapping : DWORD {
   IT(PointCtrlRadiansPerUnitY, 3.009e-5f) \
   IT(PointCtrlProjectionDistance, 0.60f)
 
+#define HandTrackedCockpitClicking_STRING_SETTINGS \
+  IT( \
+    VirtualControllerInteractionProfilePath, \
+    "/interaction_profiles/oculus/touch_controller")
+
 namespace HandTrackedCockpitClicking::Config {
 
 #define IT(native_type, name, default) \
@@ -102,6 +107,11 @@ HandTrackedCockpitClicking_DWORD_SETTINGS
   extern float name; \
   constexpr float name##Default {default};
   HandTrackedCockpitClicking_FLOAT_SETTINGS
+#undef IT
+#define IT(name, default) \
+  extern std::string name; \
+  constexpr std::string_view name##Default {default};
+    HandTrackedCockpitClicking_STRING_SETTINGS
 #undef IT
 
   void

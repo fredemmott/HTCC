@@ -32,8 +32,6 @@ using namespace DirectX::SimpleMath;
 
 namespace HandTrackedCockpitClicking {
 
-static constexpr std::string_view gInteractionProfilePath {
-  "/interaction_profiles/oculus/touch_controller"};
 static constexpr std::string_view gLeftHandPath {"/user/hand/left"};
 static constexpr std::string_view gRightHandPath {"/user/hand/right"};
 static constexpr std::string_view gAimPosePath {"/input/aim/pose"};
@@ -218,15 +216,17 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
   {
     std::string_view interactionProfile {pathBuf, pathLen - 1};
 
-    if (interactionProfile != gInteractionProfilePath) {
+    if (interactionProfile != Config::VirtualControllerInteractionProfilePath) {
       DebugPrint(
         "Profile '{}' does not match desired profile '{}'",
         interactionProfile,
-        gInteractionProfilePath);
+        Config::VirtualControllerInteractionProfilePath);
       return mOpenXR->xrSuggestInteractionProfileBindings(
         instance, suggestedBindings);
     }
-    DebugPrint("Found desired profile '{}'", gInteractionProfilePath);
+    DebugPrint(
+      "Found desired profile '{}'",
+      Config::VirtualControllerInteractionProfilePath);
     mProfilePath = suggestedBindings->interactionProfile;
   }
 

@@ -35,6 +35,9 @@ HandTrackedCockpitClicking_DWORD_SETTINGS
 #define IT(name, default) float name {default};
   HandTrackedCockpitClicking_FLOAT_SETTINGS
 #undef IT
+#define IT(name, default) std::string name {default};
+    HandTrackedCockpitClicking_STRING_SETTINGS
+#undef IT
 
   static const std::wstring SubKey {
     L"SOFTWARE\\FredEmmott\\HandTrackedCockpitClicking"};
@@ -77,7 +80,7 @@ static void LoadDWord(T& value, const wchar_t* valueName) {
   }
 }
 
-static void LoadFloat(float& value, const wchar_t* valueName) {
+static bool LoadString(std::string& value, const wchar_t* valueName) {
   for (const auto& subKey: {AppOverrideSubKey(), SubKey}) {
     DWORD dataSize = 0;
     const auto sizeResult = RegGetValueW(
@@ -103,9 +106,17 @@ static void LoadFloat(float& value, const wchar_t* valueName) {
       &dataSize);
 
     if (dataResult == ERROR_SUCCESS) {
-      value = static_cast<float>(_wtof(buffer.data()));
-      return;
+      value = winrt::to_string(buffer.data());
+      return true;
     }
+  }
+  return false;
+}
+
+static void LoadFloat(float& value, const wchar_t* valueName) {
+  std::string buffer;
+  if (LoadString(buffer, valueName)) {
+    value = std::atof(buffer.data());
   }
 }
 
@@ -118,6 +129,9 @@ void Load() {
 #undef IT
 #define IT(name, default) LoadFloat(Config::name, L#name);
     HandTrackedCockpitClicking_FLOAT_SETTINGS
+#undef IT
+#define IT(name, default) LoadString(Config::name, L#name);
+      HandTrackedCockpitClicking_STRING_SETTINGS
 #undef IT
 }
 
@@ -137,20 +151,24 @@ static void SaveDWord(const wchar_t* valueName, T value) {
   }
 }
 
-static void SaveFloat(const wchar_t* valueName, float value) {
-  const auto data = std::format(L"{}", value);
-
+static void SaveString(const wchar_t* valueName, std::string_view value) {
+  const std::wstring buffer {winrt::to_hstring(value)};
   const auto result = RegSetKeyValueW(
     HKEY_LOCAL_MACHINE,
     SubKey.c_str(),
     valueName,
     REG_SZ,
-    data.data(),
-    data.size() * sizeof(data[0]));
+    buffer.data(),
+    buffer.size() * sizeof(value[0]));
   if (result != ERROR_SUCCESS) {
     auto message = std::format("Saving to registry failed: error {}", result);
     throw std::runtime_error(message);
   }
+}
+
+static void SaveFloat(const wchar_t* valueName, float value) {
+  const auto data = std::format("{}", value);
+  SaveString(valueName, data);
 }
 
 void Save() {
@@ -159,6 +177,9 @@ void Save() {
 #undef IT
 #define IT(name, default) SaveFloat(L#name, Config::name);
     HandTrackedCockpitClicking_FLOAT_SETTINGS
+#undef IT
+#define IT(name, default) SaveString(L#name, Config::name);
+      HandTrackedCockpitClicking_STRING_SETTINGS
 #undef IT
 }
 
