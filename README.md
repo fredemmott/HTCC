@@ -11,6 +11,7 @@ This project is an OpenXR API layer aimed to make it easy to click on cockpits i
 - [PointCTRL](docs/pointctrl/README.md)
 - [Oculus hand tracking](docs/oculus-hand-tracking/README.md)
 - [DCS World](docs/dcs-world/README.md)
+- [MSFS](docs/msfs/README.md)
 
 ## Getting help
 

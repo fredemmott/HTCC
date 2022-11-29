@@ -22,9 +22,10 @@ As DCS World does not support OpenXR (regardless of headset), OpenComposite is n
 
 ## Configuring your games
 
-- MSFS: Not yet supported.
 - [DCS World]
+- [MSFS]
 
 [Oculus Hand Tracking]: oculus-hand-tracking/README.md
 [DCS World]: dcs-world/README.md
 [PointCTRL]: pointctrl/README.md
+[MSFS]: msfs/README.md

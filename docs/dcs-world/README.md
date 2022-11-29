@@ -9,14 +9,22 @@
 
 ![Skatezilla's SteamVR option](skatezilla-steamvr.png).
 
-## FAQ
+## Controls
 
 ### Oculus hand tracking gesture controls
 
-- Index finger pinch to thumb: left click/tVR thumbstick down
+- Index finger pinch to thumb: left click/VR thumbstick down
 - Middle finger pinch to thumb: right click/VR thumbstick up
 - Ring finger pinch to thumb: scroll wheel up/VR thumbstick left
 - Little finger pinch to thumb: scroll wheel down/VR thumbstick right
+
+### PointCTRL FCU buttons
+
+- FCU1: left click
+- FCU2: right click
+- FCU3: if FCU1 was pressed more recently than FCU2, scroll down; otherwise, scroll up
+
+## FAQ
 
 ### Why is OpenComposite and SteamVR mode needed for Oculus headsets, when DCS World has native support for Oculus headsets?
 
