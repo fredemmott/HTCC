@@ -271,7 +271,9 @@ void PointCtrlSource::MapActionsModal(
       break;
     case LockState::MaybeLockingWithLeftHold:
       if (!fcu2) {
-        if (now - mModeSwitchStart > std::chrono::milliseconds(200)) {
+        if (
+          now - mModeSwitchStart > std::chrono::milliseconds(
+            Config::ShortPressLongPressMilliseconds)) {
           mScrollMode = LockState::LockingWithLeftHoldAfterRelease;
         } else {
           mScrollMode = LockState::Unlocked;

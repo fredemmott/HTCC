@@ -58,15 +58,6 @@ DWORD 0 (disabled) or 1 (enabled): use Oculus hand tracking pinch gestures to cl
 ## PinchToScroll
 
 DWORD 0 (disabled) or 1 (enabled): use Oculus hand tracking pinch gestures to scroll
-
-## PointCtrlFCUClicks
-
-DWORD 0 (disabled) or 1 (enabled): use PointCtrl FCU button clicks to click or scroll
-
-## PointCtrlProjectionDistance
-
-String (SZ) containing a distance (in meters) to project virtual hands when using a PointCtrl. For example, "0.6" for 60cm.
-
 ## OneHandOnly
 
 DWORD 0 (disabled) or 1 (enabled): only render one controller at a time.
@@ -76,6 +67,20 @@ Some games (including DCS) assume that you pick up one controller at a time to p
 With this option enabled (default), it will prefer:
 1. whichever is performing any gestures, if any
 2. whichever is currently closer to the center of the field of view
+
+## ShortPressLongPressMilliseconds
+
+DWORD, number of milliseconds for the boundary between a short press and a long press; this affects the PointCTRL MSFS bindings.
+
+## PointCtrlFCUClicks
+
+DWORD 0 (disabled) or 1 (enabled): use PointCtrl FCU button clicks to click or scroll
+
+## PointCtrlProjectionDistance
+
+String (SZ) containing a distance (in meters) to project virtual hands when using a PointCtrl. For example, "0.6" for 60cm.
+
+
 
 ## PointCtrlCenterX, PointCtrlCenterY, PointCtrlRadiansPerUnitX, PointCtrlRadiansPerUnitY
 

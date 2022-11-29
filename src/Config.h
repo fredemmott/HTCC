@@ -59,6 +59,7 @@ enum class PointCtrlFCUMapping : DWORD {
   IT(bool, PinchToClick, true) \
   IT(bool, PinchToScroll, true) \
   IT(bool, PointCtrlFCUClicks, true) \
+  IT(uint16_t, ShortPressLongPressMilliseconds, 200) \
   IT(uint16_t, PointCtrlCenterX, 32767) \
   IT(uint16_t, PointCtrlCenterY, 32767) \
   IT( \
