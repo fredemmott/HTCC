@@ -84,6 +84,13 @@ PointCtrlRadiansPerUnitX and Y are floats as strings.
 
 These values should be set with the included `PointCtrlCalibration.exe` program.
 
+## PointCtrlFCUMapping
+
+DWORD:
+
+- 0: Classic
+- 1: Modal (MSFS)
+
 ## PointCtrlVID, PointCtrlPID (firmware developers and custom button boxes only)
 
 DWORDs containing 16-bit USB vendor and product IDs.

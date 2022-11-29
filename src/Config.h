@@ -43,7 +43,7 @@ enum class ActionSink : DWORD {
 };
 enum class PointCtrlFCUMapping : DWORD {
   Classic = 0,
-  MSFS = 1,
+  Modal = 1,
 };
 }// namespace HandTrackedCockpitClicking
 

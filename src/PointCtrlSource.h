@@ -58,7 +58,7 @@ class PointCtrlSource final {
   void MapActionsClassic(
     ActionState&,
     const decltype(DIJOYSTATE2::rgbButtons)&);
-  void MapActionsMSFS(ActionState&, const decltype(DIJOYSTATE2::rgbButtons)&);
+  void MapActionsModal(ActionState&, const decltype(DIJOYSTATE2::rgbButtons)&);
 
   enum class ScrollDirection {
     Up,

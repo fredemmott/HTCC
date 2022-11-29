@@ -143,8 +143,8 @@ void PointCtrlSource::Update() {
   ActionState newState;
   if (Config::PointCtrlFCUMapping == PointCtrlFCUMapping::Classic) {
     MapActionsClassic(newState, joystate.rgbButtons);
-  } else if (Config::PointCtrlFCUMapping == PointCtrlFCUMapping::MSFS) {
-    MapActionsMSFS(newState, joystate.rgbButtons);
+  } else if (Config::PointCtrlFCUMapping == PointCtrlFCUMapping::Modal) {
+    MapActionsModal(newState, joystate.rgbButtons);
   }
 
   if (Config::VerboseDebug >= 1 && newState != mActionState) {
@@ -247,7 +247,7 @@ void PointCtrlSource::MapActionsClassic(
   }
 }
 
-void PointCtrlSource::MapActionsMSFS(
+void PointCtrlSource::MapActionsModal(
   ActionState& newState,
   const decltype(DIJOYSTATE2::rgbButtons)& buttons) {
   const auto previousScrollMode = mScrollMode;
