@@ -149,72 +149,64 @@ XrResult VirtualControllerSink::xrPollEvent(
   return mOpenXR->xrPollEvent(instance, eventData);
 }
 
+std::string_view VirtualControllerSink::ResolvePath(XrPath path) {
+  auto it = mPaths.find(path);
+  if (it != mPaths.end()) {
+    return it->second;
+  }
+
+  char buf[XR_MAX_PATH_LENGTH];
+  uint32_t bufLen;
+  mOpenXR->xrPathToString(mInstance, path, sizeof(buf), &bufLen, buf);
+
+  std::string_view str {buf, bufLen - 1};
+  mPaths[path] = str;
+
+  if (str == gLeftHandPath) {
+    mLeftHand.path = path;
+  } else if (str == gRightHandPath) {
+    mRightHand.path = path;
+  }
+
+  return mPaths.at(path);
+}
+
 XrResult VirtualControllerSink::xrGetCurrentInteractionProfile(
   XrSession session,
-  XrPath topLevelUserPath,
+  XrPath path,
   XrInteractionProfileState* interactionProfile) {
   if (!mHaveSuggestedBindings) {
     return mOpenXR->xrGetCurrentInteractionProfile(
-      session, topLevelUserPath, interactionProfile);
+      session, path, interactionProfile);
   }
-  char pathBuf[XR_MAX_PATH_LENGTH];
-  uint32_t pathLen;
-  mOpenXR->xrPathToString(
-    mInstance, topLevelUserPath, sizeof(pathBuf), &pathLen, pathBuf);
-  std::string_view path {pathBuf, pathLen - 1};
+  // We need the side effect of populating m(Left|Right)Hand.path
+  const auto pathStr = ResolvePath(path);
+
   if (Config::VerboseDebug >= 1) {
-    DebugPrint("Requested interaction profile for {}", path);
-  }
-  if (mLeftHand.present && mRightHand.present) {
-    DebugPrint("Both hands?!");
+    DebugPrint("Requested interaction profile for {}", pathStr);
   }
 
-  if (path == gLeftHandPath) {
+  if (path == mLeftHand.path) {
     interactionProfile->interactionProfile
       = mLeftHand.present ? mProfilePath : XR_NULL_PATH;
     return XR_SUCCESS;
   }
-  if (path == gRightHandPath) {
+  if (path == mRightHand.path) {
     interactionProfile->interactionProfile
       = mRightHand.present ? mProfilePath : XR_NULL_PATH;
     return XR_SUCCESS;
   }
 
-  const auto next = mOpenXR->xrGetCurrentInteractionProfile(
-    session, topLevelUserPath, interactionProfile);
-  if (
-    Config::VerboseDebug >= 1 && next == XR_SUCCESS
-    && ((path == gLeftHandPath) || path == gRightHandPath)) {
-    const auto result = mOpenXR->xrPathToString(
-      mInstance,
-      interactionProfile->interactionProfile,
-      sizeof(pathBuf),
-      &pathLen,
-      pathBuf);
-    DebugPrint(
-      "Upstream interaction profile: {:#016x} {} {} {}",
-      static_cast<uint64_t>(interactionProfile->interactionProfile),
-      static_cast<int>(result),
-      pathLen,
-      std::string_view {pathBuf, pathLen - 1});
-  }
-  return next;
+  return mOpenXR->xrGetCurrentInteractionProfile(
+    session, path, interactionProfile);
 }
 
 XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
   XrInstance instance,
   const XrInteractionProfileSuggestedBinding* suggestedBindings) {
-  char pathBuf[XR_MAX_PATH_LENGTH];
-  uint32_t pathLen = sizeof(pathBuf);
-  mOpenXR->xrPathToString(
-    instance,
-    suggestedBindings->interactionProfile,
-    sizeof(pathBuf),
-    &pathLen,
-    pathBuf);
-
   {
-    std::string_view interactionProfile {pathBuf, pathLen - 1};
+    const auto interactionProfile
+      = ResolvePath(suggestedBindings->interactionProfile);
 
     if (interactionProfile != Config::VirtualControllerInteractionProfilePath) {
       DebugPrint(
@@ -232,9 +224,7 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
 
   for (uint32_t i = 0; i < suggestedBindings->countSuggestedBindings; ++i) {
     const auto& it = suggestedBindings->suggestedBindings[i];
-    mOpenXR->xrPathToString(
-      instance, it.binding, sizeof(pathBuf), &pathLen, pathBuf);
-    const std::string binding {pathBuf, pathLen - 1};
+    const auto binding = ResolvePath(it.binding);
     mActionPaths[it.action] = binding;
 
     if (Config::VerboseDebug >= 2) {
@@ -302,7 +292,12 @@ XrResult VirtualControllerSink::xrCreateActionSpace(
 
   mActionSpaces[*space] = createInfo->action;
 
+  const auto path = createInfo->subactionPath;
+  ResolvePath(path);
   for (auto hand: {&mLeftHand, &mRightHand}) {
+    if (path != XR_NULL_PATH && path != hand->path) {
+      continue;
+    }
     if (hand->aimActions.contains(createInfo->action)) {
       hand->aimSpace = *space;
       DebugPrint(
@@ -367,10 +362,18 @@ XrResult VirtualControllerSink::xrGetActionStatePose(
   XrSession session,
   const XrActionStateGetInfo* getInfo,
   XrActionStatePose* state) {
+  ResolvePath(getInfo->subactionPath);
   const auto action = getInfo->action;
+
   for (auto hand: {&mLeftHand, &mRightHand}) {
     if (
       hand->aimActions.contains(action) || hand->gripActions.contains(action)) {
+      if (
+        getInfo->subactionPath != XR_NULL_PATH
+        && getInfo->subactionPath != hand->path) {
+        continue;
+      }
+
       state->isActive = hand->present ? XR_TRUE : XR_FALSE;
       return XR_SUCCESS;
     }

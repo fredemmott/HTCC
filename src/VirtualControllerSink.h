@@ -92,7 +92,8 @@ class VirtualControllerSink final {
  private:
   // based on /interaction_profiles/oculus/touch_controller
   struct ControllerState {
-    XrHandEXT hand;
+    XrHandEXT hand {};
+    XrPath path {};
 
     bool present {false};
     bool presentLastSync {false};
@@ -127,6 +128,9 @@ class VirtualControllerSink final {
   XrPath mProfilePath {};
   ControllerState mLeftHand {XR_HAND_LEFT_EXT};
   ControllerState mRightHand {XR_HAND_RIGHT_EXT};
+
+  std::string_view ResolvePath(XrPath path);
+  std::unordered_map<XrPath, std::string> mPaths;
 
   // For debugging
   std::unordered_map<XrAction, std::string> mActionPaths;
