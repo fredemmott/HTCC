@@ -90,6 +90,9 @@ class VirtualControllerSink final {
     XrInteractionProfileState* interactionProfile);
 
  private:
+  // Move the pose down, and angle upwards, so it's not blocked by the
+  // controller model
+  XrPosef OffsetPointerPose(const XrPosef& original);
   // based on /interaction_profiles/oculus/touch_controller
   struct ControllerState {
     XrHandEXT hand {};

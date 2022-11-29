@@ -90,7 +90,9 @@ enum class PointCtrlFCUMapping : DWORD {
 #define HandTrackedCockpitClicking_FLOAT_SETTINGS \
   IT(PointCtrlRadiansPerUnitX, 3.009e-5f) \
   IT(PointCtrlRadiansPerUnitY, 3.009e-5f) \
-  IT(PointCtrlProjectionDistance, 0.60f)
+  IT(PointCtrlProjectionDistance, 0.3f) \
+  IT(VRVerticalOffset, -0.04f) \
+  IT(VRFarDistance, 0.8f)
 
 #define HandTrackedCockpitClicking_STRING_SETTINGS \
   IT( \

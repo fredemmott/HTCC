@@ -28,6 +28,8 @@
 
 #include <numbers>
 
+#include "math.h"
+
 using namespace DirectX::SimpleMath;
 
 namespace HandTrackedCockpitClicking {
@@ -73,11 +75,11 @@ void VirtualControllerSink::Update(
   const ActionState& actionState) {
   mLeftHand.present = leftAimPose.has_value();
   if (mLeftHand.present) {
-    mLeftHand.aimPose = *leftAimPose;
+    mLeftHand.aimPose = OffsetPointerPose(*leftAimPose);
   }
   mRightHand.present = rightAimPose.has_value();
   if (mRightHand.present) {
-    mRightHand.aimPose = *rightAimPose;
+    mRightHand.aimPose = OffsetPointerPose(*rightAimPose);
   }
 
   for (auto* hand: {&mLeftHand, &mRightHand}) {
@@ -381,38 +383,29 @@ XrResult VirtualControllerSink::xrGetActionStatePose(
   return mOpenXR->xrGetActionStatePose(session, getInfo, state);
 }
 
-static XrPosef operator*(const XrPosef& a, const XrPosef& b) {
-  const Quaternion ao {
-    a.orientation.x,
-    a.orientation.y,
-    a.orientation.z,
-    a.orientation.w,
-  };
-  const Quaternion bo {
-    b.orientation.x,
-    b.orientation.y,
-    b.orientation.z,
-    b.orientation.w,
-  };
-  const Vector3 ap {
-    a.position.x,
-    a.position.y,
-    a.position.z,
-  };
-  const Vector3 bp {
-    b.position.x,
-    b.position.y,
-    b.position.z,
+XrPosef VirtualControllerSink::OffsetPointerPose(const XrPosef& original) {
+  const auto nearDistance
+    = Vector3(original.position.x, original.position.y, original.position.z)
+        .Length();
+  DebugPrint("nearDistance: {}", nearDistance);
+  const auto nearFarDistance = Config::VRFarDistance - nearDistance;
+  const auto rx = std::atan2f(Config::VRVerticalOffset, nearFarDistance);
+
+  const XrVector3f position {
+    original.position.x,
+    original.position.y + Config::VRVerticalOffset,
+    original.position.z,
   };
 
-  auto o = ao * bo;
-  o.Normalize();
-  const auto p = Vector3::Transform(ap, bo) + bp;
+  const auto q = Quaternion(
+                   original.orientation.x,
+                   original.orientation.y,
+                   original.orientation.z,
+                   original.orientation.w)
+    * Quaternion::CreateFromAxisAngle(Vector3::UnitX, -rx);
+  const XrQuaternionf orientation {q.x, q.y, q.z, q.w};
 
-  return {
-    .orientation = {o.x, o.y, o.z, o.w},
-    .position = {p.x, p.y, p.z},
-  };
+  return {orientation, position};
 }
 
 XrResult VirtualControllerSink::xrLocateSpace(
