@@ -201,13 +201,17 @@ void HandTrackingSource::Update(XrTime displayTime) {
     }
   }
 
-  if (Config::RaycastHandTrackingPose) {
-    if (mLeftHandPose) {
-      RaycastPose(*mLeftHandPose);
-    }
-    if (mRightHandPose) {
-      RaycastPose(*mRightHandPose);
-    }
+  switch (Config::HandTrackingOrientation) {
+    case HandTrackingOrientation::Raw:
+      break;
+    case HandTrackingOrientation::RayCast:
+      if (mLeftHandPose) {
+        RaycastPose(*mLeftHandPose);
+      }
+      if (mRightHandPose) {
+        RaycastPose(*mRightHandPose);
+      }
+      break;
   }
 
 #define EITHER_HAS(flag) \

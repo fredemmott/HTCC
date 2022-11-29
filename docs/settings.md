@@ -116,9 +116,12 @@ DWORD 0 (disabled) or 1 (enabled): Use the FB-provided 'aim' point instead of a 
 
 DWORD: joint index for aim joint. See the OpenXR specification.
 
-# RaycastHandTrackingPose (developers only)
+# HandTrackingOrientation (developers only)
 
-DWORD 0 (disabled) or 1 (enabled): Discard the orientation/rotation of your hand, and instead rotate it to fit a laser pointer from the center of your headset. This will improve accuracy and stability, but if controller models are enabled in-game, it may feel weird. Leaving this on is recommended.
+DWORD:
+
+- 0 (raw): The hand joint orientation/rotation reported by OpenXR is used unmodified
+- 1 (ray cast): Discard the orientation/rotation of your hand, and instead rotate it to fit a laser pointer from the center of your headset. This will improve accuracy and stability, but if controller models are enabled in-game, it may feel weird. Leaving this on is recommended.
 
 # EnableFBOpenXRExtensions (developers only)
 

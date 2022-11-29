@@ -384,7 +384,7 @@ XrResult VirtualControllerSink::xrGetActionStatePose(
 }
 
 XrPosef VirtualControllerSink::OffsetPointerPose(const XrPosef& original) {
-  if (!Config::IsRaycastPose()) {
+  if (!Config::IsRaycastOrientation()) {
     return original;
   }
   const auto nearDistance

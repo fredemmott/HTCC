@@ -45,6 +45,10 @@ enum class PointCtrlFCUMapping : DWORD {
   Classic = 0,
   Modal = 1,
 };
+enum class HandTrackingOrientation : DWORD {
+  Raw = 0,
+  RayCast = 1,
+};
 }// namespace HandTrackedCockpitClicking
 
 #define HandTrackedCockpitClicking_DWORD_SETTINGS \
@@ -55,7 +59,6 @@ enum class PointCtrlFCUMapping : DWORD {
   IT(bool, OneHandOnly, true) \
   IT(bool, UseHandTrackingAimPointFB, false) \
   IT(XrHandJointEXT, HandTrackingAimJoint, XR_HAND_JOINT_INDEX_PROXIMAL_EXT) \
-  IT(bool, RaycastHandTrackingPose, true) \
   IT(bool, PinchToClick, true) \
   IT(bool, PinchToScroll, true) \
   IT(bool, PointCtrlFCUClicks, true) \
@@ -78,6 +81,10 @@ enum class PointCtrlFCUMapping : DWORD {
     HandTrackedCockpitClicking::ActionSink, \
     ActionSink, \
     HandTrackedCockpitClicking::ActionSink::MatchPointerSink) \
+  IT( \
+    HandTrackedCockpitClicking::HandTrackingOrientation, \
+    HandTrackingOrientation, \
+    HandTrackedCockpitClicking::HandTrackingOrientation::RayCast) \
   IT(uint16_t, PointCtrlVID, 0x04d8) \
   IT(uint16_t, PointCtrlPID, 0xeeec) \
   IT(uint8_t, PointCtrlFCUButtonL1, 0) \
@@ -118,10 +125,10 @@ HandTrackedCockpitClicking_DWORD_SETTINGS
 #undef IT
 
   inline bool
-  IsRaycastPose() {
+  IsRaycastOrientation() {
   return (
-    Config::PointerSource == PointerSource::PointCtrl
-    || Config::RaycastHandTrackingPose);
+    (Config::PointerSource == PointerSource::PointCtrl)
+    || Config::HandTrackingOrientation == HandTrackingOrientation::RayCast);
 }
 
 void Load();
