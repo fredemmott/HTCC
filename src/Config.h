@@ -117,8 +117,14 @@ HandTrackedCockpitClicking_DWORD_SETTINGS
     HandTrackedCockpitClicking_STRING_SETTINGS
 #undef IT
 
-  void
-  Load();
+  inline bool
+  IsRaycastPose() {
+  return (
+    Config::PointerSource == PointerSource::PointCtrl
+    || Config::RaycastHandTrackingPose);
+}
+
+void Load();
 void Save();
 
 }// namespace HandTrackedCockpitClicking::Config
