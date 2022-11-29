@@ -38,7 +38,8 @@ Name: "{group}\Uninstall Hand Tracked Cockpit Clicking"; Filename: "{uninstallex
 
 [Run]
 Filename: "{app}\PointCtrlCalibration.exe"; Description: "Calibrate PointCTRL - requires custom firmware"; Flags: postinstall runascurrentuser
-Filename: "reg.exe"; Parameters: "import ""{app}\reg\DCS.reg"" /reg:64"; Description: "Default configuration for DCS World"; Flags: runascurrentuser nowait runhidden
+Filename: "reg.exe"; Parameters: "import ""{app}\reg\DCS.reg"" /reg:64"; Description: "Settings for DCS World"; Flags: runascurrentuser nowait runhidden
+Filename: "reg.exe"; Parameters: "import ""{app}\reg\MSFS.reg"" /reg:64"; Description: "Settings for MSFS"; Flags: runascurrentuser nowait runhidden
 
 [Code]
 var
