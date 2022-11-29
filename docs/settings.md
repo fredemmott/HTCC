@@ -106,7 +106,7 @@ The pointing angle is based on this distance, combined with the `VRFarDistance` 
 
 String (SZ) containing a distance in meters, e.g. `0.8` (80cm away).
 
-Rough distance from your head to the majority of things you want to interact with. Combined with `VRVerticalOffset`, this sets the upwards rotation of the pointer; a shorter 'far distance' will increase the angle, a longer one will reduce it:
+Rough distance from your head to the majority of things you want to interact with. Combined with `VRVerticalOffset`, this sets the upwards rotation of the pointer; a shorter 'far distance' will increase the amount of rotation, a longer one will reduce it:
 
 ![upwards tilt = atan(offset / (far distance - hand to headset distance)](tilt-angle.png)
 
