@@ -262,56 +262,73 @@ void PointCtrlSource::MapActionsMSFS(
   switch (mScrollMode) {
     case LockState::Unlocked:
       if (fcu1 && fcu2) {
-        mScrollMode = LockState::MaybeLocking;
-        mRightPressedAt = now;
+        mScrollMode = LockState::MaybeLockingWithLeftHold;
+        mModeSwitchStart = now;
+      } else if (fcu3) {
+        mScrollMode = LockState::SwitchingMode;
+        mModeSwitchStart = now;
       }
       break;
-    case LockState::MaybeLocking:
+    case LockState::MaybeLockingWithLeftHold:
       if (!fcu2) {
-        if (now - mRightPressedAt > std::chrono::milliseconds(100)) {
-          mScrollMode = LockState::LockingAfterRelease;
+        if (now - mModeSwitchStart > std::chrono::milliseconds(200)) {
+          mScrollMode = LockState::LockingWithLeftHoldAfterRelease;
         } else {
           mScrollMode = LockState::Unlocked;
           // will be unset on next frame
           newState.mRightClick = true;
         }
       } else if (!fcu1) {
-        mScrollMode = LockState::LockingAfterRelease;
+        mScrollMode = LockState::LockingWithLeftHoldAfterRelease;
       }
       break;
-    case LockState::LockingAfterRelease:
+    case LockState::SwitchingMode:
+      if (!fcu3) {
+        if (now - mModeSwitchStart > std::chrono::milliseconds(200)) {
+          mScrollMode = LockState::LockedWithoutLeftHold;
+        } else {
+          mScrollMode = LockState::Unlocked;
+        }
+      }
+      break;
+    case LockState::LockingWithLeftHoldAfterRelease:
       if (!(fcu1 || fcu2)) {
-        mScrollMode = LockState::Locked;
+        mScrollMode = LockState::LockedWithLeftHold;
       }
       break;
-    case LockState::Locked:
-      if (fcu1) {
-        mScrollMode = LockState::UnlockingAfterRelease;
+    case LockState::LockedWithLeftHold:
+    case LockState::LockedWithoutLeftHold:
+      if (fcu3) {
+        mScrollMode = LockState::SwitchingMode;
+        mModeSwitchStart = now;
       }
       break;
-    case LockState::UnlockingAfterRelease:
-      if (!fcu1) {
-        mScrollMode = LockState::Unlocked;
-      }
   }
 
   // Set actions according to state
   switch (mScrollMode) {
     case LockState::Unlocked:
-    case LockState::MaybeLocking:
+      newState.mRightClick = fcu2;
+      [[fallthrough]];
+    case LockState::MaybeLockingWithLeftHold:
       newState.mLeftClick = fcu1;
       // right click handled by state switches
       break;
-    case LockState::Locked:
+    case LockState::SwitchingMode:
+    case LockState::LockingWithLeftHoldAfterRelease:
+      break;
+    case LockState::LockedWithLeftHold:
       newState = {
         .mLeftClick = true,
         .mWheelUp = fcu2,
-        .mWheelDown = fcu3,
+        .mWheelDown = fcu1,
       };
       break;
-    case LockState::LockingAfterRelease:
-    case LockState::UnlockingAfterRelease:
-      newState.mLeftClick = true;
+    case LockState::LockedWithoutLeftHold:
+      newState = {
+        .mWheelUp = fcu2,
+        .mWheelDown = fcu1,
+      };
       break;
   }
 

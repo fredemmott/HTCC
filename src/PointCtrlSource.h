@@ -68,13 +68,14 @@ class PointCtrlSource final {
 
   enum class LockState {
     Unlocked,
-    MaybeLocking,
-    LockingAfterRelease,
-    Locked,
-    UnlockingAfterRelease,
+    MaybeLockingWithLeftHold,
+    SwitchingMode,
+    LockingWithLeftHoldAfterRelease,
+    LockedWithLeftHold,
+    LockedWithoutLeftHold,
   };
   LockState mScrollMode {LockState::Unlocked};
-  std::chrono::steady_clock::time_point mRightPressedAt {};
+  std::chrono::steady_clock::time_point mModeSwitchStart {};
 
   winrt::com_ptr<IDirectInput8W> mDI;
   winrt::com_ptr<IDirectInputDevice8W> mDevice;
