@@ -320,14 +320,14 @@ void PointCtrlSource::MapActionsMSFS(
     case LockState::LockedWithLeftHold:
       newState = {
         .mLeftClick = true,
-        .mWheelUp = fcu2,
-        .mWheelDown = fcu1,
+        .mWheelUp = fcu1,
+        .mWheelDown = fcu2,
       };
       break;
     case LockState::LockedWithoutLeftHold:
       newState = {
-        .mWheelUp = fcu2,
-        .mWheelDown = fcu1,
+        .mWheelUp = fcu1,
+        .mWheelDown = fcu2,
       };
       break;
   }
