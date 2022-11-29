@@ -390,7 +390,6 @@ XrPosef VirtualControllerSink::OffsetPointerPose(const XrPosef& original) {
   const auto nearDistance
     = Vector3(original.position.x, original.position.y, original.position.z)
         .Length();
-  DebugPrint("nearDistance: {}", nearDistance);
   const auto nearFarDistance = Config::VRFarDistance - nearDistance;
   const auto rx = std::atan2f(Config::VRVerticalOffset, nearFarDistance);
 
