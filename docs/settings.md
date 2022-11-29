@@ -78,9 +78,7 @@ DWORD 0 (disabled) or 1 (enabled): use PointCtrl FCU button clicks to click or s
 
 ## PointCtrlProjectionDistance
 
-String (SZ) containing a distance (in meters) to project virtual hands when using a PointCtrl. For example, "0.6" for 60cm.
-
-
+String (SZ) containing a distance in meters to project virtual hands when using a PointCtrl. For example, `0.6` for 60cm.
 
 ## PointCtrlCenterX, PointCtrlCenterY, PointCtrlRadiansPerUnitX, PointCtrlRadiansPerUnitY
 
@@ -95,6 +93,22 @@ DWORD:
 
 - 0: Classic
 - 1: Modal (MSFS)
+
+## VRVerticalOffset
+
+String (SZ) containing a distance in meters, e.g. `-0.04` (4cm down).
+
+The emulated VR controller is positioned slightly below your hand, and angled slightly up to make the 'laser pointer' more visible. This adjusts how far below it is.
+
+The pointing angle is based on this distance, combined with the `VRFarDistance` setting.
+
+# VRFarDistance
+
+String (SZ) containing a distance in meters, e.g. `0.8` (80cm away).
+
+Rough distance from your head to the majority of things you want to interact with. Combined with `VRVerticalOffset`, this sets the upwards rotation of the pointer:
+
+![upwards tilt = atan(offset / (far distance - hand to headset distance)](tilt-angle.png)
 
 ## PointCtrlVID, PointCtrlPID (firmware developers and custom button boxes only)
 
