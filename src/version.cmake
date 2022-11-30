@@ -56,18 +56,10 @@ endif()
 
 if("${RELEASE_NAME}" STREQUAL "")
   if(MATCHING_TAG)
-    set(RELEASE_NAME "${LATEST_GIT_TAG}+${BUILD_TYPE}.rev.${VERSION_BUILD}")
+    set(VERSION_SEMVER "${LATEST_GIT_TAG}+${BUILD_TYPE}.rev.${VERSION_BUILD}")
   else()
-    set(RELEASE_NAME "v${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}-alpha.rev.${VERSION_BUILD}+${BUILD_TYPE}")
+    set(VERSION_SEMVER "v${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}-alpha.rev.${VERSION_BUILD}+${BUILD_TYPE}")
   endif()
-endif()
-
-if(INPUT_CPP_FILE)
-  configure_file(
-    ${INPUT_CPP_FILE}
-    ${OUTPUT_CPP_FILE}
-    @ONLY
-  )
 endif()
 
 if(INPUT_RC_FILE)
