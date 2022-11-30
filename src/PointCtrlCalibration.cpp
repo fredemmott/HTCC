@@ -39,10 +39,12 @@
 
 #include "Config.h"
 #include "DebugPrint.h"
+#include "Environment.h"
 #include "PointCtrlSource.h"
 
 using namespace HandTrackedCockpitClicking;
 namespace Config = HandTrackedCockpitClicking::Config;
+namespace Environment = HandTrackedCockpitClicking::Environment;
 
 #define EXTENSION_FUNCTIONS IT(xrGetD3D11GraphicsRequirementsKHR)
 
@@ -253,6 +255,7 @@ void DrawLayer(
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   winrt::init_apartment(winrt::apartment_type::single_threaded);
   Config::Load();
+  Environment::IsPointCtrlCalibration = true;
 
   PointCtrlSource pointCtrl;
   while (!pointCtrl.IsConnected()) {

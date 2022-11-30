@@ -93,7 +93,8 @@ enum class HandTrackingOrientation : DWORD {
   IT(uint8_t, PointCtrlFCUButtonL3, 2) \
   IT(uint8_t, PointCtrlFCUButtonR1, 3) \
   IT(uint8_t, PointCtrlFCUButtonR2, 4) \
-  IT(uint8_t, PointCtrlFCUButtonR3, 5)
+  IT(uint8_t, PointCtrlFCUButtonR3, 5) \
+  IT(uint32_t, PointCtrlSleepMilliseconds, 20000)
 
 #define HandTrackedCockpitClicking_FLOAT_SETTINGS \
   IT(PointCtrlRadiansPerUnitX, 3.009e-5f) \

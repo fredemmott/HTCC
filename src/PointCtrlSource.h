@@ -85,6 +85,19 @@ class PointCtrlSource final {
   uint16_t mX {};
   uint16_t mY {};
   std::chrono::steady_clock::time_point mLastMovedAt {};
+
+  enum class WakeState {
+    Default,
+    Waking,
+  };
+  WakeState mLeftWakeState {WakeState::Default};
+  WakeState mRightWakeState {WakeState::Default};
+  std::chrono::steady_clock::time_point mLeftButtonAt {};
+  std::chrono::steady_clock::time_point mRightButtonAt {};
+  void UpdateWakeState(
+    bool hasButtons,
+    WakeState& state,
+    std::chrono::steady_clock::time_point& timePoint);
 };
 
 }// namespace HandTrackedCockpitClicking

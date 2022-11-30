@@ -56,6 +56,7 @@ add_executable(
   PointCtrlCalibration
   WIN32
   Config.cpp
+  Environment.cpp
   DebugPrint.cpp
   PointCtrlCalibration.cpp
   PointCtrlSource.cpp

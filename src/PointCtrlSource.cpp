@@ -29,10 +29,16 @@
 
 #include "Config.h"
 #include "DebugPrint.h"
+#include "Environment.h"
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 using namespace DirectX::SimpleMath;
+
+static constexpr auto PressedBit = 1 << 7;
+#define FCUB(x) Config::PointCtrlFCUButton##x
+#define HAS_BUTTON(idx) ((buttons[idx] & PressedBit) == PressedBit)
+#define HAS_EITHER_BUTTON(a, b) (HAS_BUTTON(a) || HAS_BUTTON(b))
 
 namespace HandTrackedCockpitClicking {
 
@@ -134,10 +140,31 @@ void PointCtrlSource::Update() {
     return;
   }
 
+  const auto now = std::chrono::steady_clock::now();
+
+  if (
+    Config::PointerSource == PointerSource::PointCtrl
+    || Environment::IsPointCtrlCalibration) {
+    const auto& buttons = joystate.rgbButtons;
+    const auto anyLeftButton
+      = HAS_BUTTON(FCUB(L1)) || HAS_BUTTON(FCUB(L2)) || HAS_BUTTON(FCUB(L3));
+    const auto anyRightButton
+      = HAS_BUTTON(FCUB(R1)) || HAS_BUTTON(FCUB(R2)) || HAS_BUTTON(FCUB(R3));
+    UpdateWakeState(anyLeftButton, mLeftWakeState, mLeftButtonAt);
+    UpdateWakeState(anyRightButton, mRightWakeState, mRightButtonAt);
+  }
+
   if (mX != joystate.lX || mY != joystate.lY) {
-    mLastMovedAt = std::chrono::steady_clock::now();
+    mLastMovedAt = now;
     mX = joystate.lX;
     mY = joystate.lY;
+  }
+
+  if (
+    mLeftWakeState == WakeState::Waking
+    || mRightWakeState == WakeState::Waking) {
+    mActionState = {};
+    return;
   }
 
   ActionState newState;
@@ -160,6 +187,30 @@ void PointCtrlSource::Update() {
   mActionState = newState;
 }
 
+void PointCtrlSource::UpdateWakeState(
+  bool hasButtons,
+  WakeState& state,
+  std::chrono::steady_clock::time_point& timePoint) {
+  const auto now = std::chrono::steady_clock::now();
+  if (state == WakeState::Default && hasButtons) {
+    if (
+      now - timePoint
+      > std::chrono::milliseconds(Config::PointCtrlSleepMilliseconds)) {
+      state = WakeState::Waking;
+    }
+    timePoint = now;
+    return;
+  }
+  if (state == WakeState::Waking && !hasButtons) {
+    timePoint = now;
+    state = WakeState::Default;
+    return;
+  }
+  if (hasButtons) {
+    timePoint = now;
+  }
+}
+
 ActionState PointCtrlSource::GetActionState() const {
   return mActionState;
 }
@@ -174,7 +225,7 @@ bool PointCtrlSource::IsConnected() const {
 }
 
 bool PointCtrlSource::IsStale() const {
-  return std::chrono::steady_clock::now() - mLastMovedAt
+  return (std::chrono::steady_clock::now() - mLastMovedAt)
     >= std::chrono::seconds(1);
 }
 
@@ -221,11 +272,6 @@ PointCtrlSource::GetPoses() const {
 }
 
 ///// start button mappings /////
-
-static constexpr auto pressedBit = 1 << 7;
-#define FCUB(x) Config::PointCtrlFCUButton##x
-#define HAS_BUTTON(idx) ((buttons[idx] & pressedBit) == pressedBit)
-#define HAS_EITHER_BUTTON(a, b) (HAS_BUTTON(a) || HAS_BUTTON(b))
 
 void PointCtrlSource::MapActionsClassic(
   ActionState& newState,
