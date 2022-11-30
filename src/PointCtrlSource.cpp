@@ -250,7 +250,6 @@ PointCtrlSource::GetPoses() const {
   }
 
   const auto [rx, ry] = *rotations;
-  const auto leftHand = ry < 0;
 
   const auto pointDirection
     = Quaternion::CreateFromAxisAngle(Vector3::UnitX, rx)
@@ -265,7 +264,7 @@ PointCtrlSource::GetPoses() const {
     .position = {p.x, p.y, p.z},
   };
 
-  if (leftHand) {
+  if (mLeftButtonAt > mRightButtonAt) {
     return {{pose}, {}};
   }
   return {{}, {pose}};
