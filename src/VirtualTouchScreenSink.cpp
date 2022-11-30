@@ -239,7 +239,7 @@ void VirtualTouchScreenSink::Update(
 
     if (
       actionState.mWheelUp
-      && (now - mLastWheelUp > std::chrono::milliseconds(250))) {
+      && (now - mLastWheelUp > std::chrono::milliseconds(Config::ScrollWheelMilliseconds))) {
       mLastWheelUp = now;
       events.push_back({
       .type = INPUT_MOUSE,
@@ -252,7 +252,7 @@ void VirtualTouchScreenSink::Update(
 
     if (
       actionState.mWheelDown
-      && (now - mLastWheelDown > std::chrono::milliseconds(250))) {
+      && (now - mLastWheelDown > std::chrono::milliseconds(Config::ScrollWheelMilliseconds))) {
       mLastWheelDown = now;
       events.push_back({
       .type = INPUT_MOUSE,

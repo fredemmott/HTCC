@@ -72,6 +72,10 @@ With this option enabled (default), it will prefer:
 
 DWORD, number of milliseconds for the boundary between a short press and a long press; this affects the PointCTRL MSFS bindings.
 
+## ScrollWheelMilliseconds
+
+DWORD, number of milliseconds between emulated scroll wheel ticks when using virtual mouse/touch screen as action sink.
+
 ## PointCtrlFCUClicks
 
 DWORD 0 (disabled) or 1 (enabled): use PointCtrl FCU button clicks to click or scroll
