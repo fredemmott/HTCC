@@ -159,7 +159,7 @@ static void SaveString(const wchar_t* valueName, std::string_view value) {
     valueName,
     REG_SZ,
     buffer.data(),
-    buffer.size() * sizeof(value[0]));
+    buffer.size() * sizeof(buffer[0]));
   if (result != ERROR_SUCCESS) {
     auto message = std::format("Saving to registry failed: error {}", result);
     throw std::runtime_error(message);
