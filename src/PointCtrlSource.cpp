@@ -152,8 +152,8 @@ void PointCtrlSource::Update() {
       "FCU button state change: L {} R {} U {} D {}; scroll lock {}",
       newState.mLeftClick,
       newState.mRightClick,
-      newState.mWheelUp,
-      newState.mWheelDown,
+      newState.mDecreaseValue,
+      newState.mIncreaseValue,
       static_cast<uint8_t>(mScrollMode));
   }
 
@@ -242,8 +242,8 @@ void PointCtrlSource::MapActionsClassic(
   }
 
   if (HAS_EITHER_BUTTON(FCUB(L3), FCUB(R3))) {
-    newState.mWheelDown = (mScrollDirection == ScrollDirection::Down);
-    newState.mWheelUp = (mScrollDirection == ScrollDirection::Up);
+    newState.mIncreaseValue = (mScrollDirection == ScrollDirection::Down);
+    newState.mDecreaseValue = (mScrollDirection == ScrollDirection::Up);
   }
 }
 
@@ -322,14 +322,14 @@ void PointCtrlSource::MapActionsModal(
     case LockState::LockedWithLeftHold:
       newState = {
         .mLeftClick = true,
-        .mWheelUp = fcu1,
-        .mWheelDown = fcu2,
+        .mDecreaseValue = fcu1,
+        .mIncreaseValue = fcu2,
       };
       break;
     case LockState::LockedWithoutLeftHold:
       newState = {
-        .mWheelUp = fcu1,
-        .mWheelDown = fcu2,
+        .mDecreaseValue = fcu1,
+        .mIncreaseValue = fcu2,
       };
       break;
   }

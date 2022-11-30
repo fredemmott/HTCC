@@ -97,9 +97,9 @@ void VirtualControllerSink::Update(
       hand->thumbstickY.currentState = 0.0f;
     }
 
-    if (actionState.mWheelUp) {
+    if (actionState.mDecreaseValue) {
       hand->thumbstickX.currentState = -1.0f;
-    } else if (actionState.mWheelDown) {
+    } else if (actionState.mIncreaseValue) {
       hand->thumbstickX.currentState = 1.0f;
     } else {
       hand->thumbstickX.currentState = 0.0f;

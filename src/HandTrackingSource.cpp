@@ -222,9 +222,9 @@ void HandTrackingSource::Update(XrTime displayTime) {
       && EITHER_HAS(XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB),
     .mRightClick = Config::PinchToClick
       && EITHER_HAS(XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB),
-    .mWheelUp = Config::PinchToScroll
+    .mDecreaseValue = Config::PinchToScroll
       && EITHER_HAS(XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB),
-    .mWheelDown = Config::PinchToScroll
+    .mIncreaseValue = Config::PinchToScroll
       && EITHER_HAS(XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB),
   };
 

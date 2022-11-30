@@ -224,8 +224,8 @@ XrResult APILayer::xrWaitFrame(
       actionState = {
         .mLeftClick = actionState.mLeftClick || as.mLeftClick,
         .mRightClick = actionState.mRightClick || as.mRightClick,
-        .mWheelUp = actionState.mWheelUp || as.mWheelUp,
-        .mWheelDown = actionState.mWheelDown || as.mWheelDown,
+        .mDecreaseValue = actionState.mDecreaseValue || as.mDecreaseValue,
+        .mIncreaseValue = actionState.mIncreaseValue || as.mIncreaseValue,
       };
     }
     if (Config::PointerSource == PointerSource::PointCtrl) {
@@ -236,9 +236,9 @@ XrResult APILayer::xrWaitFrame(
     }
   }
 
-  if (actionState.mWheelUp && actionState.mWheelDown) {
-    actionState.mWheelUp = false;
-    actionState.mWheelDown = false;
+  if (actionState.mDecreaseValue && actionState.mIncreaseValue) {
+    actionState.mDecreaseValue = false;
+    actionState.mIncreaseValue = false;
   }
 
   if (mVirtualTouchScreen) {

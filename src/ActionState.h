@@ -28,8 +28,8 @@ namespace HandTrackedCockpitClicking {
 struct ActionState {
   bool mLeftClick {};
   bool mRightClick {};
-  bool mWheelUp {};
-  bool mWheelDown {};
+  bool mDecreaseValue {};
+  bool mIncreaseValue {};
 
   constexpr auto operator<=>(const ActionState&) const noexcept = default;
 };
