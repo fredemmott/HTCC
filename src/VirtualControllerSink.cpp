@@ -152,6 +152,10 @@ XrResult VirtualControllerSink::xrPollEvent(
 }
 
 std::string_view VirtualControllerSink::ResolvePath(XrPath path) {
+  if (path == XR_NULL_PATH) {
+    return {};
+  }
+
   auto it = mPaths.find(path);
   if (it != mPaths.end()) {
     return it->second;
