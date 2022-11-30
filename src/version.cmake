@@ -1,5 +1,5 @@
 execute_process(
-  COMMAND git rev-parse HEAD
+  COMMAND git rev-parse --short HEAD
   OUTPUT_VARIABLE COMMIT_ID
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
