@@ -22,8 +22,6 @@
  * SOFTWARE.
  */
 
-#define XR_USE_PLATFORM_WIN32
-
 #include <loader_interfaces.h>
 #include <openxr/openxr.h>
 #include <openxr/openxr_platform.h>
@@ -348,7 +346,7 @@ static XrResult xrCreateApiLayerInstance(
       }
 
       enabledExtensions.push_back(XR_EXT_HAND_TRACKING_EXTENSION_NAME);
-      // Required by Ultraleap
+      // We need 'real time' units to rotate the hand at a known speed for MSFS
       if (Environment::Have_XR_KHR_win32_convert_performance_counter_time) {
         enabledExtensions.push_back(
           XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME);

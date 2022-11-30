@@ -26,11 +26,13 @@
 #define DIRECTINPUT_VERSION 0x0800
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
+#define XR_USE_PLATFORM_WIN32
 
 // Include order matters for these, so don't let clang-format reorder them
 // clang-format off
 #include <Windows.h>
 #include <Unknwn.h>
+#include <winrt/base.h>
 // clang-format on
 
-#include <winrt/base.h>
+#include <openxr/openxr.h>
