@@ -163,7 +163,11 @@ std::string_view VirtualControllerSink::ResolvePath(XrPath path) {
 
   char buf[XR_MAX_PATH_LENGTH];
   uint32_t bufLen;
-  mOpenXR->xrPathToString(mInstance, path, sizeof(buf), &bufLen, buf);
+  if (
+    mOpenXR->xrPathToString(mInstance, path, sizeof(buf), &bufLen, buf)
+    != XR_SUCCESS) {
+    return {};
+  }
 
   std::string_view str {buf, bufLen - 1};
   mPaths[path] = str;
