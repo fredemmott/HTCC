@@ -43,6 +43,7 @@ class VirtualControllerSink final {
     XrSpace viewSpace);
 
   void Update(
+    XrTime predictedDisplayTime,
     const std::optional<XrPosef>& leftAimPose,
     const std::optional<XrPosef>& rightAimPose,
     const ActionState& actionState);
@@ -109,18 +110,34 @@ class VirtualControllerSink final {
     XrSpace gripSpace {};
     std::unordered_set<XrAction> gripActions {};
 
+    // Cosmetic and 'is using controller'
     XrActionStateFloat squeezeValue {XR_TYPE_ACTION_STATE_FLOAT};
     std::unordered_set<XrAction> squeezeValueActions {};
 
+    // Cosmetic and DCS
     XrActionStateBoolean thumbstickTouch {XR_TYPE_ACTION_STATE_BOOLEAN};
     std::unordered_set<XrAction> thumbstickTouchActions {};
+
+    // Cosmetic and MSFS
+    XrActionStateBoolean triggerTouch {XR_TYPE_ACTION_STATE_BOOLEAN};
+    std::unordered_set<XrAction> triggerTouchActions {};
+
+    // DCS
 
     XrActionStateFloat thumbstickX {XR_TYPE_ACTION_STATE_FLOAT};
     std::unordered_set<XrAction> thumbstickXActions {};
 
     XrActionStateFloat thumbstickY {XR_TYPE_ACTION_STATE_FLOAT};
     std::unordered_set<XrAction> thumbstickYActions {};
+
+    // MSFS
+
+    XrActionStateBoolean triggerValue {XR_TYPE_ACTION_STATE_BOOLEAN};
+    std::unordered_set<XrAction> triggerValueActions {};
   };
+
+  LARGE_INTEGER mPerformanceCounterFrequency {};
+  XrTime mPredictedDisplayTime {};
 
   bool mHaveSuggestedBindings {false};
   std::shared_ptr<OpenXRNext> mOpenXR;
@@ -138,6 +155,16 @@ class VirtualControllerSink final {
   // For debugging
   std::unordered_map<XrAction, std::string> mActionPaths;
   std::unordered_map<XrSpace, XrAction> mActionSpaces;
+
+  void SetControllerActions(
+    ControllerState* controller,
+    const ActionState& actions);
+  void SetDCSControllerActions(
+    ControllerState* controller,
+    const ActionState& actions);
+  void SetMSFSControllerActions(
+    ControllerState* controller,
+    const ActionState& actions);
 };
 
 }// namespace HandTrackedCockpitClicking

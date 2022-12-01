@@ -24,6 +24,7 @@
 #pragma once
 
 #include <openxr/openxr.h>
+#include <openxr/openxr_platform.h>
 
 #include <utility>
 
@@ -51,7 +52,8 @@
   IT(xrGetActionStatePose) \
   IT(xrSyncActions) \
   IT(xrGetCurrentInteractionProfile) \
-  IT(xrPollEvent)
+  IT(xrPollEvent) \
+  IT(xrConvertTimeToWin32PerformanceCounterKHR)
 
 namespace HandTrackedCockpitClicking {
 

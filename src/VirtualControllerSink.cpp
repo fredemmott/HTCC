@@ -45,6 +45,22 @@ static constexpr std::string_view gThumbstickTouchPath {
   "/input/thumbstick/touch"};
 static constexpr std::string_view gThumbstickXPath {"/input/thumbstick/x"};
 static constexpr std::string_view gThumbstickYPath {"/input/thumbstick/y"};
+static constexpr std::string_view gTriggerTouchPath {"/input/trigger/touch"};
+static constexpr std::string_view gTriggerValuePath {"/input/trigger/value"};
+
+static constexpr XrVector3f gPushOffset {0.0f, 0.0f, -0.02f};
+
+static bool UseDCSActions() {
+  return VirtualControllerSink::IsActionSink()
+    && (Config::VRControllerActionSinkMapping
+        == VRControllerActionSinkMapping::DCS);
+}
+
+static bool UseMSFSActions() {
+  return VirtualControllerSink::IsActionSink()
+    && (Config::VRControllerActionSinkMapping
+        == VRControllerActionSinkMapping::MSFS);
+}
 
 VirtualControllerSink::VirtualControllerSink(
   const std::shared_ptr<OpenXRNext>& openXR,
@@ -59,6 +75,8 @@ VirtualControllerSink::VirtualControllerSink(
     "Initialized virtual VR controller - PointerSink: {}; ActionSink: {}",
     IsPointerSink(),
     IsActionSink());
+
+  QueryPerformanceFrequency(&mPerformanceCounterFrequency);
 }
 
 bool VirtualControllerSink::IsPointerSink() {
@@ -83,9 +101,12 @@ bool VirtualControllerSink::IsActionSink() {
 }
 
 void VirtualControllerSink::Update(
+  XrTime predictedDisplayTime,
   const std::optional<XrPosef>& leftAimPose,
   const std::optional<XrPosef>& rightAimPose,
   const ActionState& actionState) {
+  mPredictedDisplayTime = predictedDisplayTime;
+
   mLeftHand.present = leftAimPose.has_value();
   if (mLeftHand.present) {
     mLeftHand.aimPose = OffsetPointerPose(*leftAimPose);
@@ -99,25 +120,60 @@ void VirtualControllerSink::Update(
     if (!hand->present) {
       continue;
     }
-    hand->thumbstickX.changedSinceLastSync = true;
-    hand->thumbstickY.changedSinceLastSync = true;
-
-    if (actionState.mLeftClick) {
-      hand->thumbstickY.currentState = -1.0f;
-    } else if (actionState.mRightClick) {
-      hand->thumbstickY.currentState = 1.0f;
-    } else {
-      hand->thumbstickY.currentState = 0.0f;
-    }
-
-    if (actionState.mDecreaseValue) {
-      hand->thumbstickX.currentState = -1.0f;
-    } else if (actionState.mIncreaseValue) {
-      hand->thumbstickX.currentState = 1.0f;
-    } else {
-      hand->thumbstickX.currentState = 0.0f;
-    }
+    SetControllerActions(hand, actionState);
   }
+}
+
+void VirtualControllerSink::SetControllerActions(
+  ControllerState* controller,
+  const ActionState& actions) {
+  if (!IsActionSink()) {
+    return;
+  }
+  if (UseDCSActions()) {
+    SetDCSControllerActions(controller, actions);
+    return;
+  }
+  if (UseMSFSActions()) {
+    SetMSFSControllerActions(controller, actions);
+    return;
+  }
+
+  static bool sFirstFail = true;
+  if (sFirstFail) {
+    sFirstFail = false;
+    DebugPrint("Setting controller actions, but no binding set");
+  }
+}
+
+void VirtualControllerSink::SetDCSControllerActions(
+  ControllerState* hand,
+  const ActionState& actionState) {
+  hand->thumbstickX.changedSinceLastSync = true;
+  hand->thumbstickY.changedSinceLastSync = true;
+
+  if (actionState.mLeftClick) {
+    hand->thumbstickY.currentState = -1.0f;
+  } else if (actionState.mRightClick) {
+    hand->thumbstickY.currentState = 1.0f;
+  } else {
+    hand->thumbstickY.currentState = 0.0f;
+  }
+
+  if (actionState.mDecreaseValue) {
+    hand->thumbstickX.currentState = -1.0f;
+  } else if (actionState.mIncreaseValue) {
+    hand->thumbstickX.currentState = 1.0f;
+  } else {
+    hand->thumbstickX.currentState = 0.0f;
+  }
+}
+
+void VirtualControllerSink::SetMSFSControllerActions(
+  ControllerState* hand,
+  const ActionState& actionState) {
+  hand->triggerValue.changedSinceLastSync = true;
+  hand->triggerValue.currentState = actionState.mLeftClick;
 }
 
 XrResult VirtualControllerSink::xrSyncActions(
@@ -135,11 +191,13 @@ XrResult VirtualControllerSink::xrSyncActions(
     hand->squeezeValue.changedSinceLastSync = presenceChanged;
 
     hand->thumbstickTouch.currentState = (hand->present ? XR_TRUE : XR_FALSE);
-    hand->thumbstickTouch.isActive = hand->present;
     hand->thumbstickTouch.changedSinceLastSync = presenceChanged;
+    hand->thumbstickTouch.isActive = hand->present;
+    hand->triggerTouch = hand->thumbstickTouch;
 
     hand->thumbstickX.isActive = hand->present;
     hand->thumbstickY.isActive = hand->present;
+    hand->triggerValue.isActive = hand->present;
   }
 
   return mOpenXR->xrSyncActions(session, syncInfo);
@@ -274,18 +332,26 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
         continue;
       }
 
+      // Partially cosmetic, also helps with 'is using this controller' in some
+      // games
       if (binding.ends_with(gSqueezeValuePath)) {
         state->squeezeValueActions.insert(it.action);
         continue;
       }
-    }
 
-    if (IsActionSink()) {
+      // Cosmetic
       if (binding.ends_with(gThumbstickTouchPath)) {
         state->thumbstickTouchActions.insert(it.action);
         continue;
       }
 
+      if (binding.ends_with(gTriggerTouchPath)) {
+        state->triggerTouchActions.insert(it.action);
+        continue;
+      }
+    }
+
+    if (IsActionSink()) {
       if (binding.ends_with(gThumbstickXPath)) {
         state->thumbstickXActions.insert(it.action);
         continue;
@@ -293,6 +359,16 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
 
       if (binding.ends_with(gThumbstickYPath)) {
         state->thumbstickYActions.insert(it.action);
+        continue;
+      }
+
+      if (binding.ends_with(gTriggerTouchPath)) {
+        state->triggerTouchActions.insert(it.action);
+        continue;
+      }
+
+      if (binding.ends_with(gTriggerValuePath)) {
+        state->triggerValueActions.insert(it.action);
         continue;
       }
     }
@@ -350,6 +426,16 @@ XrResult VirtualControllerSink::xrGetActionStateBoolean(
       *state = hand->thumbstickTouch;
       return XR_SUCCESS;
     }
+
+    if (hand->triggerTouchActions.contains(action)) {
+      *state = hand->triggerTouch;
+      return XR_SUCCESS;
+    }
+
+    if (hand->triggerValueActions.contains(action)) {
+      *state = hand->triggerValue;
+      return XR_SUCCESS;
+    }
   }
 
   return mOpenXR->xrGetActionStateBoolean(session, getInfo, state);
@@ -374,6 +460,17 @@ XrResult VirtualControllerSink::xrGetActionStateFloat(
 
     if (hand->thumbstickYActions.contains(action)) {
       *state = hand->thumbstickY;
+      return XR_SUCCESS;
+    }
+
+    if (hand->triggerValueActions.contains(action)) {
+      *state = {
+        .type = XR_TYPE_ACTION_STATE_FLOAT,
+        .currentState = hand->triggerValue.currentState ? 1.0f : 0.0f,
+        .changedSinceLastSync = hand->triggerValue.changedSinceLastSync,
+        .lastChangeTime = hand->triggerValue.lastChangeTime,
+        .isActive = hand->triggerValue.isActive,
+      };
       return XR_SUCCESS;
     }
   }

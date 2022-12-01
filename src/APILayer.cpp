@@ -246,7 +246,8 @@ XrResult APILayer::xrWaitFrame(
   }
 
   if (mVirtualController) {
-    mVirtualController->Update(leftAimPose, rightAimPose, actionState);
+    mVirtualController->Update(
+      state->predictedDisplayTime, leftAimPose, rightAimPose, actionState);
   }
 
   return XR_SUCCESS;
