@@ -227,8 +227,17 @@ void HandTrackingSource::Update(XrTime displayTime) {
     .mIncreaseValue = Config::PinchToScroll
       && EITHER_HAS(XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB),
   };
-
 #undef EITHER_HAS
+
+  if (
+    rightAim.status
+    & (XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB)) {
+    mActionState.mActiveHand = XR_HAND_RIGHT_EXT;
+  } else if (
+    leftAim.status
+    & (XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB)) {
+    mActionState.mActiveHand = XR_HAND_LEFT_EXT;
+  }
 }
 
 void HandTrackingSource::InitHandTrackers() {

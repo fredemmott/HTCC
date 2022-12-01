@@ -139,13 +139,13 @@ void PointCtrlSource::Update() {
   if (mDevice->GetDeviceState(sizeof(joystate), &joystate) != DI_OK) {
     return;
   }
+  const auto& buttons = joystate.rgbButtons;
 
   const auto now = std::chrono::steady_clock::now();
 
   if (
     Config::PointerSource == PointerSource::PointCtrl
     || Environment::IsPointCtrlCalibration) {
-    const auto& buttons = joystate.rgbButtons;
     const auto anyLeftButton
       = HAS_BUTTON(FCUB(L1)) || HAS_BUTTON(FCUB(L2)) || HAS_BUTTON(FCUB(L3));
     const auto anyRightButton
@@ -169,9 +169,15 @@ void PointCtrlSource::Update() {
 
   ActionState newState;
   if (Config::PointCtrlFCUMapping == PointCtrlFCUMapping::Classic) {
-    MapActionsClassic(newState, joystate.rgbButtons);
+    MapActionsClassic(newState, buttons);
   } else if (Config::PointCtrlFCUMapping == PointCtrlFCUMapping::Modal) {
-    MapActionsModal(newState, joystate.rgbButtons);
+    MapActionsModal(newState, buttons);
+  }
+
+  if (mLeftButtonAt > mRightButtonAt) {
+    mActionState.mActiveHand = XR_HAND_LEFT_EXT;
+  } else {
+    mActionState.mActiveHand = XR_HAND_RIGHT_EXT;
   }
 
   if (Config::VerboseDebug >= 1 && newState != mActionState) {

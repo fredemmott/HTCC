@@ -26,6 +26,8 @@
 namespace HandTrackedCockpitClicking {
 
 struct ActionState {
+  XrHandEXT mActiveHand {XR_HAND_RIGHT_EXT};
+
   bool mLeftClick {};
   bool mRightClick {};
   bool mDecreaseValue {};
