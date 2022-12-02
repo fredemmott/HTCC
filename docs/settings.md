@@ -114,6 +114,22 @@ Rough distance from your head to the majority of things you want to interact wit
 
 ![upwards tilt = atan(offset / (far distance - hand to headset distance)](tilt-angle.png)
 
+# VRControllerActionSinkMapping 
+
+DWORD:
+
+- 0: [DCS](dcs-world/README.md)
+- 1: [MSFS](msfs/README.md)
+
+Which game's mappings are used for VR controllers.
+
+# VRControllerActionSinkWorldLock 
+
+DWORD
+
+- 0: clicking does not affect tracking
+- 1 - orientation: any click/wheel action locks the angle of the pointer, but not the position
+
 ## PointCtrlVID, PointCtrlPID (firmware developers and custom button boxes only)
 
 DWORDs containing 16-bit USB vendor and product IDs.
