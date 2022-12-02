@@ -22,45 +22,42 @@
  * SOFTWARE.
  */
 #pragma once
+#include <optional>
 
-#include <openxr/openxr.h>
-
-#include "InputSource.h"
-#include "OpenXRNext.h"
+#include "PointerMode.h"
+#include "openxr.h"
 
 namespace HandTrackedCockpitClicking {
 
-class HandTrackingSource final : public InputSource {
- public:
-  HandTrackingSource(
-    const std::shared_ptr<OpenXRNext>& next,
-    XrInstance instance,
-    XrSession session,
-    XrSpace viewSpace,
-    XrSpace localSpace);
-  ~HandTrackingSource();
+struct InputState {
+  XrHandEXT mHand;
+  XrTime mUpdatedAt {};
 
-  std::tuple<InputState, InputState>
-  Update(PointerMode, XrTime now, XrTime displayTime) override;
+  PointerMode mPointerMode {PointerMode::None};
+  // in LOCAL space
+  std::optional<XrPosef> mPose;
+  /* Rotation around the x and y axis, in radians.
+   *
+   * Movement *along* the x axis is rotation *around* the y axis.
+   */
+  std::optional<XrVector2f> mDirection;
 
- private:
-  std::shared_ptr<OpenXRNext> mOpenXR;
-  XrInstance mInstance {};
-  XrSession mSession {};
-  XrSpace mViewSpace {};
-  XrSpace mLocalSpace {};
+  bool mPrimaryInteraction {false};// 'left click'
+  bool mSecondaryInteraction {false};// 'right click'
 
-  struct Hand {
-    XrHandEXT mHand;
-    InputState mState {mHand};
-    XrHandTrackerEXT mTracker {};
+  enum class ValueChange {
+    None,
+    Decrease,// scroll wheel up
+    Increase,// scroll wheel down
   };
+  ValueChange mValueChange {ValueChange::None};
 
-  Hand mLeftHand {XR_HAND_LEFT_EXT};
-  Hand mRightHand {XR_HAND_RIGHT_EXT};
+  constexpr bool AnyInteraction() const {
+    return mPrimaryInteraction || mSecondaryInteraction
+      || (mValueChange != ValueChange::None);
+  }
 
-  void InitHandTracker(Hand* hand);
-  void UpdateHand(XrTime now, XrTime displayTime, Hand* hand);
+  constexpr auto operator<=>(const InputState&) const noexcept = default;
 };
 
 }// namespace HandTrackedCockpitClicking

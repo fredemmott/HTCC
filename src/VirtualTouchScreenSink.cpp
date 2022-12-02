@@ -27,6 +27,7 @@
 
 #include "Config.h"
 #include "DebugPrint.h"
+#include "InputState.h"
 
 namespace HandTrackedCockpitClicking {
 
@@ -184,11 +185,33 @@ bool VirtualTouchScreenSink::RotationToCartesian(
 }
 
 void VirtualTouchScreenSink::Update(
-  const std::optional<XrVector2f>& rotation,
-  const ActionState& actionState) {
+  const InputState& left,
+  const InputState& right) {
+  if (right.AnyInteraction()) {
+    Update(right);
+    return;
+  }
+  if (left.AnyInteraction()) {
+    Update(left);
+    return;
+  }
+
+  if (left.mDirection && !right.mDirection) {
+    Update(left);
+    return;
+  }
+
+  if (right.mDirection && !left.mDirection) {
+    Update(right);
+    return;
+  }
+}
+
+void VirtualTouchScreenSink::Update(const InputState& hand) {
   std::vector<INPUT> events;
 
   const auto now = std::chrono::steady_clock::now();
+  const auto& rotation = hand.mDirection;
   XrVector2f xy {};
   if (IsPointerSink() && rotation && RotationToCartesian(*rotation, &xy)) {
     if (now - mLastWindowCheck > std::chrono::seconds(1)) {
@@ -218,7 +241,7 @@ void VirtualTouchScreenSink::Update(
   }
 
   if (IsActionSink()) {
-    const auto leftClick = actionState.mLeftClick;
+    const auto leftClick = hand.mPrimaryInteraction;
     if (leftClick != mLeftClick) {
       mLeftClick = leftClick;
       events.push_back(
@@ -229,7 +252,7 @@ void VirtualTouchScreenSink::Update(
          }});
     }
 
-    const auto rightClick = actionState.mRightClick;
+    const auto rightClick = hand.mSecondaryInteraction;
     if (rightClick != mRightClick) {
       mRightClick = rightClick;
       events.push_back(
@@ -240,8 +263,9 @@ void VirtualTouchScreenSink::Update(
          }});
     }
 
+    using ValueChange = InputState::ValueChange;
     if (
-      actionState.mDecreaseValue
+      hand.mValueChange == ValueChange::Decrease
       && (now - mLastWheelUp > std::chrono::milliseconds(Config::ScrollWheelMilliseconds))) {
       mLastWheelUp = now;
       events.push_back({
@@ -254,7 +278,7 @@ void VirtualTouchScreenSink::Update(
     }
 
     if (
-      actionState.mIncreaseValue
+      hand.mValueChange == ValueChange::Increase
       && (now - mLastWheelDown > std::chrono::milliseconds(Config::ScrollWheelMilliseconds))) {
       mLastWheelDown = now;
       events.push_back({

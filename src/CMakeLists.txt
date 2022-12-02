@@ -58,6 +58,7 @@ add_executable(
   Config.cpp
   Environment.cpp
   DebugPrint.cpp
+  OpenXRNext.cpp
   PointCtrlCalibration.cpp
   PointCtrlSource.cpp
 )

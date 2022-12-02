@@ -53,7 +53,8 @@
   IT(xrSyncActions) \
   IT(xrGetCurrentInteractionProfile) \
   IT(xrPollEvent) \
-  IT(xrConvertTimeToWin32PerformanceCounterKHR)
+  IT(xrConvertTimeToWin32PerformanceCounterKHR) \
+  IT(xrConvertWin32PerformanceCounterToTimeKHR)
 
 namespace HandTrackedCockpitClicking {
 

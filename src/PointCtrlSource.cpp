@@ -30,6 +30,7 @@
 #include "Config.h"
 #include "DebugPrint.h"
 #include "Environment.h"
+#include "openxr.h"
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
@@ -38,11 +39,21 @@ using namespace DirectX::SimpleMath;
 static constexpr auto PressedBit = 1 << 7;
 #define FCUB(x) Config::PointCtrlFCUButton##x
 #define HAS_BUTTON(idx) ((buttons[idx] & PressedBit) == PressedBit)
-#define HAS_EITHER_BUTTON(a, b) (HAS_BUTTON(a) || HAS_BUTTON(b))
+#define HAND_FCUB(hand, x) (hand == XR_HAND_LEFT_EXT ? FCUB(L##x) : FCUB(R##x))
 
 namespace HandTrackedCockpitClicking {
 
-PointCtrlSource::PointCtrlSource() {
+PointCtrlSource::PointCtrlSource(
+  const std::shared_ptr<OpenXRNext>& next,
+  XrInstance instance,
+  XrSession session,
+  XrSpace viewSpace,
+  XrSpace localSpace)
+  : mInstance(instance),
+    mSession(session),
+    mViewSpace(viewSpace),
+    mLocalSpace(localSpace),
+    mOpenXR(next) {
   DebugPrint(
     "Initializing PointCtrlSource with calibration ({}, {}) delta ({}, {})",
     Config::PointCtrlCenterX,
@@ -123,25 +134,59 @@ BOOL PointCtrlSource::EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi) {
   return DIENUM_STOP;
 }
 
-void PointCtrlSource::Update() {
+void PointCtrlSource::UpdatePose(
+  XrTime predictedDisplayTime,
+  InputState* hand) {
+  hand->mPose = {};
+  if (!hand->mDirection) {
+    return;
+  }
+  XrSpaceLocation viewToWorld {XR_TYPE_SPACE_LOCATION};
+  if (!mOpenXR->check_xrLocateSpace(
+        mViewSpace, mLocalSpace, predictedDisplayTime, &viewToWorld)) {
+    return;
+  }
+
+  const auto rx = hand->mDirection->x;
+  const auto ry = hand->mDirection->y;
+
+  const auto pointDirection
+    = Quaternion::CreateFromAxisAngle(Vector3::UnitX, rx)
+    * Quaternion::CreateFromAxisAngle(Vector3::UnitY, -ry);
+
+  const auto p = Vector3::Transform(
+    {0.0f, 0.0f, -Config::PointCtrlProjectionDistance}, pointDirection);
+  const auto o = pointDirection;
+
+  const XrPosef viewPose {
+    .orientation = {o.x, o.y, o.z, o.w},
+    .position = {p.x, p.y, p.z},
+  };
+
+  const auto worldPose = viewPose * viewToWorld.pose;
+  hand->mPose = worldPose;
+}
+
+std::tuple<InputState, InputState> PointCtrlSource::Update(
+  PointerMode pointerMode,
+  XrTime now,
+  XrTime displayTime) {
   ConnectDevice();
   if (!mDevice) {
-    return;
+    return {{XR_HAND_LEFT_EXT}, {XR_HAND_RIGHT_EXT}};
   }
 
   const auto polled = mDevice->Poll();
   if (polled != DI_OK && polled != DI_NOEFFECT) {
     mDevice = {nullptr};
-    return;
+    return {{XR_HAND_LEFT_EXT}, {XR_HAND_RIGHT_EXT}};
   }
 
   DIJOYSTATE2 joystate;
   if (mDevice->GetDeviceState(sizeof(joystate), &joystate) != DI_OK) {
-    return;
+    return {{XR_HAND_LEFT_EXT}, {XR_HAND_RIGHT_EXT}};
   }
   const auto& buttons = joystate.rgbButtons;
-
-  const auto now = std::chrono::steady_clock::now();
 
   if (
     Config::PointerSource == PointerSource::PointCtrl
@@ -150,47 +195,88 @@ void PointCtrlSource::Update() {
       = HAS_BUTTON(FCUB(L1)) || HAS_BUTTON(FCUB(L2)) || HAS_BUTTON(FCUB(L3));
     const auto anyRightButton
       = HAS_BUTTON(FCUB(R1)) || HAS_BUTTON(FCUB(R2)) || HAS_BUTTON(FCUB(R3));
-    UpdateWakeState(anyLeftButton, mLeftWakeState, mLeftButtonAt);
-    UpdateWakeState(anyRightButton, mRightWakeState, mRightButtonAt);
+    /*
+  UpdateWakeState(anyLeftButton, mLeftWakeState, mLeftButtonAt);
+  UpdateWakeState(anyRightButton, mRightWakeState, mRightButtonAt);
+  */
   }
+  auto& mX = mRaw.mX;
+  auto& mY = mRaw.mY;
 
   if (mX != joystate.lX || mY != joystate.lY) {
     mLastMovedAt = now;
     mX = joystate.lX;
     mY = joystate.lY;
+    mRaw.mFCUL1 = HAS_BUTTON(FCUB(L1));
+    mRaw.mFCUL2 = HAS_BUTTON(FCUB(L2));
+    mRaw.mFCUL3 = HAS_BUTTON(FCUB(L3));
+    mRaw.mFCUR1 = HAS_BUTTON(FCUB(R1));
+    mRaw.mFCUR2 = HAS_BUTTON(FCUB(R2));
+    mRaw.mFCUR3 = HAS_BUTTON(FCUB(R3));
   }
 
   if (
-    mLeftWakeState == WakeState::Waking
-    || mRightWakeState == WakeState::Waking) {
-    mActionState = {};
-    return;
+    mLeftHand.mWakeState == WakeState::Waking
+    || mRightHand.mWakeState == WakeState::Waking) {
+    return {{XR_HAND_LEFT_EXT}, {XR_HAND_RIGHT_EXT}};
   }
 
-  ActionState newState;
-  if (Config::PointCtrlFCUMapping == PointCtrlFCUMapping::Classic) {
-    MapActionsClassic(newState, buttons);
-  } else if (Config::PointCtrlFCUMapping == PointCtrlFCUMapping::Modal) {
-    MapActionsModal(newState, buttons);
+  for (auto hand: {&mLeftHand, &mRightHand}) {
+    const auto b1 = HAS_BUTTON(HAND_FCUB(hand->mHand, 1));
+    const auto b2 = HAS_BUTTON(HAND_FCUB(hand->mHand, 2));
+    const auto b3 = HAS_BUTTON(HAND_FCUB(hand->mHand, 3));
+    const auto haveButton = b1 || b2 || b3;
+    if (haveButton != hand->mHaveButton) {
+      hand->mHaveButton = haveButton;
+      hand->mInteractionAt = now;
+    }
+
+    hand->mState.mPose = {};
+    hand->mState.mDirection = {};
+    hand->mState.mUpdatedAt = std::max(mLastMovedAt, hand->mInteractionAt);
+
+    // TODO:wake goes here to update mInteractionAT
+
+    if (Config::PointCtrlFCUMapping == PointCtrlFCUMapping::Classic) {
+      MapActionsClassic(hand, now, buttons);
+    } else if (Config::PointCtrlFCUMapping == PointCtrlFCUMapping::Modal) {
+      MapActionsModal(hand, now, buttons);
+    }
   }
 
-  if (mLeftButtonAt > mRightButtonAt) {
-    mActionState.mActiveHand = XR_HAND_LEFT_EXT;
-  } else {
-    mActionState.mActiveHand = XR_HAND_RIGHT_EXT;
+  const auto interval = std::chrono::nanoseconds(now - mLastMovedAt);
+  if (
+    pointerMode == PointerMode::None
+    || interval > std::chrono::milliseconds(200)) {
+    if (mLeftHand.mInteractionAt > mRightHand.mInteractionAt) {
+      return {mLeftHand.mState, {XR_HAND_RIGHT_EXT}};
+    }
+    return {{XR_HAND_LEFT_EXT}, mRightHand.mState};
   }
 
-  if (Config::VerboseDebug >= 1 && newState != mActionState) {
-    DebugPrint(
-      "FCU button state change: L {} R {} U {} D {}; scroll lock {}",
-      newState.mLeftClick,
-      newState.mRightClick,
-      newState.mDecreaseValue,
-      newState.mIncreaseValue,
-      static_cast<uint8_t>(mScrollMode));
+  const XrVector2f direction {
+    (static_cast<float>(mY) - Config::PointCtrlCenterY)
+      * -Config::PointCtrlRadiansPerUnitY,
+    (static_cast<float>(mX) - Config::PointCtrlCenterX)
+      * Config::PointCtrlRadiansPerUnitX,
+  };
+
+  mLeftHand.mState.mUpdatedAt = now;
+  mRightHand.mState.mUpdatedAt = now;
+  if (mLeftHand.mInteractionAt > mRightHand.mInteractionAt) {
+    mLeftHand.mState.mDirection = direction;
+    if (pointerMode == PointerMode::Pose) {
+      UpdatePose(displayTime, &mLeftHand.mState);
+    }
+
+    return {mLeftHand.mState, {XR_HAND_RIGHT_EXT}};
   }
 
-  mActionState = newState;
+  mRightHand.mState.mDirection = direction;
+  if (pointerMode == PointerMode::Pose) {
+    UpdatePose(displayTime, &mRightHand.mState);
+  }
+  return {{XR_HAND_LEFT_EXT}, mRightHand.mState};
 }
 
 void PointCtrlSource::UpdateWakeState(
@@ -217,179 +303,142 @@ void PointCtrlSource::UpdateWakeState(
   }
 }
 
-ActionState PointCtrlSource::GetActionState() const {
-  return mActionState;
-}
-
-std::tuple<uint16_t, uint16_t>
-PointCtrlSource::GetRawCoordinatesForCalibration() const {
-  return {mX, mY};
+PointCtrlSource::RawValues PointCtrlSource::GetRawValuesForCalibration() const {
+  return mRaw;
 }
 
 bool PointCtrlSource::IsConnected() const {
   return static_cast<bool>(mDevice);
 }
 
-bool PointCtrlSource::IsStale() const {
-  return (std::chrono::steady_clock::now() - mLastMovedAt)
-    >= std::chrono::seconds(1);
-}
-
-std::optional<XrVector2f> PointCtrlSource::GetRXRY() const {
-  if (IsStale()) {
-    return {};
-  }
-
-  return {{
-    (static_cast<float>(mY) - Config::PointCtrlCenterY)
-      * -Config::PointCtrlRadiansPerUnitY,
-    (static_cast<float>(mX) - Config::PointCtrlCenterX)
-      * Config::PointCtrlRadiansPerUnitX,
-  }};
-}
-
-std::tuple<std::optional<XrPosef>, std::optional<XrPosef>>
-PointCtrlSource::GetPoses() const {
-  auto rotations = GetRXRY();
-  if (!rotations) {
-    return {{}, {}};
-  }
-
-  const auto [rx, ry] = *rotations;
-
-  const auto pointDirection
-    = Quaternion::CreateFromAxisAngle(Vector3::UnitX, rx)
-    * Quaternion::CreateFromAxisAngle(Vector3::UnitY, -ry);
-
-  const auto p = Vector3::Transform(
-    {0.0f, 0.0f, -Config::PointCtrlProjectionDistance}, pointDirection);
-  const auto o = pointDirection;
-
-  XrPosef pose {
-    .orientation = {o.x, o.y, o.z, o.w},
-    .position = {p.x, p.y, p.z},
-  };
-
-  if (mLeftButtonAt > mRightButtonAt) {
-    return {{pose}, {}};
-  }
-  return {{}, {pose}};
-}
-
 ///// start button mappings /////
 
 void PointCtrlSource::MapActionsClassic(
-  ActionState& newState,
+  Hand* hand,
+  XrTime now,
   const decltype(DIJOYSTATE2::rgbButtons)& buttons) {
-  newState = {
-    .mLeftClick = HAS_EITHER_BUTTON(FCUB(L1), FCUB(R1)),
-    .mRightClick = HAS_EITHER_BUTTON(FCUB(L2), FCUB(R2)),
-  };
-  if (newState.mLeftClick && !newState.mRightClick) {
-    mScrollDirection = ScrollDirection::Down;
-  }
-  if (newState.mRightClick && !newState.mLeftClick) {
-    mScrollDirection = ScrollDirection::Up;
+  auto& state = hand->mState;
+  const auto b1 = HAS_BUTTON(HAND_FCUB(hand->mHand, 1));
+  const auto b2 = HAS_BUTTON(HAND_FCUB(hand->mHand, 2));
+  const auto b3 = HAS_BUTTON(HAND_FCUB(hand->mHand, 3));
+
+  if (b3) {
+    state.mPrimaryInteraction = false;
+    state.mSecondaryInteraction = false;
+    state.mValueChange = hand->mScrollDirection;
+    return;
   }
 
-  if (HAS_EITHER_BUTTON(FCUB(L3), FCUB(R3))) {
-    newState.mIncreaseValue = (mScrollDirection == ScrollDirection::Down);
-    newState.mDecreaseValue = (mScrollDirection == ScrollDirection::Up);
+  state.mPrimaryInteraction = b1;
+  state.mSecondaryInteraction = b2;
+  state.mValueChange = InputState::ValueChange::None;
+
+  if (b1 && !b2) {
+    hand->mScrollDirection = ScrollDirection::Increase;
+  } else if (b2 && !b1) {
+    hand->mScrollDirection = ScrollDirection::Decrease;
   }
 }
 
 void PointCtrlSource::MapActionsModal(
-  ActionState& newState,
+  Hand* hand,
+  XrTime now,
   const decltype(DIJOYSTATE2::rgbButtons)& buttons) {
-  const auto previousScrollMode = mScrollMode;
+  auto& state = hand->mState;
+  const auto b1 = HAS_BUTTON(HAND_FCUB(hand->mHand, 1));
+  const auto b2 = HAS_BUTTON(HAND_FCUB(hand->mHand, 2));
+  const auto b3 = HAS_BUTTON(HAND_FCUB(hand->mHand, 3));
 
-  const auto fcu1 = HAS_EITHER_BUTTON(FCUB(L1), FCUB(R1));
-  const auto fcu2 = HAS_EITHER_BUTTON(FCUB(L2), FCUB(R2));
-  const auto fcu3 = HAS_EITHER_BUTTON(FCUB(L3), FCUB(R3));
+  const auto previousValueChange = state.mValueChange;
 
-  const auto now = std::chrono::steady_clock::now();
+  const auto interval = std::chrono::nanoseconds(now - hand->mModeSwitchStart);
 
   // Update state
-  switch (mScrollMode) {
+  switch (hand->mScrollMode) {
     case LockState::Unlocked:
-      if (fcu1 && fcu2) {
-        mScrollMode = LockState::MaybeLockingWithLeftHold;
-        mModeSwitchStart = now;
-      } else if (fcu3) {
-        mScrollMode = LockState::SwitchingMode;
-        mModeSwitchStart = now;
+      if (b1 && b2) {
+        hand->mScrollMode = LockState::MaybeLockingWithLeftHold;
+        hand->mModeSwitchStart = now;
+      } else if (b3) {
+        hand->mScrollMode = LockState::SwitchingMode;
+        hand->mModeSwitchStart = now;
       }
       break;
     case LockState::MaybeLockingWithLeftHold:
-      if (!fcu2) {
+      if (!b2) {
         if (
-          now - mModeSwitchStart > std::chrono::milliseconds(
+          interval > std::chrono::milliseconds(
             Config::ShortPressLongPressMilliseconds)) {
-          mScrollMode = LockState::LockingWithLeftHoldAfterRelease;
+          hand->mScrollMode = LockState::LockingWithLeftHoldAfterRelease;
         } else {
-          mScrollMode = LockState::Unlocked;
+          hand->mScrollMode = LockState::Unlocked;
           // will be unset on next frame
-          newState.mRightClick = true;
+          state.mSecondaryInteraction = true;
         }
-      } else if (!fcu1) {
-        mScrollMode = LockState::LockingWithLeftHoldAfterRelease;
+      } else if (!b1) {
+        hand->mScrollMode = LockState::LockingWithLeftHoldAfterRelease;
       }
       break;
     case LockState::SwitchingMode:
-      if (!fcu3) {
-        if (now - mModeSwitchStart > std::chrono::milliseconds(200)) {
-          mScrollMode = LockState::LockedWithoutLeftHold;
+      if (!b3) {
+        if (
+          interval > std::chrono::milliseconds(
+            Config::ShortPressLongPressMilliseconds)) {
+          hand->mScrollMode = LockState::LockedWithoutLeftHold;
         } else {
-          mScrollMode = LockState::Unlocked;
+          hand->mScrollMode = LockState::Unlocked;
         }
       }
       break;
     case LockState::LockingWithLeftHoldAfterRelease:
-      if (!(fcu1 || fcu2)) {
-        mScrollMode = LockState::LockedWithLeftHold;
+      if (!(b1 || b2)) {
+        hand->mScrollMode = LockState::LockedWithLeftHold;
       }
       break;
     case LockState::LockedWithLeftHold:
     case LockState::LockedWithoutLeftHold:
-      if (fcu3) {
-        mScrollMode = LockState::SwitchingMode;
-        mModeSwitchStart = now;
+      if (b3) {
+        hand->mScrollMode = LockState::SwitchingMode;
+        hand->mModeSwitchStart = now;
       }
       break;
   }
 
+  state.mPrimaryInteraction = false;
+  state.mSecondaryInteraction = false;
+  state.mValueChange = InputState::ValueChange::None;
   // Set actions according to state
-  switch (mScrollMode) {
+  switch (hand->mScrollMode) {
     case LockState::Unlocked:
-      newState.mRightClick = fcu2;
-      [[fallthrough]];
+      state.mPrimaryInteraction = b1;
+      state.mSecondaryInteraction = b2;
+      break;
     case LockState::MaybeLockingWithLeftHold:
-      newState.mLeftClick = fcu1;
-      // right click handled by state switches
+      state.mPrimaryInteraction = b1;
+      // right click handled by state switches above
+      break;
+    case LockState::LockingWithLeftHoldAfterRelease:
+      state.mPrimaryInteraction = true;
       break;
     case LockState::SwitchingMode:
-    case LockState::LockingWithLeftHoldAfterRelease:
       break;
     case LockState::LockedWithLeftHold:
-      newState = {
-        .mLeftClick = true,
-        .mDecreaseValue = fcu1,
-        .mIncreaseValue = fcu2,
-      };
-      break;
+      state.mPrimaryInteraction = true;
+      [[fallthrough]];
     case LockState::LockedWithoutLeftHold:
-      newState = {
-        .mDecreaseValue = fcu1,
-        .mIncreaseValue = fcu2,
-      };
+      if (b1 && !b2) {
+        state.mValueChange = InputState::ValueChange::Decrease;
+      } else if (b2 && !b1) {
+        state.mValueChange = InputState::ValueChange::Increase;
+      }
       break;
   }
 
-  if (mScrollMode != previousScrollMode && Config::VerboseDebug >= 1) {
+  if (state.mValueChange != previousValueChange && Config::VerboseDebug >= 1) {
     DebugPrint(
       "Scroll mode change: {} -> {}",
-      static_cast<uint8_t>(previousScrollMode),
-      static_cast<uint8_t>(mScrollMode));
+      static_cast<uint8_t>(previousValueChange),
+      static_cast<uint8_t>(state.mValueChange));
   }
 }
 

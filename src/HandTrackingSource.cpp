@@ -36,9 +36,15 @@ namespace HandTrackedCockpitClicking {
 
 HandTrackingSource::HandTrackingSource(
   const std::shared_ptr<OpenXRNext>& next,
+  XrInstance instance,
   XrSession session,
-  XrSpace space)
-  : mOpenXR(next), mSession(session), mSpace(space) {
+  XrSpace viewSpace,
+  XrSpace localSpace)
+  : mOpenXR(next),
+    mInstance(instance),
+    mSession(session),
+    mViewSpace(viewSpace),
+    mLocalSpace(localSpace) {
   DebugPrint(
     "HandTrackingSource - PointerSource: {}; PinchToClick: {}; PinchToScroll: "
     "{}",
@@ -48,11 +54,10 @@ HandTrackingSource::HandTrackingSource(
 }
 
 HandTrackingSource::~HandTrackingSource() {
-  if (mLeftHand) {
-    mOpenXR->xrDestroyHandTrackerEXT(mLeftHand);
-  }
-  if (mRightHand) {
-    mOpenXR->xrDestroyHandTrackerEXT(mRightHand);
+  for (const auto& hand: {mLeftHand, mRightHand}) {
+    if (hand.mTracker) {
+      mOpenXR->xrDestroyHandTrackerEXT(hand.mTracker);
+    }
   }
 }
 
@@ -61,40 +66,41 @@ static constexpr bool HasFlags(Actual actual, Wanted wanted) {
   return (actual & wanted) == wanted;
 }
 
-static void DumpHandState(
-  std::string_view name,
-  const XrHandTrackingAimStateFB& state) {
-  if (!HasFlags(state.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
-    DebugPrint("{} hand not present.", name);
-    return;
-  }
-
-  DebugPrint(
-    "{} hand: I{} M{} R{} L{} @ ({}, {}, {})",
-    name,
-    HasFlags(state.status, XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB),
-    HasFlags(state.status, XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB),
-    HasFlags(state.status, XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB),
-    HasFlags(state.status, XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB),
-    state.aimPose.position.x,
-    state.aimPose.position.y,
-    state.aimPose.position.z);
-  DebugPrint(
-    "  I{:.02f} M{:.02f} R{:.02f} L{:.02f}",
-    state.pinchStrengthIndex,
-    state.pinchStrengthMiddle,
-    state.pinchStrengthRing,
-    state.pinchStrengthLittle);
-}
-
-static void RaycastPose(XrPosef& pose) {
+static std::tuple<XrPosef, XrVector2f> RaycastPose(const XrPosef& pose) {
   const auto& p = pose.position;
   const auto rx = std::atan2f(p.y, -p.z);
   const auto ry = std::atan2f(p.x, -p.z);
 
   const auto o = Quaternion::CreateFromAxisAngle(Vector3::UnitX, rx)
     * Quaternion::CreateFromAxisAngle(Vector3::UnitY, -ry);
-  pose.orientation = {o.x, o.y, o.z, o.w};
+  return {
+    {
+      {o.x, o.y, o.z, o.w},
+      pose.position,
+    },
+    {rx, ry},
+  };
+}
+
+static void PopulateInteractions(
+  XrHandTrackingAimFlagsFB status,
+  InputState* hand) {
+  hand->mPrimaryInteraction = Config::PinchToClick
+    && HasFlags(status, XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB);
+  hand->mSecondaryInteraction = Config::PinchToClick
+    && HasFlags(status, XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB);
+  if (!Config::PinchToScroll) {
+    return;
+  }
+
+  if (HasFlags(status, XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB)) {
+    hand->mValueChange = InputState::ValueChange::Decrease;
+    return;
+  }
+  if (HasFlags(status, XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB)) {
+    hand->mValueChange = InputState::ValueChange::Increase;
+    return;
+  }
 }
 
 static bool UseHandTrackingAimPointFB() {
@@ -102,16 +108,57 @@ static bool UseHandTrackingAimPointFB() {
     && Environment::Have_XR_FB_HandTracking_Aim;
 }
 
-void HandTrackingSource::Update(XrTime displayTime) {
-  InitHandTrackers();
+std::tuple<InputState, InputState>
+HandTrackingSource::Update(PointerMode, XrTime now, XrTime displayTime) {
+  this->UpdateHand(now, displayTime, &mLeftHand);
+  this->UpdateHand(now, displayTime, &mRightHand);
+
+  const auto& leftState = mLeftHand.mState;
+  const auto& rightState = mRightHand.mState;
+  if (!Config::OneHandOnly) {
+    return {leftState, rightState};
+  }
+
+  if (!(leftState.mPose && rightState.mPose)) {
+    return {leftState, rightState};
+  }
+
+  const auto leftActive = leftState.AnyInteraction();
+  const auto rightActive = rightState.AnyInteraction();
+  if (leftActive && !rightActive) {
+    return {leftState, {XR_HAND_RIGHT_EXT}};
+  }
+  if (rightActive && !leftActive) {
+    return {{XR_HAND_LEFT_EXT}, rightState};
+  }
+
+  const auto lrx = leftState.mDirection->x;
+  const auto lry = leftState.mDirection->y;
+  const auto ldiff = (lrx * lrx) + (lry * lry);
+
+  const auto rrx = rightState.mDirection->x;
+  const auto rry = rightState.mDirection->y;
+  const auto rdiff = (rrx * rrx) + (rry * rry);
+  if (ldiff < rdiff) {
+    return {leftState, {XR_HAND_RIGHT_EXT}};
+  }
+  return {{XR_HAND_LEFT_EXT}, rightState};
+}
+
+void HandTrackingSource::UpdateHand(
+  XrTime now,
+  XrTime displayTime,
+  Hand* hand) {
+  InitHandTracker(hand);
+  auto& state = hand->mState;
 
   XrHandJointsLocateInfoEXT locateInfo {
     .type = XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT,
-    .baseSpace = mSpace,
+    .baseSpace = mLocalSpace,
     .time = displayTime,
   };
 
-  XrHandTrackingAimStateFB aimState {XR_TYPE_HAND_TRACKING_AIM_STATE_FB};
+  XrHandTrackingAimStateFB aimFB {XR_TYPE_HAND_TRACKING_AIM_STATE_FB};
   std::array<XrHandJointLocationEXT, XR_HAND_JOINT_COUNT_EXT> jointData;
   XrHandJointLocationsEXT joints {
     .type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT,
@@ -119,222 +166,71 @@ void HandTrackingSource::Update(XrTime displayTime) {
     .jointLocations = jointData.data(),
   };
   if (Environment::Have_XR_FB_HandTracking_Aim) {
-    joints.next = &aimState;
+    joints.next = &aimFB;
   }
 
   jointData.fill({});
-  auto nextResult
-    = mOpenXR->xrLocateHandJointsEXT(mLeftHand, &locateInfo, &joints);
-  if (nextResult != XR_SUCCESS) {
-    aimState.status = {};
-  }
-  const auto leftAim = aimState;
-  const auto leftJoints = jointData;
-  const auto leftJointValid = joints.isActive;
-
-  nextResult = mOpenXR->xrLocateHandJointsEXT(mRightHand, &locateInfo, &joints);
-  if (nextResult != XR_SUCCESS) {
-    aimState.status = {};
-  }
-
-  const auto rightAim = aimState;
-  const auto rightJoints = jointData;
-  const auto rightJointsValid = joints.isActive;
-
-  static std::chrono::steady_clock::time_point lastPrint {};
-  const auto now = std::chrono::steady_clock::now();
-  if (
-    (Config::VerboseDebug >= 2)
-    && (now - lastPrint > std::chrono::seconds(1))) {
-    lastPrint = now;
-    DumpHandState("Left", leftAim);
-    DumpHandState("Right", rightAim);
+  if (!mOpenXR->check_xrLocateHandJointsEXT(
+        hand->mTracker, &locateInfo, &joints)) {
+    state = {hand->mHand};
+    return;
   }
 
   if (UseHandTrackingAimPointFB()) {
-    if (HasFlags(leftAim.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
-      mLeftHandPose = {leftAim.aimPose};
-      mLeftHandUpdateAt = now;
+    if (HasFlags(aimFB.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
+      state = {
+        .mHand = hand->mHand,
+        .mUpdatedAt = displayTime,
+        .mPose = {aimFB.aimPose},
+      };
     }
-  } else {
-    const auto joint = leftJoints[Config::HandTrackingAimJoint];
+  } else if (joints.isActive) {
+    const auto joint = jointData[Config::HandTrackingAimJoint];
     if (
       HasFlags(joint.locationFlags, XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)
       && HasFlags(joint.locationFlags, XR_SPACE_LOCATION_POSITION_VALID_BIT)) {
-      mLeftHandPose = joint.pose;
-      mLeftHandUpdateAt = now;
+      state = {
+        .mHand = hand->mHand,
+        .mUpdatedAt = displayTime,
+        .mPose = {joint.pose},
+      };
     }
   }
 
-  if (UseHandTrackingAimPointFB()) {
-    if (HasFlags(rightAim.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
-      mRightHandPose = {rightAim.aimPose};
-      mRightHandUpdateAt = now;
-    }
-  } else {
-    const auto joint = rightJoints[Config::HandTrackingAimJoint];
-    if (
-      HasFlags(joint.locationFlags, XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)
-      && HasFlags(joint.locationFlags, XR_SPACE_LOCATION_POSITION_VALID_BIT)) {
-      mRightHandPose = joint.pose;
-      mRightHandUpdateAt = now;
-    }
-  }
+  const auto age = std::chrono::nanoseconds(now - state.mUpdatedAt);
+  const auto stale = age > std::chrono::milliseconds(200);
 
-  const auto leftValid
-    = (now - mLeftHandUpdateAt) < std::chrono::milliseconds(200);
-  const auto rightValid
-    = (now - mLeftHandUpdateAt) < std::chrono::milliseconds(200);
-  if (!leftValid) {
-    mLeftHandPose = {};
-  }
-  if (!rightValid) {
-    mRightHandPose = {};
-  }
-
-  if (Config::OneHandOnly && mLeftHandPose && mRightHandPose) {
-    constexpr auto actionBits = XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB
-      | XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB
-      | XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB
-      | XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB;
-    const auto leftAction = (leftAim.status & actionBits) != 0;
-    const auto rightAction = (rightAim.status & actionBits) != 0;
-    if (leftAction && !rightAction) {
-      mRightHandPose = {};
-    } else if (rightAction && !leftAction) {
-      mLeftHandPose = {};
-    } else {
-      const auto& lp = mLeftHandPose->position;
-      const auto lrx = std::atan2f(lp.y, -lp.z);
-      const auto lry = std::atan2f(lp.x, -lp.z);
-      const auto ldiff = (lrx * lrx) + (lry * lry);
-
-      const auto& rp = mRightHandPose->position;
-      const auto rrx = std::atan2f(rp.y, -rp.z);
-      const auto rry = std::atan2f(rp.x, -rp.z);
-      const auto rdiff = (rrx * rrx) + (rry * rry);
-
-      if (ldiff > rdiff) {
-        mLeftHandPose = {};
-      } else {
-        mRightHandPose = {};
-      }
-    }
-  }
-
-  switch (Config::HandTrackingOrientation) {
-    case HandTrackingOrientation::Raw:
-      break;
-    case HandTrackingOrientation::RayCast:
-      if (mLeftHandPose) {
-        RaycastPose(*mLeftHandPose);
-      }
-      if (mRightHandPose) {
-        RaycastPose(*mRightHandPose);
-      }
-      break;
-  }
-
-#define EITHER_HAS(flag) \
-  (HasFlags(leftAim.status, flag) || HasFlags(rightAim.status, flag))
-
-  if (leftValid || rightValid) {
-    mActionState = {
-      .mLeftClick = Config::PinchToClick
-        && EITHER_HAS(XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB),
-      .mRightClick = Config::PinchToClick
-        && EITHER_HAS(XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB),
-      .mDecreaseValue = Config::PinchToScroll
-        && EITHER_HAS(XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB),
-      .mIncreaseValue = Config::PinchToScroll
-        && EITHER_HAS(XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB),
-    };
-  }
-#undef EITHER_HAS
-
-  if (!mActionState.Any()) {
-    if (!leftValid) {
-      mLeftHandPose = {};
-    }
-    if (!rightValid) {
-      mRightHandPose = {};
-    }
+  if (stale) {
+    state = {hand->mHand};
     return;
   }
-
-  if (
-    rightValid
-    && (rightAim.status & (XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB))) {
-    mActionState.mActiveHand = XR_HAND_RIGHT_EXT;
-  } else if (
-    leftValid
-    && (leftAim.status & (XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB))) {
-    mActionState.mActiveHand = XR_HAND_LEFT_EXT;
-  }
-
-  if (leftValid && !rightValid) {
-    mActionState.mActiveHand = XR_HAND_LEFT_EXT;
-    return;
-  }
-
-  if (rightValid && !leftValid) {
-    mActionState.mActiveHand = XR_HAND_RIGHT_EXT;
-    return;
-  }
-
-  if (!(leftValid || rightValid)) {
-    mActionState = {};
+  PopulateInteractions(aimFB.status, &state);
+  const auto [raycastPose, direction] = RaycastPose(*state.mPose);
+  state.mDirection = {direction};
+  if (Config::HandTrackingOrientation == HandTrackingOrientation::RayCast) {
+    state.mPose = raycastPose;
   }
 }
 
-void HandTrackingSource::InitHandTrackers() {
-  if (mLeftHand && mRightHand) [[likely]] {
+void HandTrackingSource::InitHandTracker(Hand* hand) {
+  if (hand->mTracker) [[likely]] {
     return;
   }
 
   XrHandTrackerCreateInfoEXT createInfo {
     .type = XR_TYPE_HAND_TRACKER_CREATE_INFO_EXT,
-    .hand = XR_HAND_LEFT_EXT,
+    .hand = hand->mHand,
     .handJointSet = XR_HAND_JOINT_SET_DEFAULT_EXT,
   };
-  auto nextResult
-    = mOpenXR->xrCreateHandTrackerEXT(mSession, &createInfo, &mLeftHand);
-  if (nextResult != XR_SUCCESS) {
-    DebugPrint("Failed to initialize left hand: {}", nextResult);
-    return;
-  }
-  createInfo.hand = XR_HAND_RIGHT_EXT;
-  nextResult
-    = mOpenXR->xrCreateHandTrackerEXT(mSession, &createInfo, &mRightHand);
-  if (nextResult != XR_SUCCESS) {
-    DebugPrint("Failed to initialize right hand: {}", nextResult);
+  if (!mOpenXR->check_xrCreateHandTrackerEXT(
+        mSession, &createInfo, &hand->mTracker)) {
+    DebugPrint(
+      "Failed to initialize hand tracker for hand {}",
+      static_cast<int>(hand->mHand));
     return;
   }
 
-  DebugPrint("Initialized hand trackers.");
-}
-
-std::tuple<std::optional<XrPosef>, std::optional<XrPosef>>
-HandTrackingSource::GetPoses() const {
-  return {mLeftHandPose, mRightHandPose};
-}
-
-std::optional<XrVector2f> HandTrackingSource::GetRXRY() const {
-  auto [left, right] = GetPoses();
-  if (!(left || right)) {
-    return {};
-  }
-
-  const auto& hand = left ? left : right;
-  const auto& pos = hand->position;
-
-  const auto rx = std::atan2f(pos.y, -pos.z);
-  const auto ry = std::atan2f(pos.x, -pos.z);
-  return {{rx, ry}};
-}
-
-ActionState HandTrackingSource::GetActionState() const {
-  return mActionState;
+  DebugPrint("Initialized hand tracker {}.", static_cast<int>(hand->mHand));
 }
 
 }// namespace HandTrackedCockpitClicking

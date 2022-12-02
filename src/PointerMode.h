@@ -24,20 +24,9 @@
 #pragma once
 
 namespace HandTrackedCockpitClicking {
-
-struct ActionState {
-  XrHandEXT mActiveHand {XR_HAND_RIGHT_EXT};
-
-  bool mLeftClick {};
-  bool mRightClick {};
-  bool mDecreaseValue {};
-  bool mIncreaseValue {};
-
-  bool Any() const {
-    return mLeftClick || mRightClick || mDecreaseValue || mIncreaseValue;
-  }
-
-  constexpr auto operator<=>(const ActionState&) const noexcept = default;
+enum class PointerMode {
+  None,
+  Pose,
+  Direction,
 };
-
 }// namespace HandTrackedCockpitClicking

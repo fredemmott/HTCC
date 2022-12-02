@@ -25,11 +25,12 @@
 
 #include <openxr/openxr.h>
 
-#include "ActionState.h"
 #include "Config.h"
 #include "OpenXRNext.h"
 
 namespace HandTrackedCockpitClicking {
+
+struct InputState;
 
 class VirtualTouchScreenSink final {
  public:
@@ -39,14 +40,13 @@ class VirtualTouchScreenSink final {
     XrTime nextDisplayTime,
     XrSpace viewSpace);
 
-  void Update(
-    const std::optional<XrVector2f>& rxry,
-    const ActionState& actionState);
+  void Update(const InputState& leftHand, const InputState& rightHand);
 
   static bool IsActionSink();
   static bool IsPointerSink();
 
  private:
+  void Update(const InputState& hand);
   bool RotationToCartesian(const XrVector2f& rotation, XrVector2f* cartesian);
   void UpdateMainWindow();
   static BOOL CALLBACK EnumWindowCallback(HWND hwnd, LPARAM lparam);

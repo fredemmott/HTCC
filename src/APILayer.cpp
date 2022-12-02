@@ -45,7 +45,7 @@ APILayer::APILayer(
   XrInstance instance,
   XrSession session,
   const std::shared_ptr<OpenXRNext>& next)
-  : mOpenXR(next) {
+  : mOpenXR(next), mInstance(instance) {
   DebugPrint("{}()", __FUNCTION__);
   auto oxr = next.get();
 
@@ -56,18 +56,24 @@ APILayer::APILayer(
     .poseInReferenceSpace = XR_POSEF_IDENTITY,
   };
 
-  auto nextResult
-    = oxr->xrCreateReferenceSpace(session, &referenceSpace, &mViewSpace);
-  if (nextResult != XR_SUCCESS) {
-    DebugPrint("Failed to create view space: {}", nextResult);
+  if (!oxr->check_xrCreateReferenceSpace(
+        session, &referenceSpace, &mViewSpace)) {
+    DebugPrint("Failed to create view space");
+    return;
+  }
+  referenceSpace.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL;
+  if (!oxr->check_xrCreateReferenceSpace(
+        session, &referenceSpace, &mWorldSpace)) {
+    DebugPrint("Failed to create world space");
     return;
   }
 
   if (Environment::Have_XR_EXT_HandTracking) {
-    mHandTracking
-      = std::make_unique<HandTrackingSource>(next, session, mViewSpace);
+    mHandTracking = std::make_unique<HandTrackingSource>(
+      next, instance, session, mViewSpace, mWorldSpace);
   }
-  mPointCtrl = std::make_unique<PointCtrlSource>();
+  mPointCtrl = std::make_unique<PointCtrlSource>(
+    next, instance, session, mViewSpace, mWorldSpace);
 
   if (
     VirtualControllerSink::IsActionSink()
@@ -82,6 +88,9 @@ APILayer::APILayer(
 APILayer::~APILayer() {
   if (mViewSpace) {
     mOpenXR->xrDestroySpace(mViewSpace);
+  }
+  if (mWorldSpace) {
+    mOpenXR->xrDestroySpace(mWorldSpace);
   }
 }
 
@@ -186,6 +195,13 @@ XrResult APILayer::xrWaitFrame(
     return nextResult;
   }
 
+  XrTime now {state->predictedDisplayTime};
+  {
+    LARGE_INTEGER nowPC;
+    QueryPerformanceCounter(&nowPC);
+    mOpenXR->xrConvertWin32PerformanceCounterToTimeKHR(mInstance, &nowPC, &now);
+  }
+
   if (
     (!mVirtualTouchScreen)
     && (VirtualTouchScreenSink::IsActionSink() || VirtualTouchScreenSink::IsPointerSink())) {
@@ -193,50 +209,72 @@ XrResult APILayer::xrWaitFrame(
       mOpenXR, session, state->predictedDisplayTime, mViewSpace);
   }
 
-  ActionState actionState {};
-  std::optional<XrVector2f> rotation;
-  std::optional<XrPosef> leftAimPose;
-  std::optional<XrPosef> rightAimPose;
+  InputState leftHand {XR_HAND_LEFT_EXT};
+  InputState rightHand {XR_HAND_RIGHT_EXT};
+  const auto pointerMode
+    = (Config::PointerSink == PointerSink::VirtualTouchScreen)
+    ? PointerMode::Direction
+    : PointerMode::Pose;
 
   if (mHandTracking) {
-    mHandTracking->Update(state->predictedDisplayTime);
-    actionState = mHandTracking->GetActionState();
+    const auto [l, r] = mHandTracking->Update(
+      (Config::PointerSource == PointerSource::OculusHandTracking)
+        ? pointerMode
+        : PointerMode::None,
+      now,
+      state->predictedDisplayTime);
     if (Config::PointerSource == PointerSource::OculusHandTracking) {
-      rotation = mHandTracking->GetRXRY();
-      auto [left, right] = mHandTracking->GetPoses();
-      leftAimPose = left;
-      rightAimPose = right;
+      leftHand.mPose = l.mPose;
+      leftHand.mDirection = l.mDirection;
+      rightHand.mPose = r.mPose;
+      rightHand.mDirection = r.mDirection;
+    }
+    if (Config::PinchToClick) {
+      leftHand.mPrimaryInteraction = l.mPrimaryInteraction;
+      leftHand.mSecondaryInteraction = l.mSecondaryInteraction;
+      rightHand.mPrimaryInteraction = r.mPrimaryInteraction;
+      rightHand.mSecondaryInteraction = r.mSecondaryInteraction;
+    }
+    if (Config::PinchToScroll) {
+      leftHand.mValueChange = l.mValueChange;
+      rightHand.mValueChange = r.mValueChange;
     }
   }
 
   if (mPointCtrl) {
-    mPointCtrl->Update();
-    if (Config::PointCtrlFCUClicks) {
-      const auto as = mPointCtrl->GetActionState();
-      if (as.Any()) {
-        actionState = as;
-      };
-    }
+    const auto [l, r]
+      = mPointCtrl->Update(pointerMode, now, state->predictedDisplayTime);
     if (Config::PointerSource == PointerSource::PointCtrl) {
-      rotation = mPointCtrl->GetRXRY();
-      auto [left, right] = mPointCtrl->GetPoses();
-      leftAimPose = left;
-      rightAimPose = right;
+      leftHand.mPose = l.mPose;
+      leftHand.mDirection = l.mDirection;
+      rightHand.mPose = r.mPose;
+      rightHand.mDirection = r.mDirection;
     }
-  }
-
-  if (actionState.mDecreaseValue && actionState.mIncreaseValue) {
-    actionState.mDecreaseValue = false;
-    actionState.mIncreaseValue = false;
+    if (Config::PointCtrlFCUClicks) {
+      leftHand.mPrimaryInteraction
+        = leftHand.mPrimaryInteraction || l.mPrimaryInteraction;
+      leftHand.mSecondaryInteraction
+        = leftHand.mSecondaryInteraction || l.mSecondaryInteraction;
+      if (l.mValueChange != InputState::ValueChange::None) {
+        leftHand.mValueChange = l.mValueChange;
+      }
+      rightHand.mPrimaryInteraction
+        = rightHand.mPrimaryInteraction || r.mPrimaryInteraction;
+      rightHand.mSecondaryInteraction
+        = rightHand.mSecondaryInteraction || r.mSecondaryInteraction;
+      if (r.mValueChange != InputState::ValueChange::None) {
+        rightHand.mValueChange = r.mValueChange;
+      }
+    }
   }
 
   if (mVirtualTouchScreen) {
-    mVirtualTouchScreen->Update(rotation, actionState);
+    mVirtualTouchScreen->Update(leftHand, rightHand);
   }
 
   if (mVirtualController) {
     mVirtualController->Update(
-      state->predictedDisplayTime, leftAimPose, rightAimPose, actionState);
+      state->predictedDisplayTime, leftHand, rightHand);
   }
 
   return XR_SUCCESS;

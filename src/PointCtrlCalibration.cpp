@@ -40,6 +40,7 @@
 #include "Config.h"
 #include "DebugPrint.h"
 #include "Environment.h"
+#include "OpenXRNext.h"
 #include "PointCtrlSource.h"
 
 using namespace HandTrackedCockpitClicking;
@@ -51,11 +52,6 @@ namespace Environment = HandTrackedCockpitClicking::Environment;
 #define IT(x) static PFN_##x ext_##x {nullptr};
 EXTENSION_FUNCTIONS
 #undef IT
-
-static constexpr XrPosef XR_POSEF_IDENTITY {
-  .orientation = {0.0f, 0.0f, 0.0f, 1.0f},
-  .position = {0.0f, 0.0f, 0.0f},
-};
 
 constexpr uint32_t TextureHeight = 1024;
 constexpr uint32_t TextureWidth = 1024;
@@ -257,19 +253,6 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   Config::Load();
   Environment::IsPointCtrlCalibration = true;
 
-  PointCtrlSource pointCtrl;
-  while (!pointCtrl.IsConnected()) {
-    const auto result = MessageBoxW(
-      NULL,
-      L"PointCTRL device not found; please plug it in, then click retry.",
-      L"PointCTRL Calibration",
-      MB_RETRYCANCEL | MB_ICONEXCLAMATION | MB_DEFBUTTON1);
-    if (result == IDCANCEL) {
-      return 0;
-    }
-    pointCtrl.Update();
-  }
-
   XrInstance instance {};
   {
     const std::vector<const char*> enabledExtensions = {
@@ -288,7 +271,6 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     check_xr(xrCreateInstance(&createInfo, &instance));
     gInstance = instance;
   }
-
 #define IT(x) \
   xrGetInstanceProcAddr( \
     instance, #x, reinterpret_cast<PFN_xrVoidFunction*>(&ext_##x));
@@ -368,12 +350,38 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     };
     xrCreateReferenceSpace(session, &createInfo, &viewSpace);
   }
+  XrSpace localSpace {};
+  {
+    XrReferenceSpaceCreateInfo createInfo {
+      .type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
+      .referenceSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL,
+      .poseInReferenceSpace = XR_POSEF_IDENTITY,
+    };
+    xrCreateReferenceSpace(session, &createInfo, &localSpace);
+  }
+  PointCtrlSource pointCtrl(
+    std::make_shared<OpenXRNext>(instance, &xrGetInstanceProcAddr),
+    instance,
+    session,
+    viewSpace,
+    localSpace);
+  while (!pointCtrl.IsConnected()) {
+    const auto result = MessageBoxW(
+      NULL,
+      L"PointCTRL device not found; please plug it in, then click retry.",
+      L"PointCTRL Calibration",
+      MB_RETRYCANCEL | MB_ICONEXCLAMATION | MB_DEFBUTTON1);
+    if (result == IDCANCEL) {
+      return 0;
+    }
+    pointCtrl.Update(PointerMode::Direction, 0, 0);
+  }
 
   bool xrRunning = false;
   XrSwapchain swapchain {};
   std::vector<XrSwapchainImageD3D11KHR> swapchainImages;
   CalibrationState state {CalibrationState::WaitForCenter};
-  ActionState actionState {};
+  PointCtrlSource::RawValues rawValues;
   D2D1_POINT_2U centerPoint {};
   D2D1_POINT_2U offsetPoint {};
   XrVector2f radiansPerUnit {
@@ -477,17 +485,21 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
       };
       check_xr(xrWaitSwapchainImage(swapchain, &waitInfo));
 
-      pointCtrl.Update();
-      auto [x, y] = pointCtrl.GetRawCoordinatesForCalibration();
-      const auto newActions = pointCtrl.GetActionState();
+      const auto [l, r] = pointCtrl.Update(
+        PointerMode::Direction,
+        frameState.predictedDisplayTime,
+        frameState.predictedDisplayTime);
+      const auto newRaw = pointCtrl.GetRawValuesForCalibration();
+      const auto x = newRaw.mX;
+      const auto y = newRaw.mY;
 
-      const auto click2 = newActions.mRightClick && !actionState.mRightClick;
+      const auto click1 = newRaw.FCU1() && !rawValues.FCU1();
+      const auto click2 = newRaw.FCU2() && !rawValues.FCU2();
+      rawValues = newRaw;
       if (click2) {
         state = CalibrationState::WaitForCenter;
-        actionState = newActions;
       }
 
-      const auto click1 = newActions.mLeftClick && !actionState.mLeftClick;
       if (click1) {
         switch (state) {
           case CalibrationState::WaitForCenter:
@@ -521,7 +533,6 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
             break;
         }
       }
-      actionState = newActions;
       XrVector2f calibratedRotation {};
 
       if (state == CalibrationState::Test) {

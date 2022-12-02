@@ -30,6 +30,7 @@
 #include <numbers>
 
 #include "Environment.h"
+#include "InputState.h"
 #include "openxr.h"
 
 using namespace DirectX::SimpleMath;
@@ -89,8 +90,6 @@ VirtualControllerSink::VirtualControllerSink(
     "Initialized virtual VR controller - PointerSink: {}; ActionSink: {}",
     IsPointerSink(),
     IsActionSink());
-
-  QueryPerformanceFrequency(&mPerformanceCounterFrequency);
 }
 
 bool VirtualControllerSink::IsPointerSink() {
@@ -116,93 +115,53 @@ bool VirtualControllerSink::IsActionSink() {
 
 void VirtualControllerSink::Update(
   XrTime predictedDisplayTime,
-  const std::optional<XrPosef>& leftAimPose,
-  const std::optional<XrPosef>& rightAimPose,
-  const ActionState& actionState) {
-  if (actionState.Any()) {
-    if (
-      actionState.mActiveHand == XR_HAND_LEFT_EXT && !leftAimPose.has_value()) {
-      DebugBreak();
-    }
-    if (
-      actionState.mActiveHand == XR_HAND_RIGHT_EXT
-      && !rightAimPose.has_value()) {
-      DebugBreak();
-    }
-  }
-
-  mActionState = actionState;
-  mPredictedDisplayTime = predictedDisplayTime;
-
-  mLeftHand.present = leftAimPose.has_value();
-  if (mLeftHand.present) {
-    mLeftHand.aimPose = OffsetPointerPose(*leftAimPose);
-  }
-  mRightHand.present = rightAimPose.has_value();
-  if (mRightHand.present) {
-    mRightHand.aimPose = OffsetPointerPose(*rightAimPose);
-  }
-
-  for (auto* hand: {&mLeftHand, &mRightHand}) {
-    if (!hand->present) {
-      continue;
-    }
-    SetControllerActions(hand);
-  }
-
-  const auto haveAction = actionState.Any();
-  if (actionState.mActiveHand == XR_HAND_LEFT_EXT) {
-    mRightHand.haveAction = false;
-    if (haveAction && !mLeftHand.haveAction) {
-      mLeftHand.haveAction = true;
-      UpdateWorldLockState(*leftAimPose, &mLeftHand.worldLockedAimPose);
-    } else if (!haveAction) {
-      mLeftHand.haveAction = false;
-    }
-  } else {
-    mLeftHand.haveAction = false;
-    if (haveAction && !mRightHand.haveAction) {
-      mRightHand.haveAction = true;
-      UpdateWorldLockState(*rightAimPose, &mRightHand.worldLockedAimPose);
-    } else if (!haveAction) {
-      mRightHand.haveAction = false;
-    }
-  }
+  const InputState& leftHand,
+  const InputState& rightHand) {
+  UpdateHand(predictedDisplayTime, leftHand, &mLeftController);
+  UpdateHand(predictedDisplayTime, rightHand, &mRightController);
 }
 
-void VirtualControllerSink::UpdateWorldLockState(
-  const XrPosef& viewPose,
-  XrPosef* worldPose) {
-  *worldPose = XR_POSEF_IDENTITY;
-  if (
-    Config::VRControllerActionSinkWorldLock
-    == VRControllerActionSinkWorldLock::Nothing) {
+void VirtualControllerSink::UpdateHand(
+  XrTime predictedDisplayTime,
+  const InputState& hand,
+  ControllerState* controller) {
+  if (!hand.mPose) {
+    controller->present = false;
     return;
   }
+  controller->present = true;
 
-  XrSpaceLocation viewToWorld {XR_TYPE_SPACE_LOCATION};
-  mOpenXR->check_xrLocateSpace(
-    mViewSpace, mLocalSpace, mPredictedDisplayTime, &viewToWorld);
-
+  auto inputPose = OffsetPointerPose(*hand.mPose);
+  const auto haveAction = hand.AnyInteraction();
   if (
-    Config::VRControllerActionSinkWorldLock
-      == VRControllerActionSinkWorldLock::Orientation
-    && (viewToWorld.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)) {
-    worldPose->orientation
-      = viewPose.orientation * viewToWorld.pose.orientation;
+    haveAction
+    && Config::VRControllerActionSinkWorldLock
+      == VRControllerActionSinkWorldLock::Orientation) {
+    inputPose.orientation = controller->savedAimPose.orientation;
+  } else if (!haveAction) {
+    controller->haveAction = false;
+  } else if (!controller->haveAction) {
+    controller->haveAction = true;
+    controller->savedAimPose = inputPose;
   }
+
+  SetControllerActions(predictedDisplayTime, hand, controller);
+  // TODO: grip pose
 }
 
-void VirtualControllerSink::SetControllerActions(ControllerState* controller) {
+void VirtualControllerSink::SetControllerActions(
+  XrTime predictedDisplayTime,
+  const InputState& hand,
+  ControllerState* controller) {
   if (!IsActionSink()) {
     return;
   }
   if (UseDCSActions()) {
-    SetDCSControllerActions(controller);
+    SetDCSControllerActions(hand, controller);
     return;
   }
   if (UseMSFSActions()) {
-    SetMSFSControllerActions(controller);
+    SetMSFSControllerActions(predictedDisplayTime, hand, controller);
     return;
   }
 
@@ -213,37 +172,93 @@ void VirtualControllerSink::SetControllerActions(ControllerState* controller) {
   }
 }
 
-void VirtualControllerSink::SetDCSControllerActions(ControllerState* hand) {
-  hand->thumbstickX.changedSinceLastSync = true;
-  hand->thumbstickY.changedSinceLastSync = true;
+void VirtualControllerSink::SetDCSControllerActions(
+  const InputState& hand,
+  ControllerState* controller) {
+  controller->thumbstickX.changedSinceLastSync = true;
+  controller->thumbstickY.changedSinceLastSync = true;
 
-  if (mActionState.mLeftClick) {
-    hand->thumbstickY.currentState = -1.0f;
-  } else if (mActionState.mRightClick) {
-    hand->thumbstickY.currentState = 1.0f;
+  if (hand.mPrimaryInteraction) {
+    controller->thumbstickY.currentState = -1.0f;
+  } else if (hand.mSecondaryInteraction) {
+    controller->thumbstickY.currentState = 1.0f;
   } else {
-    hand->thumbstickY.currentState = 0.0f;
+    controller->thumbstickY.currentState = 0.0f;
   }
 
-  if (mActionState.mDecreaseValue) {
-    hand->thumbstickX.currentState = -1.0f;
-  } else if (mActionState.mIncreaseValue) {
-    hand->thumbstickX.currentState = 1.0f;
-  } else {
-    hand->thumbstickX.currentState = 0.0f;
+  using ValueChange = InputState::ValueChange;
+  switch (hand.mValueChange) {
+    case ValueChange::Decrease:
+      controller->thumbstickX.currentState = -1.0f;
+      break;
+    case ValueChange::Increase:
+      controller->thumbstickX.currentState = 1.0f;
+      break;
+    case ValueChange::None:
+      controller->thumbstickX.currentState = 0.0f;
+      break;
   }
 }
 
-void VirtualControllerSink::SetMSFSControllerActions(ControllerState* hand) {
-  hand->triggerValue.changedSinceLastSync = true;
-  hand->triggerValue.currentState = mActionState.mLeftClick;
+void VirtualControllerSink::SetMSFSControllerActions(
+  XrTime predictedDisplayTime,
+  const InputState& hand,
+  ControllerState* controller) {
+  controller->triggerValue.changedSinceLastSync = true;
+  controller->triggerValue.currentState = hand.mPrimaryInteraction;
+
+  if (hand.mSecondaryInteraction) {
+    // 'push' forward
+    const auto worldOffset = Vector3::Transform(
+      {0.0f, 0.0f, -0.02f}, XrQuatToSM(controller->aimPose.orientation));
+    auto& o = controller->aimPose.orientation;
+    o.x += worldOffset.x;
+    o.y += worldOffset.y;
+    o.z += worldOffset.z;
+  }
+
+  // Just increase/decrease value from here
+  const auto oldRotation = controller->mRotation;
+  using ValueChange = InputState::ValueChange;
+  switch (hand.mValueChange) {
+    case ValueChange::None:
+      return;
+    case ValueChange::Increase:
+      controller->mRotation = Rotation::Clockwise;
+      break;
+    case ValueChange::Decrease:
+      controller->mRotation = Rotation::CounterClockwise;
+      break;
+  }
+
+  if (controller->mRotation != oldRotation) {
+    controller->mRotationStartAt = predictedDisplayTime;
+    return;
+  }
+
+  const float seconds
+    = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::nanoseconds(
+          predictedDisplayTime - controller->mRotationStartAt))
+        .count()
+    / 1000.0f;
+
+  const auto secondsPerRotation
+    = Config::VRControllerActionSinkSecondsPerRotation;
+  const auto rotations = seconds / secondsPerRotation
+    * (controller->mRotation == Rotation::Clockwise ? 1 : -1);
+
+  const auto quat = Quaternion::CreateFromAxisAngle(
+    Vector3::UnitZ, (rotations * 2 * std::numbers::pi_v<float>));
+  controller->aimPose.orientation
+    = SMQuatToXr(quat * XrQuatToSM(controller->aimPose.orientation));
 }
 
 XrResult VirtualControllerSink::xrSyncActions(
   XrSession session,
   const XrActionsSyncInfo* syncInfo) {
   static bool sFirstRun = true;
-  for (auto hand: {&mLeftHand, &mRightHand}) {
+  for (auto hand: {&mLeftController, &mRightController}) {
     const bool presenceChanged
       = sFirstRun || (hand->present != hand->presentLastSync);
     sFirstRun = false;
@@ -271,10 +286,10 @@ XrResult VirtualControllerSink::xrPollEvent(
   XrEventDataBuffer* eventData) {
   if (
     mHaveSuggestedBindings && (
-    mLeftHand.present != mLeftHand.presentLastPollEvent
-    || mRightHand.present != mRightHand.presentLastPollEvent)) {
-    mLeftHand.presentLastPollEvent = mLeftHand.present;
-    mRightHand.presentLastPollEvent = mRightHand.present;
+    mLeftController.present != mLeftController.presentLastPollEvent
+    || mRightController.present != mRightController.presentLastPollEvent)) {
+    mLeftController.presentLastPollEvent = mLeftController.present;
+    mRightController.presentLastPollEvent = mRightController.present;
     *reinterpret_cast<XrEventDataInteractionProfileChanged*>(eventData) = {
       .type = XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED,
       .session = mSession,
@@ -297,9 +312,8 @@ std::string_view VirtualControllerSink::ResolvePath(XrPath path) {
 
   char buf[XR_MAX_PATH_LENGTH];
   uint32_t bufLen;
-  if (
-    mOpenXR->xrPathToString(mInstance, path, sizeof(buf), &bufLen, buf)
-    != XR_SUCCESS) {
+  if (!mOpenXR->check_xrPathToString(
+        mInstance, path, sizeof(buf), &bufLen, buf)) {
     return {};
   }
 
@@ -307,9 +321,9 @@ std::string_view VirtualControllerSink::ResolvePath(XrPath path) {
   mPaths[path] = str;
 
   if (str == gLeftHandPath) {
-    mLeftHand.path = path;
+    mLeftController.path = path;
   } else if (str == gRightHandPath) {
-    mRightHand.path = path;
+    mRightController.path = path;
   }
 
   return mPaths.at(path);
@@ -330,14 +344,14 @@ XrResult VirtualControllerSink::xrGetCurrentInteractionProfile(
     DebugPrint("Requested interaction profile for {}", pathStr);
   }
 
-  if (path == mLeftHand.path) {
+  if (path == mLeftController.path) {
     interactionProfile->interactionProfile
-      = mLeftHand.present ? mProfilePath : XR_NULL_PATH;
+      = mLeftController.present ? mProfilePath : XR_NULL_PATH;
     return XR_SUCCESS;
   }
-  if (path == mRightHand.path) {
+  if (path == mRightController.path) {
     interactionProfile->interactionProfile
-      = mRightHand.present ? mProfilePath : XR_NULL_PATH;
+      = mRightController.present ? mProfilePath : XR_NULL_PATH;
     return XR_SUCCESS;
   }
 
@@ -377,9 +391,9 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
 
     ControllerState* state;
     if (binding.starts_with(gLeftHandPath)) {
-      state = &mLeftHand;
+      state = &mLeftController;
     } else if (binding.starts_with(gRightHandPath)) {
-      state = &mRightHand;
+      state = &mRightController;
     } else {
       continue;
     }
@@ -395,8 +409,8 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
         continue;
       }
 
-      // Partially cosmetic, also helps with 'is using this controller' in some
-      // games
+      // Partially cosmetic, also helps with 'is using this controller' in
+      // some games
       if (binding.ends_with(gSqueezeValuePath)) {
         state->squeezeValueActions.insert(it.action);
         continue;
@@ -456,7 +470,7 @@ XrResult VirtualControllerSink::xrCreateActionSpace(
 
   const auto path = createInfo->subactionPath;
   ResolvePath(path);
-  for (auto hand: {&mLeftHand, &mRightHand}) {
+  for (auto hand: {&mLeftController, &mRightController}) {
     if (path != XR_NULL_PATH && path != hand->path) {
       continue;
     }
@@ -484,7 +498,7 @@ XrResult VirtualControllerSink::xrGetActionStateBoolean(
   XrActionStateBoolean* state) {
   const auto action = getInfo->action;
 
-  for (auto hand: {&mLeftHand, &mRightHand}) {
+  for (auto hand: {&mLeftController, &mRightController}) {
     if (hand->thumbstickTouchActions.contains(action)) {
       *state = hand->thumbstickTouch;
       return XR_SUCCESS;
@@ -510,7 +524,7 @@ XrResult VirtualControllerSink::xrGetActionStateFloat(
   XrActionStateFloat* state) {
   const auto action = getInfo->action;
 
-  for (auto hand: {&mLeftHand, &mRightHand}) {
+  for (auto hand: {&mLeftController, &mRightController}) {
     if (hand->squeezeValueActions.contains(action)) {
       *state = hand->squeezeValue;
       return XR_SUCCESS;
@@ -548,7 +562,7 @@ XrResult VirtualControllerSink::xrGetActionStatePose(
   ResolvePath(getInfo->subactionPath);
   const auto action = getInfo->action;
 
-  for (auto hand: {&mLeftHand, &mRightHand}) {
+  for (auto hand: {&mLeftController, &mRightController}) {
     if (
       hand->aimActions.contains(action) || hand->gripActions.contains(action)) {
       if (
@@ -596,7 +610,7 @@ XrResult VirtualControllerSink::xrLocateSpace(
   XrSpace baseSpace,
   XrTime time,
   XrSpaceLocation* location) {
-  for (const ControllerState& hand: {mLeftHand, mRightHand}) {
+  for (const ControllerState& hand: {mLeftController, mRightController}) {
     if (space != hand.aimSpace && space != hand.gripSpace) {
       continue;
     }
@@ -608,78 +622,11 @@ XrResult VirtualControllerSink::xrLocateSpace(
 
     mOpenXR->xrLocateSpace(mViewSpace, baseSpace, time, location);
 
-    const auto viewPose = location->pose;
-
-    auto aimPose = hand.aimPose;
-    const auto worldLockType = Config::VRControllerActionSinkWorldLock;
-    if (
-      hand.haveAction
-      && worldLockType != VRControllerActionSinkWorldLock::Nothing) {
-      XrSpaceLocation localInView {XR_TYPE_SPACE_LOCATION};
-      mOpenXR->xrLocateSpace(mLocalSpace, mViewSpace, time, &localInView);
-
-      if (worldLockType == VRControllerActionSinkWorldLock::Orientation) {
-        aimPose.orientation
-          = hand.worldLockedAimPose.orientation * localInView.pose.orientation;
-      }
-    }
-
-    if (UseMSFSActions() && hand.hand == mActionState.mActiveHand) {
-      if (mActionState.mRightClick) {
-        // "Push" button by moving forward
-        aimPose.position = SMVecToXr(
-          XrVecToSM(aimPose.position)
-          + Vector3::Transform(
-            {0.0f, 0.0f, -0.02f}, XrQuatToSM(aimPose.orientation)));
-      }
-
-      const auto oldRotation = mRotation;
-      if (mActionState.mDecreaseValue) {
-        mRotation = Rotation::CounterClockwise;
-      } else if (mActionState.mIncreaseValue) {
-        mRotation = Rotation::Clockwise;
-      } else {
-        mRotation = Rotation::None;
-      }
-
-      if (mRotation != Rotation::None) {
-        LARGE_INTEGER predictedTime;
-        mOpenXR->check_xrConvertTimeToWin32PerformanceCounterKHR(
-          mInstance, mPredictedDisplayTime, &predictedTime);
-        const int64_t nowWhole
-          = (predictedTime.QuadPart / mPerformanceCounterFrequency.QuadPart)
-          * std::chrono::high_resolution_clock::period::den;
-        const int64_t nowPart
-          = (predictedTime.QuadPart % mPerformanceCounterFrequency.QuadPart)
-          * std::chrono::high_resolution_clock::period::den
-          / mPerformanceCounterFrequency.QuadPart;
-        const std::chrono::high_resolution_clock::time_point frameTime(
-          std::chrono::high_resolution_clock::duration(nowWhole + nowPart));
-
-        if (mRotation != oldRotation) {
-          mRotationStartAt = frameTime;
-        } else {
-          const float seconds
-            = std::chrono::duration_cast<std::chrono::milliseconds>(
-                frameTime - mRotationStartAt)
-                .count()
-            / 1000.0f;
-
-          const auto secondsPerRotation
-            = Config::VRControllerActionSinkSecondsPerRotation;
-          const auto rotations = seconds / secondsPerRotation
-            * (mRotation == Rotation::Clockwise ? 1 : -1);
-
-          const auto quat = Quaternion::CreateFromAxisAngle(
-            Vector3::UnitZ, (rotations * 2 * std::numbers::pi_v<float>));
-          aimPose.orientation
-            = SMQuatToXr(quat * XrQuatToSM(aimPose.orientation));
-        }
-      }
-    }
+    const auto spacePose = location->pose;
+    const auto aimPose = hand.aimPose;
 
     if (space == hand.aimSpace) {
-      location->pose = aimPose * viewPose;
+      location->pose = aimPose * spacePose;
       return XR_SUCCESS;
     }
 
@@ -698,7 +645,7 @@ XrResult VirtualControllerSink::xrLocateSpace(
 
     const auto handPose = aimToGrip * aimPose;
 
-    location->pose = handPose * viewPose;
+    location->pose = handPose * spacePose;
 
     return XR_SUCCESS;
   }

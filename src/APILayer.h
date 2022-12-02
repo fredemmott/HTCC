@@ -87,7 +87,9 @@ class APILayer final {
 
  private:
   std::shared_ptr<OpenXRNext> mOpenXR;
+  XrInstance mInstance {};
   XrSpace mViewSpace {};
+  XrSpace mWorldSpace {};
 
   std::unique_ptr<HandTrackingSource> mHandTracking;
   std::unique_ptr<PointCtrlSource> mPointCtrl;

@@ -23,44 +23,13 @@
  */
 #pragma once
 
-#include <openxr/openxr.h>
-
-#include "InputSource.h"
-#include "OpenXRNext.h"
+#include "InputState.h"
 
 namespace HandTrackedCockpitClicking {
 
-class HandTrackingSource final : public InputSource {
+class InputSource {
  public:
-  HandTrackingSource(
-    const std::shared_ptr<OpenXRNext>& next,
-    XrInstance instance,
-    XrSession session,
-    XrSpace viewSpace,
-    XrSpace localSpace);
-  ~HandTrackingSource();
-
-  std::tuple<InputState, InputState>
-  Update(PointerMode, XrTime now, XrTime displayTime) override;
-
- private:
-  std::shared_ptr<OpenXRNext> mOpenXR;
-  XrInstance mInstance {};
-  XrSession mSession {};
-  XrSpace mViewSpace {};
-  XrSpace mLocalSpace {};
-
-  struct Hand {
-    XrHandEXT mHand;
-    InputState mState {mHand};
-    XrHandTrackerEXT mTracker {};
-  };
-
-  Hand mLeftHand {XR_HAND_LEFT_EXT};
-  Hand mRightHand {XR_HAND_RIGHT_EXT};
-
-  void InitHandTracker(Hand* hand);
-  void UpdateHand(XrTime now, XrTime displayTime, Hand* hand);
+  virtual std::tuple<InputState, InputState>
+  Update(PointerMode pointerMode, XrTime now, XrTime displayTime) = 0;
 };
-
 }// namespace HandTrackedCockpitClicking

@@ -28,11 +28,12 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "ActionState.h"
 #include "Config.h"
 #include "OpenXRNext.h"
 
 namespace HandTrackedCockpitClicking {
+
+struct InputState;
 
 class VirtualControllerSink final {
  public:
@@ -44,9 +45,8 @@ class VirtualControllerSink final {
 
   void Update(
     XrTime predictedDisplayTime,
-    const std::optional<XrPosef>& leftAimPose,
-    const std::optional<XrPosef>& rightAimPose,
-    const ActionState& actionState);
+    const InputState& leftHand,
+    const InputState& rightHand);
 
   static bool IsActionSink();
   static bool IsPointerSink();
@@ -91,21 +91,21 @@ class VirtualControllerSink final {
     XrInteractionProfileState* interactionProfile);
 
  private:
-  void UpdateWorldLockState(const XrPosef& viewPose, XrPosef* worldPose);
   // Move the pose down, and angle upwards, so it's not blocked by the
   // controller model
   XrPosef OffsetPointerPose(const XrPosef& original);
-  // based on /interaction_profiles/oculus/touch_controller
+
+  enum class Rotation { None, Clockwise, CounterClockwise };
   struct ControllerState {
     XrHandEXT hand {};
     XrPath path {};
-    XrPosef worldLockedAimPose {};
     bool haveAction = false;
 
     bool present {false};
     bool presentLastSync {false};
     bool presentLastPollEvent {false};
 
+    XrPosef savedAimPose {};
     XrPosef aimPose {};
     XrSpace aimSpace {};
     std::unordered_set<XrAction> aimActions {};
@@ -137,10 +137,10 @@ class VirtualControllerSink final {
 
     XrActionStateBoolean triggerValue {XR_TYPE_ACTION_STATE_BOOLEAN};
     std::unordered_set<XrAction> triggerValueActions {};
-  };
 
-  LARGE_INTEGER mPerformanceCounterFrequency {};
-  XrTime mPredictedDisplayTime {};
+    Rotation mRotation {Rotation::None};
+    XrTime mRotationStartAt {};
+  };
 
   bool mHaveSuggestedBindings {false};
   std::shared_ptr<OpenXRNext> mOpenXR;
@@ -150,20 +150,28 @@ class VirtualControllerSink final {
   XrSpace mLocalSpace {};
 
   XrPath mProfilePath {};
-  ControllerState mLeftHand {XR_HAND_LEFT_EXT};
-  ControllerState mRightHand {XR_HAND_RIGHT_EXT};
+  ControllerState mLeftController {XR_HAND_LEFT_EXT};
+  ControllerState mRightController {XR_HAND_RIGHT_EXT};
 
   std::string_view ResolvePath(XrPath path);
   std::unordered_map<XrPath, std::string> mPaths;
 
-  ActionState mActionState {};
-  void SetControllerActions(ControllerState* controller);
-  void SetDCSControllerActions(ControllerState* controller);
-  void SetMSFSControllerActions(ControllerState* controller);
+  void SetControllerActions(
+    XrTime predictedDisplayTime,
+    const InputState& hand,
+    ControllerState* controller);
+  void SetDCSControllerActions(
+    const InputState& hand,
+    ControllerState* controller);
+  void SetMSFSControllerActions(
+    XrTime predictedDisplayTime,
+    const InputState& hand,
+    ControllerState* controller);
 
-  enum class Rotation { None, Clockwise, CounterClockwise };
-  Rotation mRotation {Rotation::None};
-  std::chrono::high_resolution_clock::time_point mRotationStartAt {};
+  void UpdateHand(
+    XrTime predictedDisplayTime,
+    const InputState& hand,
+    ControllerState* controller);
 
   // For debugging
   std::unordered_map<XrAction, std::string> mActionPaths;

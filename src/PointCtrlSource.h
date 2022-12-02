@@ -29,24 +29,48 @@
 #include <chrono>
 #include <cinttypes>
 
-#include "ActionState.h"
+#include "InputSource.h"
+#include "OpenXRNext.h"
 
 namespace HandTrackedCockpitClicking {
 
 // Wrapper for PointCtrl joystick devices. This currently requires a custom
 // firmware.
-class PointCtrlSource final {
+class PointCtrlSource final : public InputSource {
  public:
-  PointCtrlSource();
-
-  void Update();
-
-  std::optional<XrVector2f> GetRXRY() const;
-  ActionState GetActionState() const;
-  std::tuple<uint16_t, uint16_t> GetRawCoordinatesForCalibration() const;
-  std::tuple<std::optional<XrPosef>, std::optional<XrPosef>> GetPoses() const;
+  PointCtrlSource(
+    const std::shared_ptr<OpenXRNext>& next,
+    XrInstance instance,
+    XrSession session,
+    XrSpace viewSpace,
+    XrSpace localSpace);
 
   bool IsConnected() const;
+
+  std::tuple<InputState, InputState>
+  Update(PointerMode, XrTime now, XrTime displayTime) override;
+
+  struct RawValues {
+    uint16_t mX {};
+    uint16_t mY {};
+    bool mFCUL1 {false};
+    bool mFCUL2 {false};
+    bool mFCUL3 {false};
+    bool mFCUR1 {false};
+    bool mFCUR2 {false};
+    bool mFCUR3 {false};
+
+    constexpr bool FCU1() const {
+      return mFCUL1 || mFCUR1;
+    }
+    constexpr bool FCU2() const {
+      return mFCUL2 || mFCUR2;
+    }
+    constexpr bool FCU3() const {
+      return mFCUL3 || mFCUR3;
+    }
+  };
+  RawValues GetRawValuesForCalibration() const;
 
  private:
   void ConnectDevice();
@@ -55,16 +79,6 @@ class PointCtrlSource final {
     LPCDIDEVICEINSTANCE lpddi,
     LPVOID pvRef);
   BOOL EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi);
-  void MapActionsClassic(
-    ActionState&,
-    const decltype(DIJOYSTATE2::rgbButtons)&);
-  void MapActionsModal(ActionState&, const decltype(DIJOYSTATE2::rgbButtons)&);
-
-  enum class ScrollDirection {
-    Up,
-    Down,
-  };
-  ScrollDirection mScrollDirection {ScrollDirection::Down};
 
   enum class LockState {
     Unlocked,
@@ -74,30 +88,49 @@ class PointCtrlSource final {
     LockedWithLeftHold,
     LockedWithoutLeftHold,
   };
-  LockState mScrollMode {LockState::Unlocked};
-  std::chrono::steady_clock::time_point mModeSwitchStart {};
-
-  winrt::com_ptr<IDirectInput8W> mDI;
-  winrt::com_ptr<IDirectInputDevice8W> mDevice;
-
-  ActionState mActionState {};
-
-  uint16_t mX {};
-  uint16_t mY {};
-  std::chrono::steady_clock::time_point mLastMovedAt {};
-
   enum class WakeState {
     Default,
     Waking,
   };
-  WakeState mLeftWakeState {WakeState::Default};
-  WakeState mRightWakeState {WakeState::Default};
-  std::chrono::steady_clock::time_point mLeftButtonAt {};
-  std::chrono::steady_clock::time_point mRightButtonAt {};
+  using ScrollDirection = InputState::ValueChange;
+  struct Hand {
+    XrHandEXT mHand;
+    WakeState mWakeState {WakeState::Default};
+
+    InputState mState {mHand};
+
+    LockState mScrollMode {LockState::Unlocked};
+    ScrollDirection mScrollDirection {ScrollDirection::Increase};
+    XrTime mModeSwitchStart {};
+    XrTime mInteractionAt {};
+    bool mHaveButton {false};
+  };
+  Hand mLeftHand;
+  Hand mRightHand;
+
+  winrt::com_ptr<IDirectInput8W> mDI;
+  winrt::com_ptr<IDirectInputDevice8W> mDevice;
+
+  RawValues mRaw {};
+  XrTime mLastMovedAt {};
+
+  XrInstance mInstance {};
+  XrSession mSession {};
+  XrSpace mViewSpace {};
+  XrSpace mLocalSpace {};
+  std::shared_ptr<OpenXRNext> mOpenXR;
+
+  void UpdatePose(XrTime predictedDisplayTime, InputState* hand);
   void UpdateWakeState(
     bool hasButtons,
     WakeState& state,
     std::chrono::steady_clock::time_point& timePoint);
+  void MapActionsClassic(
+    Hand*,
+    XrTime now,
+    const decltype(DIJOYSTATE2::rgbButtons)&);
+  void
+  MapActionsModal(Hand*, XrTime now, const decltype(DIJOYSTATE2::rgbButtons)&);
 };
 
 }// namespace HandTrackedCockpitClicking
