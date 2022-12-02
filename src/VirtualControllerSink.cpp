@@ -665,7 +665,8 @@ XrResult VirtualControllerSink::xrLocateSpace(
                 .count()
             / 1000.0f;
 
-          const auto secondsPerRotation = 4.0f;
+          const auto secondsPerRotation
+            = Config::VRControllerActionSinkSecondsPerRotation;
           const auto rotations = seconds / secondsPerRotation
             * (mRotation == Rotation::Clockwise ? 1 : -1);
 

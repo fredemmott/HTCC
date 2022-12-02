@@ -58,6 +58,7 @@ DWORD 0 (disabled) or 1 (enabled): use Oculus hand tracking pinch gestures to cl
 ## PinchToScroll
 
 DWORD 0 (disabled) or 1 (enabled): use Oculus hand tracking pinch gestures to scroll
+
 ## OneHandOnly
 
 DWORD 0 (disabled) or 1 (enabled): only render one controller at a time.
@@ -129,6 +130,12 @@ DWORD
 
 - 0: clicking does not affect tracking
 - 1 - orientation: any click/wheel action locks the angle of the pointer, but not the position
+
+# VRControllerActionSinkSecondsPerRotation
+
+STRING
+
+Number of seconds for a mouse wheel event to trigger a full rotation of the controller when using MSFS bindings. For example, "4.0"
 
 ## PointCtrlVID, PointCtrlPID (firmware developers and custom button boxes only)
 

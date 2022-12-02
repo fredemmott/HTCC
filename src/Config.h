@@ -117,7 +117,8 @@ enum class VRControllerActionSinkWorldLock : DWORD {
   IT(PointCtrlRadiansPerUnitY, 3.009e-5f) \
   IT(PointCtrlProjectionDistance, 0.3f) \
   IT(VRVerticalOffset, -0.04f) \
-  IT(VRFarDistance, 0.8f)
+  IT(VRFarDistance, 0.8f) \
+  IT(VRControllerActionSinkSecondsPerRotation, 4.0f)
 
 #define HandTrackedCockpitClicking_STRING_SETTINGS \
   IT( \
