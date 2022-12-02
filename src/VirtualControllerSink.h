@@ -161,6 +161,10 @@ class VirtualControllerSink final {
   void SetDCSControllerActions(ControllerState* controller);
   void SetMSFSControllerActions(ControllerState* controller);
 
+  enum class Rotation { None, Clockwise, CounterClockwise };
+  Rotation mRotation {Rotation::None};
+  std::chrono::high_resolution_clock::time_point mRotationStartAt {};
+
   // For debugging
   std::unordered_map<XrAction, std::string> mActionPaths;
   std::unordered_map<XrSpace, XrAction> mActionSpaces;

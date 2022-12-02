@@ -612,15 +612,57 @@ XrResult VirtualControllerSink::xrLocateSpace(
       }
     }
 
-    if (
-      Config::VRControllerActionSinkMapping
-        == VRControllerActionSinkMapping::MSFS
-      && mActionState.mRightClick) {
-      // "Push" button by moving forward
-      aimPose.position = SMVecToXr(
-        XrVecToSM(aimPose.position)
-        + Vector3::Transform(
-          {0.0f, 0.0f, -0.02f}, XrQuatToSM(aimPose.orientation)));
+    if (UseMSFSActions() && mActionState.Any()) {
+      if (mActionState.mRightClick) {
+        // "Push" button by moving forward
+        aimPose.position = SMVecToXr(
+          XrVecToSM(aimPose.position)
+          + Vector3::Transform(
+            {0.0f, 0.0f, -0.02f}, XrQuatToSM(aimPose.orientation)));
+      }
+
+      const auto oldRotation = mRotation;
+      if (mActionState.mDecreaseValue) {
+        mRotation = Rotation::CounterClockwise;
+      } else if (mActionState.mIncreaseValue) {
+        mRotation = Rotation::Clockwise;
+      }
+
+      if (mRotation != Rotation::None) {
+        LARGE_INTEGER predictedTime;
+        mOpenXR->check_xrConvertTimeToWin32PerformanceCounterKHR(
+          mInstance, mPredictedDisplayTime, &predictedTime);
+        const int64_t nowWhole
+          = (predictedTime.QuadPart / mPerformanceCounterFrequency.QuadPart)
+          * std::chrono::high_resolution_clock::period::den;
+        const int64_t nowPart
+          = (predictedTime.QuadPart % mPerformanceCounterFrequency.QuadPart)
+          * std::chrono::high_resolution_clock::period::den
+          / mPerformanceCounterFrequency.QuadPart;
+        const std::chrono::high_resolution_clock::time_point frameTime(
+          std::chrono::high_resolution_clock::duration(nowWhole + nowPart));
+
+        if (mRotation != oldRotation) {
+          mRotationStartAt = frameTime;
+        } else {
+          const float seconds
+            = std::chrono::duration_cast<std::chrono::milliseconds>(
+                frameTime - mRotationStartAt)
+                .count()
+            / 1000.0f;
+
+          const auto secondsPerRotation = 4.0f;
+          const auto rotations = seconds / secondsPerRotation
+            * (mRotation == Rotation::Clockwise ? 1 : -1);
+
+          const auto quat = Quaternion::CreateFromAxisAngle(
+            Vector3::UnitZ, (rotations * 2 * std::numbers::pi_v<float>));
+          /* Disabled to test other stuff
+        aimPose.orientation
+          = SMQuatToXr(quat * XrQuatToSM(aimPose.orientation));
+          */
+        }
+      }
     }
 
     if (space == hand.aimSpace) {
