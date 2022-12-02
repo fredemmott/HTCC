@@ -46,14 +46,17 @@ VirtualTouchScreenSink::VirtualTouchScreenSink(
     .space = viewSpace,
   };
   XrViewState viewState {XR_TYPE_VIEW_STATE};
-  XrView views[2];
-  views[0].type = XR_TYPE_VIEW;
-  views[1].type = XR_TYPE_VIEW;
-  uint32_t viewCount {2};
-  auto nextResult = oxr->xrLocateViews(
-    session, &viewLocateInfo, &viewState, viewCount, &viewCount, views);
-  if (nextResult != XR_SUCCESS) {
-    DebugPrint("Failed to find FOV: {}", (int)nextResult);
+  std::array<XrView, 2> views;
+  views.fill({XR_TYPE_VIEW});
+  uint32_t viewCount {views.size()};
+  if (!oxr->check_xrLocateViews(
+        session,
+        &viewLocateInfo,
+        &viewState,
+        viewCount,
+        &viewCount,
+        views.data())) {
+    DebugPrint("Failed to find FOV");
     return;
   }
 
