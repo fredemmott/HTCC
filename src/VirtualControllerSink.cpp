@@ -624,7 +624,7 @@ XrResult VirtualControllerSink::xrLocateSpace(
       }
     }
 
-    if (UseMSFSActions()) {
+    if (UseMSFSActions() && hand.hand == mActionState.mActiveHand) {
       if (mActionState.mRightClick) {
         // "Push" button by moving forward
         aimPose.position = SMVecToXr(
