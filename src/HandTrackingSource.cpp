@@ -32,9 +32,6 @@
 
 using namespace DirectX::SimpleMath;
 
-template <class CharT>
-struct std::formatter<XrResult, CharT> : std::formatter<int, CharT> {};
-
 namespace HandTrackedCockpitClicking {
 
 HandTrackingSource::HandTrackingSource(

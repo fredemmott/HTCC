@@ -91,6 +91,7 @@ class VirtualControllerSink final {
     XrInteractionProfileState* interactionProfile);
 
  private:
+  void UpdateWorldLockState(const XrPosef& viewPose, XrPosef* worldPose);
   // Move the pose down, and angle upwards, so it's not blocked by the
   // controller model
   XrPosef OffsetPointerPose(const XrPosef& original);
@@ -98,6 +99,8 @@ class VirtualControllerSink final {
   struct ControllerState {
     XrHandEXT hand {};
     XrPath path {};
+    XrPosef worldLockedAimPose {};
+    bool haveAction = false;
 
     bool present {false};
     bool presentLastSync {false};
@@ -144,6 +147,7 @@ class VirtualControllerSink final {
   XrInstance mInstance {};
   XrSession mSession {};
   XrSpace mViewSpace {};
+  XrSpace mLocalSpace {};
 
   XrPath mProfilePath {};
   ControllerState mLeftHand {XR_HAND_LEFT_EXT};
@@ -152,19 +156,14 @@ class VirtualControllerSink final {
   std::string_view ResolvePath(XrPath path);
   std::unordered_map<XrPath, std::string> mPaths;
 
+  ActionState mActionState {};
+  void SetControllerActions(ControllerState* controller);
+  void SetDCSControllerActions(ControllerState* controller);
+  void SetMSFSControllerActions(ControllerState* controller);
+
   // For debugging
   std::unordered_map<XrAction, std::string> mActionPaths;
   std::unordered_map<XrSpace, XrAction> mActionSpaces;
-
-  void SetControllerActions(
-    ControllerState* controller,
-    const ActionState& actions);
-  void SetDCSControllerActions(
-    ControllerState* controller,
-    const ActionState& actions);
-  void SetMSFSControllerActions(
-    ControllerState* controller,
-    const ActionState& actions);
 };
 
 }// namespace HandTrackedCockpitClicking

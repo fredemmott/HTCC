@@ -25,7 +25,6 @@
 #include "APILayer.h"
 
 #include <loader_interfaces.h>
-#include <openxr/openxr.h>
 
 #include <memory>
 #include <string>
@@ -38,16 +37,9 @@
 #include "PointCtrlSource.h"
 #include "VirtualControllerSink.h"
 #include "VirtualTouchScreenSink.h"
-
-template <class CharT>
-struct std::formatter<XrResult, CharT> : std::formatter<int, CharT> {};
+#include "openxr.h"
 
 namespace HandTrackedCockpitClicking {
-
-static constexpr XrPosef XR_POSEF_IDENTITY {
-  .orientation = {0.0f, 0.0f, 0.0f, 1.0f},
-  .position = {0.0f, 0.0f, 0.0f},
-};
 
 APILayer::APILayer(
   XrInstance instance,

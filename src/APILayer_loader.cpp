@@ -34,9 +34,6 @@
 #include "Environment.h"
 #include "OpenXRNext.h"
 
-template <class CharT>
-struct std::formatter<XrResult, CharT> : std::formatter<int, CharT> {};
-
 namespace Environment = HandTrackedCockpitClicking::Environment;
 
 namespace HandTrackedCockpitClicking::Loader {

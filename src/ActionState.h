@@ -33,6 +33,10 @@ struct ActionState {
   bool mDecreaseValue {};
   bool mIncreaseValue {};
 
+  bool Any() const {
+    return mLeftClick || mRightClick || mDecreaseValue || mIncreaseValue;
+  }
+
   constexpr auto operator<=>(const ActionState&) const noexcept = default;
 };
 

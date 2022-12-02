@@ -30,7 +30,7 @@
 #include <numbers>
 
 #include "Environment.h"
-#include "math.h"
+#include "openxr.h"
 
 using namespace DirectX::SimpleMath;
 
@@ -71,6 +71,20 @@ VirtualControllerSink::VirtualControllerSink(
     mInstance(instance),
     mSession(session),
     mViewSpace(viewSpace) {
+  XrReferenceSpaceCreateInfo referenceSpace {
+    .type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
+    .next = nullptr,
+    .referenceSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL,
+    .poseInReferenceSpace = XR_POSEF_IDENTITY,
+  };
+
+  const auto nextResult
+    = openXR->xrCreateReferenceSpace(session, &referenceSpace, &mLocalSpace);
+  if (nextResult != XR_SUCCESS) {
+    DebugPrint("Failed to create local space: {}", nextResult);
+    return;
+  }
+
   DebugPrint(
     "Initialized virtual VR controller - PointerSink: {}; ActionSink: {}",
     IsPointerSink(),
@@ -105,6 +119,7 @@ void VirtualControllerSink::Update(
   const std::optional<XrPosef>& leftAimPose,
   const std::optional<XrPosef>& rightAimPose,
   const ActionState& actionState) {
+  mActionState = actionState;
   mPredictedDisplayTime = predictedDisplayTime;
 
   mLeftHand.present = leftAimPose.has_value();
@@ -120,22 +135,62 @@ void VirtualControllerSink::Update(
     if (!hand->present) {
       continue;
     }
-    SetControllerActions(hand, actionState);
+    SetControllerActions(hand);
+  }
+
+  const auto haveAction = actionState.Any();
+  if (actionState.mActiveHand == XR_HAND_LEFT_EXT) {
+    mRightHand.haveAction = false;
+    if (haveAction && !mLeftHand.haveAction) {
+      mLeftHand.haveAction = true;
+      UpdateWorldLockState(*leftAimPose, &mLeftHand.worldLockedAimPose);
+    } else if (!haveAction) {
+      mLeftHand.haveAction = false;
+    }
+  } else {
+    mLeftHand.haveAction = false;
+    if (haveAction && !mRightHand.haveAction) {
+      mRightHand.haveAction = true;
+      UpdateWorldLockState(*leftAimPose, &mRightHand.worldLockedAimPose);
+    } else if (!haveAction) {
+      mRightHand.haveAction = false;
+    }
   }
 }
 
-void VirtualControllerSink::SetControllerActions(
-  ControllerState* controller,
-  const ActionState& actions) {
+void VirtualControllerSink::UpdateWorldLockState(
+  const XrPosef& viewPose,
+  XrPosef* worldPose) {
+  *worldPose = {};
+  if (
+    Config::VRControllerActionSinkWorldLock
+    == VRControllerActionSinkWorldLock::Nothing) {
+    return;
+  }
+
+  XrSpaceLocation viewToWorld {XR_TYPE_SPACE_LOCATION};
+  mOpenXR->xrLocateSpace(
+    mViewSpace, mLocalSpace, mPredictedDisplayTime, &viewToWorld);
+
+  if (
+    Config::VRControllerActionSinkWorldLock
+      == VRControllerActionSinkWorldLock::Orientation
+    && (viewToWorld.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)) {
+    worldPose->orientation
+      = viewPose.orientation * viewToWorld.pose.orientation;
+  }
+}
+
+void VirtualControllerSink::SetControllerActions(ControllerState* controller) {
   if (!IsActionSink()) {
     return;
   }
   if (UseDCSActions()) {
-    SetDCSControllerActions(controller, actions);
+    SetDCSControllerActions(controller);
     return;
   }
   if (UseMSFSActions()) {
-    SetMSFSControllerActions(controller, actions);
+    SetMSFSControllerActions(controller);
     return;
   }
 
@@ -146,34 +201,30 @@ void VirtualControllerSink::SetControllerActions(
   }
 }
 
-void VirtualControllerSink::SetDCSControllerActions(
-  ControllerState* hand,
-  const ActionState& actionState) {
+void VirtualControllerSink::SetDCSControllerActions(ControllerState* hand) {
   hand->thumbstickX.changedSinceLastSync = true;
   hand->thumbstickY.changedSinceLastSync = true;
 
-  if (actionState.mLeftClick) {
+  if (mActionState.mLeftClick) {
     hand->thumbstickY.currentState = -1.0f;
-  } else if (actionState.mRightClick) {
+  } else if (mActionState.mRightClick) {
     hand->thumbstickY.currentState = 1.0f;
   } else {
     hand->thumbstickY.currentState = 0.0f;
   }
 
-  if (actionState.mDecreaseValue) {
+  if (mActionState.mDecreaseValue) {
     hand->thumbstickX.currentState = -1.0f;
-  } else if (actionState.mIncreaseValue) {
+  } else if (mActionState.mIncreaseValue) {
     hand->thumbstickX.currentState = 1.0f;
   } else {
     hand->thumbstickX.currentState = 0.0f;
   }
 }
 
-void VirtualControllerSink::SetMSFSControllerActions(
-  ControllerState* hand,
-  const ActionState& actionState) {
+void VirtualControllerSink::SetMSFSControllerActions(ControllerState* hand) {
   hand->triggerValue.changedSinceLastSync = true;
-  hand->triggerValue.currentState = actionState.mLeftClick;
+  hand->triggerValue.currentState = mActionState.mLeftClick;
 }
 
 XrResult VirtualControllerSink::xrSyncActions(
@@ -547,8 +598,33 @@ XrResult VirtualControllerSink::xrLocateSpace(
 
     const auto viewPose = location->pose;
 
+    auto aimPose = hand.aimPose;
+    const auto worldLockType = Config::VRControllerActionSinkWorldLock;
+    if (
+      hand.haveAction
+      && worldLockType != VRControllerActionSinkWorldLock::Nothing) {
+      XrSpaceLocation localInView {XR_TYPE_SPACE_LOCATION};
+      mOpenXR->xrLocateSpace(mLocalSpace, mViewSpace, time, &localInView);
+
+      if (worldLockType == VRControllerActionSinkWorldLock::Orientation) {
+        aimPose.orientation
+          = hand.worldLockedAimPose.orientation * localInView.pose.orientation;
+      }
+    }
+
+    if (
+      Config::VRControllerActionSinkMapping
+        == VRControllerActionSinkMapping::MSFS
+      && mActionState.mRightClick) {
+      // "Push" button by moving forward
+      aimPose.position = SMVecToXr(
+        XrVecToSM(aimPose.position)
+        + Vector3::Transform(
+          {0.0f, 0.0f, -0.02f}, XrQuatToSM(aimPose.orientation)));
+    }
+
     if (space == hand.aimSpace) {
-      location->pose = hand.aimPose * viewPose;
+      location->pose = aimPose * viewPose;
       return XR_SUCCESS;
     }
 
@@ -565,7 +641,7 @@ XrResult VirtualControllerSink::xrLocateSpace(
       .orientation = {aimToGripQ.x, aimToGripQ.y, aimToGripQ.z, aimToGripQ.w},
     };
 
-    const auto handPose = aimToGrip * hand.aimPose;
+    const auto handPose = aimToGrip * aimPose;
 
     location->pose = handPose * viewPose;
 
