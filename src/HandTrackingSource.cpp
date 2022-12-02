@@ -226,14 +226,30 @@ void HandTrackingSource::Update(XrTime displayTime) {
   };
 #undef EITHER_HAS
 
+  if (!mActionState.Any()) {
+    return;
+  }
+
+  if (mLeftHandPose.has_value() && !mRightHandPose.has_value()) {
+    mActionState.mActiveHand == XR_HAND_LEFT_EXT;
+    return;
+  }
+
+  if (mRightHandPose.has_value() && !mLeftHandPose.has_value()) {
+    mActionState.mActiveHand == XR_HAND_RIGHT_EXT;
+    return;
+  }
+
   if (
     rightAim.status
     & (XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB)) {
     mActionState.mActiveHand = XR_HAND_RIGHT_EXT;
+    assert(mRightHandPose.has_value());
   } else if (
     leftAim.status
     & (XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB)) {
     mActionState.mActiveHand = XR_HAND_LEFT_EXT;
+    assert(mLeftHandPose.has_value());
   }
 }
 

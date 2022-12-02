@@ -213,11 +213,8 @@ XrResult APILayer::xrWaitFrame(
     mPointCtrl->Update();
     if (Config::PointCtrlFCUClicks) {
       const auto as = mPointCtrl->GetActionState();
-      actionState = {
-        .mLeftClick = actionState.mLeftClick || as.mLeftClick,
-        .mRightClick = actionState.mRightClick || as.mRightClick,
-        .mDecreaseValue = actionState.mDecreaseValue || as.mDecreaseValue,
-        .mIncreaseValue = actionState.mIncreaseValue || as.mIncreaseValue,
+      if (as.Any()) {
+        actionState = as;
       };
     }
     if (Config::PointerSource == PointerSource::PointCtrl) {

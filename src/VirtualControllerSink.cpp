@@ -151,7 +151,7 @@ void VirtualControllerSink::Update(
     mLeftHand.haveAction = false;
     if (haveAction && !mRightHand.haveAction) {
       mRightHand.haveAction = true;
-      UpdateWorldLockState(*leftAimPose, &mRightHand.worldLockedAimPose);
+      UpdateWorldLockState(*rightAimPose, &mRightHand.worldLockedAimPose);
     } else if (!haveAction) {
       mRightHand.haveAction = false;
     }
@@ -161,7 +161,7 @@ void VirtualControllerSink::Update(
 void VirtualControllerSink::UpdateWorldLockState(
   const XrPosef& viewPose,
   XrPosef* worldPose) {
-  *worldPose = {};
+  *worldPose = XR_POSEF_IDENTITY;
   if (
     Config::VRControllerActionSinkWorldLock
     == VRControllerActionSinkWorldLock::Nothing) {
@@ -169,7 +169,7 @@ void VirtualControllerSink::UpdateWorldLockState(
   }
 
   XrSpaceLocation viewToWorld {XR_TYPE_SPACE_LOCATION};
-  mOpenXR->xrLocateSpace(
+  mOpenXR->check_xrLocateSpace(
     mViewSpace, mLocalSpace, mPredictedDisplayTime, &viewToWorld);
 
   if (

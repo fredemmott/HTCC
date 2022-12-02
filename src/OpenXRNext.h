@@ -79,7 +79,7 @@ class OpenXRNext final {
   template <class... Args> \
   auto func(Args&&... args) { \
     const auto result = raw_##func(std::forward<Args>(args)...); \
-    if (result != XR_SUCCESS && result != XR_EVENT_UNAVAILABLE) { \
+    if (result < 0) { \
       DebugPrint("{} failed: {}", #func, static_cast<int>(result)); \
     } \
     return result; \
