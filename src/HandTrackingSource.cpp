@@ -263,25 +263,27 @@ void HandTrackingSource::Update(XrTime displayTime) {
   }
 
   if (
-    rightAim.status
-    & (XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB)) {
+    rightValid
+    && (rightAim.status & (XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB))) {
     mActionState.mActiveHand = XR_HAND_RIGHT_EXT;
-    assert(mRightHandPose.has_value());
   } else if (
-    leftAim.status
-    & (XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB)) {
+    leftValid
+    && (leftAim.status & (XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB | XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB))) {
     mActionState.mActiveHand = XR_HAND_LEFT_EXT;
-    assert(mLeftHandPose.has_value());
   }
 
-  if (mLeftHandPose.has_value() && !mRightHandPose.has_value()) {
+  if (leftValid && !rightValid) {
     mActionState.mActiveHand = XR_HAND_LEFT_EXT;
     return;
   }
 
-  if (mRightHandPose.has_value() && !mLeftHandPose.has_value()) {
+  if (rightValid && !leftValid) {
     mActionState.mActiveHand = XR_HAND_RIGHT_EXT;
     return;
+  }
+
+  if (!(leftValid || rightValid)) {
+    mActionState = {};
   }
 }
 
