@@ -7,12 +7,14 @@ No special setup needed; just be sure to follow the setup instructions for your 
 
 ## Controls
 
-### Oculus hand tracking gesture controls
+Touchscreen/mouse emulation is not supported for MSFS.
 
-- Index finger pinch to thumb: left click
-- Middle finger pinch to thumb: right click
-- Ring finger pinch to thumb: scroll wheel up
-- Little finger pinch to thumb: scroll wheel down
+### Virtual Controller Mapping
+
+- 'left click'/index finger pinch: vr controller trigger (primary interaction)
+- 'right click'/middle finger pinch: push the vr controller away (push button)
+- 'scroll up'/ring finger pinch: rotate controller counter-clockwise
+- 'scroll down'/little finger pinch: rotate controller clockwise
 
 ### PointCTRL FCU buttons
 
