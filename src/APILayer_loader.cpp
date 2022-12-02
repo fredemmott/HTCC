@@ -246,7 +246,7 @@ static XrResult xrGetInstanceProcAddr(
   if (gNext) {
     const auto result
       = gNext->raw_xrGetInstanceProcAddr(instance, name_cstr, function);
-    if (result != XR_SUCCESS) {
+    if (result != XR_SUCCESS && Config::VerboseDebug >= 1) {
       DebugPrint(
         "xrGetInstanceProcAddr for instance {:#016x} failed: {}",
         reinterpret_cast<uintptr_t>(instance),
