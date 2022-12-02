@@ -97,6 +97,11 @@ static void RaycastPose(XrPosef& pose) {
   pose.orientation = {o.x, o.y, o.z, o.w};
 }
 
+static bool UseHandTrackingAimPointFB() {
+  return Config::UseHandTrackingAimPointFB
+    && Environment::Have_XR_FB_HandTracking_Aim;
+}
+
 void HandTrackingSource::Update(XrTime displayTime) {
   InitHandTrackers();
 
@@ -117,22 +122,24 @@ void HandTrackingSource::Update(XrTime displayTime) {
     joints.next = &aimState;
   }
 
+  jointData.fill({});
   auto nextResult
     = mOpenXR->xrLocateHandJointsEXT(mLeftHand, &locateInfo, &joints);
   if (nextResult != XR_SUCCESS) {
     aimState.status = {};
   }
-  const auto leftValid = joints.isActive;
   const auto leftAim = aimState;
   const auto leftJoints = jointData;
+  const auto leftJointValid = joints.isActive;
 
   nextResult = mOpenXR->xrLocateHandJointsEXT(mRightHand, &locateInfo, &joints);
   if (nextResult != XR_SUCCESS) {
     aimState.status = {};
   }
-  const auto rightValid = joints.isActive;
+
   const auto rightAim = aimState;
   const auto rightJoints = jointData;
+  const auto rightJointsValid = joints.isActive;
 
   static std::chrono::steady_clock::time_point lastPrint {};
   const auto now = std::chrono::steady_clock::now();
@@ -144,30 +151,45 @@ void HandTrackingSource::Update(XrTime displayTime) {
     DumpHandState("Right", rightAim);
   }
 
-  if (Config::UseHandTrackingAimPointFB) {
+  if (UseHandTrackingAimPointFB()) {
     if (HasFlags(leftAim.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
       mLeftHandPose = {leftAim.aimPose};
+      mLeftHandUpdateAt = now;
     }
-  } else if (leftValid) {
+  } else {
     const auto joint = leftJoints[Config::HandTrackingAimJoint];
     if (
       HasFlags(joint.locationFlags, XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)
       && HasFlags(joint.locationFlags, XR_SPACE_LOCATION_POSITION_VALID_BIT)) {
       mLeftHandPose = joint.pose;
+      mLeftHandUpdateAt = now;
     }
   }
 
-  if (Config::UseHandTrackingAimPointFB) {
+  if (UseHandTrackingAimPointFB()) {
     if (HasFlags(rightAim.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
       mRightHandPose = {rightAim.aimPose};
+      mRightHandUpdateAt = now;
     }
-  } else if (rightValid) {
+  } else {
     const auto joint = rightJoints[Config::HandTrackingAimJoint];
     if (
       HasFlags(joint.locationFlags, XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)
       && HasFlags(joint.locationFlags, XR_SPACE_LOCATION_POSITION_VALID_BIT)) {
       mRightHandPose = joint.pose;
+      mRightHandUpdateAt = now;
     }
+  }
+
+  const auto leftValid
+    = (now - mLeftHandUpdateAt) < std::chrono::milliseconds(200);
+  const auto rightValid
+    = (now - mLeftHandUpdateAt) < std::chrono::milliseconds(200);
+  if (!leftValid) {
+    mLeftHandPose = {};
+  }
+  if (!rightValid) {
+    mRightHandPose = {};
   }
 
   if (Config::OneHandOnly && mLeftHandPose && mRightHandPose) {

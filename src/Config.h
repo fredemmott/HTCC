@@ -65,7 +65,7 @@ enum class VRControllerActionSinkWorldLock : DWORD {
   IT(uint8_t, MirrorEye, 1) \
   IT(bool, EnableFBOpenXRExtensions, true) \
   IT(bool, OneHandOnly, true) \
-  IT(bool, UseHandTrackingAimPointFB, false) \
+  IT(bool, UseHandTrackingAimPointFB, true) \
   IT(XrHandJointEXT, HandTrackingAimJoint, XR_HAND_JOINT_INDEX_PROXIMAL_EXT) \
   IT(bool, PinchToClick, true) \
   IT(bool, PinchToScroll, true) \

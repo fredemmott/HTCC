@@ -63,6 +63,8 @@ class HandTrackingSource final {
 
   std::optional<XrPosef> mLeftHandPose;
   std::optional<XrPosef> mRightHandPose;
+  std::chrono::steady_clock::time_point mLeftHandUpdateAt {};
+  std::chrono::steady_clock::time_point mRightHandUpdateAt {};
 
   ActionState mActionState {};
 };
