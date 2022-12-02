@@ -63,7 +63,7 @@ class OpenXRNext final {
 
 #define IT(func) \
   template <class... Args> \
-  auto func(Args&&... args) { \
+  auto raw_##func(Args&&... args) { \
     if (!this->m_##func) [[unlikely]] { \
       auto nextResult = this->m_xrGetInstanceProcAddr( \
         mInstance, \
@@ -75,6 +75,18 @@ class OpenXRNext final {
       } \
     } \
     return this->m_##func(std::forward<Args>(args)...); \
+  } \
+  template <class... Args> \
+  auto func(Args&&... args) { \
+    const auto result = raw_##func(std::forward<Args>(args)...); \
+    if (result != XR_SUCCESS && result != XR_EVENT_UNAVAILABLE) { \
+      DebugPrint("{} failed: {}", #func, static_cast<int>(result)); \
+    } \
+    return result; \
+  } \
+  template <class... Args> \
+  bool check_##func(Args&&... args) { \
+    return this->func(std::forward<Args>(args)...) == XR_SUCCESS; \
   }
   IT(xrGetInstanceProcAddr)
   NEXT_OPENXR_FUNCS

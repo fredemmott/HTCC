@@ -29,8 +29,12 @@ OpenXRNext::OpenXRNext(XrInstance instance, PFN_xrGetInstanceProcAddr getNext) {
   mInstance = instance;
   m_xrGetInstanceProcAddr = getNext;
 #define IT(func) \
-  getNext( \
-    instance, #func, reinterpret_cast<PFN_xrVoidFunction*>(&this->m_##func));
+  if( \
+    getNext( \
+      instance, #func, reinterpret_cast<PFN_xrVoidFunction*>(&this->m_##func)) \
+    != XR_SUCCESS) { \
+    m_##func = nullptr; \
+  }
   NEXT_OPENXR_FUNCS
 #undef IT
 }

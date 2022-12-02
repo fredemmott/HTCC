@@ -149,6 +149,8 @@ static XrResult xrCreateSession(
   XrInstance instance,
   const XrSessionCreateInfo* createInfo,
   XrSession* session) {
+  static uint32_t sCount = 0;
+  DebugPrint("{}(): #{}", __FUNCTION__, sCount++);
   auto nextResult = gNext->xrCreateSession(instance, createInfo, session);
   if (nextResult != XR_SUCCESS) {
     DebugPrint("Failed to create OpenXR session: {}", nextResult);
@@ -175,7 +177,9 @@ static XrResult xrDestroySession(XrSession session) {
 static XrResult xrDestroyInstance(XrInstance instance) {
   delete gInstance;
   gInstance = nullptr;
-  return gNext->xrDestroyInstance(instance);
+  const auto result = gNext->xrDestroyInstance(instance);
+  gNext = nullptr;
+  return result;
 }
 
 static XrResult xrGetInstanceProcAddr(
@@ -240,7 +244,15 @@ static XrResult xrGetInstanceProcAddr(
   }
 
   if (gNext) {
-    return gNext->xrGetInstanceProcAddr(instance, name_cstr, function);
+    const auto result
+      = gNext->raw_xrGetInstanceProcAddr(instance, name_cstr, function);
+    if (result != XR_SUCCESS) {
+      DebugPrint(
+        "xrGetInstanceProcAddr for instance {:#016x} failed: {}",
+        reinterpret_cast<uintptr_t>(instance),
+        name_cstr);
+    }
+    return result;
   }
 
   if (name == "xrEnumerateApiLayerProperties") {
@@ -321,7 +333,17 @@ static XrResult xrCreateApiLayerInstance(
   const XrInstanceCreateInfo* originalInfo,
   const struct XrApiLayerCreateInfo* layerInfo,
   XrInstance* instance) {
-  DebugPrint("{}", __FUNCTION__);
+  static uint32_t sCount = {0};
+  DebugPrint(
+    "{} #{} {:#016x} {:#016x}",
+    __FUNCTION__,
+    sCount++,
+    reinterpret_cast<const uintptr_t>(originalInfo),
+    reinterpret_cast<const uintptr_t>(layerInfo));
+  if (gNext) {
+    DebugPrint("Still have a gNext, wtf?!");
+    gNext = nullptr;
+  }
 
   //  TODO: check version fields etc in layerInfo
 
