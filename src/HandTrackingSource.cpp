@@ -144,28 +144,30 @@ void HandTrackingSource::Update(XrTime displayTime) {
     DumpHandState("Right", rightAim);
   }
 
-  mLeftHandPose = {};
-  if (leftValid && !Config::UseHandTrackingAimPointFB) {
+  if (Config::UseHandTrackingAimPointFB) {
+    if (HasFlags(leftAim.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
+      mLeftHandPose = {leftAim.aimPose};
+    }
+  } else if (leftValid) {
     const auto joint = leftJoints[Config::HandTrackingAimJoint];
     if (
       HasFlags(joint.locationFlags, XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)
       && HasFlags(joint.locationFlags, XR_SPACE_LOCATION_POSITION_VALID_BIT)) {
       mLeftHandPose = joint.pose;
     }
-  } else if (HasFlags(leftAim.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
-    mLeftHandPose = {leftAim.aimPose};
   }
 
-  mRightHandPose = {};
-  if (rightValid && !Config::UseHandTrackingAimPointFB) {
+  if (Config::UseHandTrackingAimPointFB) {
+    if (HasFlags(rightAim.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
+      mRightHandPose = {rightAim.aimPose};
+    }
+  } else if (rightValid) {
     const auto joint = rightJoints[Config::HandTrackingAimJoint];
     if (
       HasFlags(joint.locationFlags, XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)
       && HasFlags(joint.locationFlags, XR_SPACE_LOCATION_POSITION_VALID_BIT)) {
       mRightHandPose = joint.pose;
     }
-  } else if (HasFlags(rightAim.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
-    mRightHandPose = {rightAim.aimPose};
   }
 
   if (Config::OneHandOnly && mLeftHandPose && mRightHandPose) {
@@ -214,19 +216,27 @@ void HandTrackingSource::Update(XrTime displayTime) {
 #define EITHER_HAS(flag) \
   (HasFlags(leftAim.status, flag) || HasFlags(rightAim.status, flag))
 
-  mActionState = {
-    .mLeftClick = Config::PinchToClick
-      && EITHER_HAS(XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB),
-    .mRightClick = Config::PinchToClick
-      && EITHER_HAS(XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB),
-    .mDecreaseValue = Config::PinchToScroll
-      && EITHER_HAS(XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB),
-    .mIncreaseValue = Config::PinchToScroll
-      && EITHER_HAS(XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB),
-  };
+  if (leftValid || rightValid) {
+    mActionState = {
+      .mLeftClick = Config::PinchToClick
+        && EITHER_HAS(XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB),
+      .mRightClick = Config::PinchToClick
+        && EITHER_HAS(XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB),
+      .mDecreaseValue = Config::PinchToScroll
+        && EITHER_HAS(XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB),
+      .mIncreaseValue = Config::PinchToScroll
+        && EITHER_HAS(XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB),
+    };
+  }
 #undef EITHER_HAS
 
   if (!mActionState.Any()) {
+    if (!leftValid) {
+      mLeftHandPose = {};
+    }
+    if (!rightValid) {
+      mRightHandPose = {};
+    }
     return;
   }
 
@@ -243,12 +253,12 @@ void HandTrackingSource::Update(XrTime displayTime) {
   }
 
   if (mLeftHandPose.has_value() && !mRightHandPose.has_value()) {
-    mActionState.mActiveHand == XR_HAND_LEFT_EXT;
+    mActionState.mActiveHand = XR_HAND_LEFT_EXT;
     return;
   }
 
   if (mRightHandPose.has_value() && !mLeftHandPose.has_value()) {
-    mActionState.mActiveHand == XR_HAND_RIGHT_EXT;
+    mActionState.mActiveHand = XR_HAND_RIGHT_EXT;
     return;
   }
 }
