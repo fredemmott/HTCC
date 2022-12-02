@@ -26,7 +26,6 @@
 #include <dinput.h>
 #include <openxr/openxr.h>
 
-#include <chrono>
 #include <cinttypes>
 
 #include "InputSource.h"
@@ -121,10 +120,7 @@ class PointCtrlSource final : public InputSource {
   std::shared_ptr<OpenXRNext> mOpenXR;
 
   void UpdatePose(XrTime predictedDisplayTime, InputState* hand);
-  void UpdateWakeState(
-    bool hasButtons,
-    WakeState& state,
-    std::chrono::steady_clock::time_point& timePoint);
+  void UpdateWakeState(bool hasButtons, XrTime now, Hand* hand);
   void MapActionsClassic(
     Hand*,
     XrTime now,

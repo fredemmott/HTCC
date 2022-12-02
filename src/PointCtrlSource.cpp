@@ -215,17 +215,20 @@ std::tuple<InputState, InputState> PointCtrlSource::Update(
     mRaw.mFCUR3 = HAS_BUTTON(FCUB(R3));
   }
 
-  if (
-    mLeftHand.mWakeState == WakeState::Waking
-    || mRightHand.mWakeState == WakeState::Waking) {
-    return {{XR_HAND_LEFT_EXT}, {XR_HAND_RIGHT_EXT}};
-  }
-
   for (auto hand: {&mLeftHand, &mRightHand}) {
     const auto b1 = HAS_BUTTON(HAND_FCUB(hand->mHand, 1));
     const auto b2 = HAS_BUTTON(HAND_FCUB(hand->mHand, 2));
     const auto b3 = HAS_BUTTON(HAND_FCUB(hand->mHand, 3));
     const auto haveButton = b1 || b2 || b3;
+
+    if (Config::PointerSource == PointerSource::PointCtrl) {
+      UpdateWakeState(haveButton, now, hand);
+
+      if (hand->mWakeState == WakeState::Waking) {
+        return {{XR_HAND_LEFT_EXT}, {XR_HAND_RIGHT_EXT}};
+      }
+    }
+
     if (haveButton != hand->mHaveButton) {
       hand->mHaveButton = haveButton;
       hand->mInteractionAt = now;
@@ -279,27 +282,26 @@ std::tuple<InputState, InputState> PointCtrlSource::Update(
   return {{XR_HAND_LEFT_EXT}, mRightHand.mState};
 }
 
-void PointCtrlSource::UpdateWakeState(
-  bool hasButtons,
-  WakeState& state,
-  std::chrono::steady_clock::time_point& timePoint) {
-  const auto now = std::chrono::steady_clock::now();
+void PointCtrlSource::UpdateWakeState(bool hasButtons, XrTime now, Hand* hand) {
+  auto& state = hand->mWakeState;
+  const auto interval = std::chrono::nanoseconds(now = hand->mInteractionAt);
   if (state == WakeState::Default && hasButtons) {
     if (
-      now - timePoint
+      interval
       > std::chrono::milliseconds(Config::PointCtrlSleepMilliseconds)) {
       state = WakeState::Waking;
     }
-    timePoint = now;
+    hand->mInteractionAt = now;
     return;
   }
   if (state == WakeState::Waking && !hasButtons) {
-    timePoint = now;
+    hand->mInteractionAt = now;
     state = WakeState::Default;
     return;
   }
+
   if (hasButtons) {
-    timePoint = now;
+    hand->mInteractionAt = now;
   }
 }
 

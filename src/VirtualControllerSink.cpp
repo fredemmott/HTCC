@@ -146,7 +146,6 @@ void VirtualControllerSink::UpdateHand(
   }
 
   SetControllerActions(predictedDisplayTime, hand, controller);
-  // TODO: grip pose
 }
 
 void VirtualControllerSink::SetControllerActions(
