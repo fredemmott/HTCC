@@ -119,6 +119,18 @@ void VirtualControllerSink::Update(
   const std::optional<XrPosef>& leftAimPose,
   const std::optional<XrPosef>& rightAimPose,
   const ActionState& actionState) {
+  if (actionState.Any()) {
+    if (
+      actionState.mActiveHand == XR_HAND_LEFT_EXT && !leftAimPose.has_value()) {
+      DebugBreak();
+    }
+    if (
+      actionState.mActiveHand == XR_HAND_RIGHT_EXT
+      && !rightAimPose.has_value()) {
+      DebugBreak();
+    }
+  }
+
   mActionState = actionState;
   mPredictedDisplayTime = predictedDisplayTime;
 
@@ -612,7 +624,7 @@ XrResult VirtualControllerSink::xrLocateSpace(
       }
     }
 
-    if (UseMSFSActions() && mActionState.Any()) {
+    if (UseMSFSActions()) {
       if (mActionState.mRightClick) {
         // "Push" button by moving forward
         aimPose.position = SMVecToXr(
@@ -626,6 +638,8 @@ XrResult VirtualControllerSink::xrLocateSpace(
         mRotation = Rotation::CounterClockwise;
       } else if (mActionState.mIncreaseValue) {
         mRotation = Rotation::Clockwise;
+      } else {
+        mRotation = Rotation::None;
       }
 
       if (mRotation != Rotation::None) {
@@ -657,10 +671,8 @@ XrResult VirtualControllerSink::xrLocateSpace(
 
           const auto quat = Quaternion::CreateFromAxisAngle(
             Vector3::UnitZ, (rotations * 2 * std::numbers::pi_v<float>));
-          /* Disabled to test other stuff
-        aimPose.orientation
-          = SMQuatToXr(quat * XrQuatToSM(aimPose.orientation));
-          */
+          aimPose.orientation
+            = SMQuatToXr(quat * XrQuatToSM(aimPose.orientation));
         }
       }
     }

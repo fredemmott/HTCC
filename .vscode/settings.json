@@ -76,7 +76,17 @@
     "functional": "cpp",
     "iostream": "cpp",
     "numbers": "cpp",
-    "numeric": "cpp"
+    "numeric": "cpp",
+    "condition_variable": "cpp",
+    "deque": "cpp",
+    "fstream": "cpp",
+    "future": "cpp",
+    "random": "cpp",
+    "ranges": "cpp",
+    "regex": "cpp",
+    "span": "cpp",
+    "stack": "cpp",
+    "variant": "cpp"
   },
   "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }
