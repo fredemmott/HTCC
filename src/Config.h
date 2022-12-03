@@ -74,7 +74,7 @@ enum class VRControllerPointerSinkWorldLock : DWORD {
   IT(bool, PointCtrlFCUClicks, true) \
   IT(uint16_t, ShortPressLongPressMilliseconds, 200) \
   IT(uint16_t, ScrollWheelMilliseconds, 500) \
-  IT(uint16_t, ScrollAccelerationMilliseconds, 4000) \
+  IT(uint16_t, ScrollAccelerationMilliseconds, 3000) \
   IT(uint16_t, PointCtrlCenterX, 32767) \
   IT(uint16_t, PointCtrlCenterY, 32767) \
   IT( \

@@ -191,7 +191,7 @@ void VirtualControllerSink::SetControllerActions(
     return;
   }
   if (UseDCSActions()) {
-    SetDCSControllerActions(hand, controller);
+    SetDCSControllerActions(predictedDisplayTime, hand, controller);
     return;
   }
   if (UseMSFSActions()) {
@@ -207,10 +207,11 @@ void VirtualControllerSink::SetControllerActions(
 }
 
 void VirtualControllerSink::SetDCSControllerActions(
+  XrTime predictedDisplayTime,
   const InputState& hand,
   ControllerState* controller) {
   if (IsClickActionSink()) {
-    controller->thumbstickX.changedSinceLastSync = true;
+    controller->thumbstickY.changedSinceLastSync = true;
     if (hand.mPrimaryInteraction) {
       controller->thumbstickY.currentState = -1.0f;
     } else if (hand.mSecondaryInteraction) {
@@ -220,20 +221,44 @@ void VirtualControllerSink::SetDCSControllerActions(
     }
   }
 
-  if (IsScrollActionSink()) {
-    controller->thumbstickY.changedSinceLastSync = true;
-    using ValueChange = InputState::ValueChange;
-    switch (hand.mValueChange) {
-      case ValueChange::Decrease:
-        controller->thumbstickX.currentState = -1.0f;
-        break;
-      case ValueChange::Increase:
-        controller->thumbstickX.currentState = 1.0f;
-        break;
-      case ValueChange::None:
-        controller->thumbstickX.currentState = 0.0f;
-        break;
-    }
+  if (!IsScrollActionSink()) {
+    return;
+  }
+
+  using ValueChange = InputState::ValueChange;
+  controller->thumbstickX.changedSinceLastSync = true;
+  if (hand.mValueChange != controller->mValueChange) {
+    controller->mValueChange = hand.mValueChange;
+    controller->mValueChangeStartAt = predictedDisplayTime;
+  }
+
+  if (hand.mValueChange == ValueChange::None) {
+    controller->thumbstickX.currentState = 0.0f;
+    return;
+  }
+
+  // DCS ignores values below 0.3, so let's just make it 3-stage
+  const auto minimumRate = (1.0f / 3.0f);
+  const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::nanoseconds(
+                      predictedDisplayTime - controller->mValueChangeStartAt))
+                    .count();
+  const auto rate = std::clamp<float>(
+    minimumRate * (1 + (ms / Config::ScrollAccelerationMilliseconds)),
+    0.0f,
+    1.0f);
+  DebugPrint("rate: {}", rate);
+
+  switch (hand.mValueChange) {
+    case ValueChange::Decrease:
+      controller->thumbstickX.currentState = -rate;
+      break;
+    case ValueChange::Increase:
+      controller->thumbstickX.currentState = rate;
+      break;
+    case ValueChange::None:
+      // unreachable
+      break;
   }
 }
 
@@ -299,14 +324,15 @@ void VirtualControllerSink::SetMSFSControllerActions(
   }
 
   if (controller->mRotationDirection != oldRotationDirection) {
-    controller->mLastRotatedAt = predictedDisplayTime;
+    controller->mLastRotationAt = predictedDisplayTime;
   }
 
   if (controller->mRotationDirection != Rotation::None) {
-    const auto seconds = std::chrono::duration_cast<std::chrono::milliseconds>(
-                           std::chrono::nanoseconds(
-                             predictedDisplayTime - controller->mLastRotatedAt))
-                           .count()
+    const auto seconds
+      = std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::nanoseconds(
+            predictedDisplayTime - controller->mLastRotationAt))
+          .count()
       / 1000.0f;
 
     const auto secondsPerRotation
@@ -318,7 +344,7 @@ void VirtualControllerSink::SetMSFSControllerActions(
     } else {
       controller->mRotationAngle += radians;
     }
-    controller->mLastRotatedAt = predictedDisplayTime;
+    controller->mLastRotationAt = predictedDisplayTime;
   }
 
   if (

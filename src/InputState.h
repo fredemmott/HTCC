@@ -56,8 +56,6 @@ struct InputState {
     return mPrimaryInteraction || mSecondaryInteraction
       || (mValueChange != ValueChange::None);
   }
-
-  constexpr auto operator<=>(const InputState&) const noexcept = default;
 };
 
 }// namespace HandTrackedCockpitClicking

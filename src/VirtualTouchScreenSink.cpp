@@ -328,7 +328,8 @@ uint8_t VirtualTouchScreenSink::GetScrollMultiplier(
   const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                     now - mScrollStartTime)
                     .count();
-  return std::clamp<uint8_t>(ms / Config::ScrollAccelerationMilliseconds, 1, 4);
+  return std::clamp<uint8_t>(
+    1 + (ms / Config::ScrollAccelerationMilliseconds), 1, 4);
 }
 
 }// namespace HandTrackedCockpitClicking

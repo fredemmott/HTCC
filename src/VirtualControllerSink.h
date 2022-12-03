@@ -30,11 +30,10 @@
 
 #include "Config.h"
 #include "FrameInfo.h"
+#include "InputState.h"
 #include "OpenXRNext.h"
 
 namespace HandTrackedCockpitClicking {
-
-struct InputState;
 
 class VirtualControllerSink final {
  public:
@@ -135,6 +134,9 @@ class VirtualControllerSink final {
     XrActionStateFloat thumbstickY {XR_TYPE_ACTION_STATE_FLOAT};
     std::unordered_set<XrAction> thumbstickYActions {};
 
+    InputState::ValueChange mValueChange {InputState::ValueChange::None};
+    XrTime mValueChangeStartAt {};
+
     // MSFS
 
     XrActionStateBoolean triggerValue {XR_TYPE_ACTION_STATE_BOOLEAN};
@@ -142,7 +144,7 @@ class VirtualControllerSink final {
 
     Rotation mRotationDirection {Rotation::None};
     float mRotationAngle {0};
-    XrTime mLastRotatedAt {};
+    XrTime mLastRotationAt {};
 
     XrTime mBlockSecondaryActionsUntil {};
   };
@@ -166,6 +168,7 @@ class VirtualControllerSink final {
     const InputState& hand,
     ControllerState* controller);
   void SetDCSControllerActions(
+    XrTime predictedDisplayTime,
     const InputState& hand,
     ControllerState* controller);
   void SetMSFSControllerActions(
