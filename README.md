@@ -13,7 +13,7 @@ This is **not** intended to be or usable as general-purpose hand tracking suppor
 | Any other    | ✓                  | ✅ | Includes HP Reverb G2 |
 | Quest 2      | ✗                 | ✅ | Requires an Oculus developer account |
 | Quest Pro    | ✗                 | ✅ | Requires an Oculus developer account |
-| Any other    | ✗                 | ❌ | Includes HP Reverb G2 |
+| All others   | ✗                 | ❌ | Includes HP Reverb G2 |
 
 - **The HP Reverb G2 does not have the required hardware or driver support**
 - **The Varjo Aero does not have the required hardware support**
@@ -26,6 +26,11 @@ If you have neither, I recommend ordering a [PointCTRL].
 
 - DCS (if using [OpenComposite])
 - MSFS
+| Game | Compatible? | Notes |
+|------|-------------|-------|
+| MSFS | ✅ |  |
+| DCS World | ✅ | Requires [OpenComposite] |
+| All others | ❌ | |
 
 If you have a PointCTRL:
 - you must calibrate using the included calibration app instead of the standard calibration procedure
