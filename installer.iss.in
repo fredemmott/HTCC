@@ -24,6 +24,7 @@ Source: "reg\*"; DestDir: "{app}\reg"
 
 [Registry]
 Root: HKLM; Subkey: "SOFTWARE\Khronos\OpenXR\1\ApiLayers\Implicit"; ValueType: dword; ValueName: "{app}\APILayer.json"; ValueData: 0; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "{#ConfigSubkey}"; Flags: uninsdeletekey
 Root: HKLM; Subkey: "{#ConfigSubkey}"; ValueType: dword; ValueName: "Enabled"; ValueData: "0"
 Root: HKLM; Subkey: "{#ConfigSubkey}"; ValueType: dword; ValueName: "PointerSource"; ValueData: "{code:ConfigPointerSource}"
 Root: HKLM; Subkey: "{#ConfigSubkey}"; ValueType: dword; ValueName: "PointerSink"; ValueData: "{code:ConfigPointerSink}"
