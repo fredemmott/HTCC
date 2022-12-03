@@ -27,6 +27,7 @@
 #include <directxtk/SimpleMath.h>
 #include <openxr/openxr_platform.h>
 
+#include <limits>
 #include <numbers>
 
 #include "Environment.h"
@@ -219,39 +220,51 @@ void VirtualControllerSink::SetMSFSControllerActions(
   }
 
   // Just increase/decrease value from here
-  const auto oldRotation = controller->mRotation;
+  const auto oldRotationDirection = controller->mRotationDirection;
   using ValueChange = InputState::ValueChange;
   switch (hand.mValueChange) {
     case ValueChange::None:
-      controller->mRotation = Rotation::None;
-      return;
+      controller->mRotationDirection = Rotation::None;
+      break;
     case ValueChange::Increase:
-      controller->mRotation = Rotation::Clockwise;
+      controller->mRotationDirection = Rotation::Clockwise;
       break;
     case ValueChange::Decrease:
-      controller->mRotation = Rotation::CounterClockwise;
+      controller->mRotationDirection = Rotation::CounterClockwise;
       break;
   }
 
-  if (controller->mRotation != oldRotation) {
-    controller->mRotationStartAt = predictedDisplayTime;
+  if (controller->mRotationDirection != oldRotationDirection) {
+    controller->mLastRotatedAt = predictedDisplayTime;
+  }
+
+  if (controller->mRotationDirection != Rotation::None) {
+    const auto seconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+                           std::chrono::nanoseconds(
+                             predictedDisplayTime - controller->mLastRotatedAt))
+                           .count()
+      / 1000.0f;
+
+    const auto secondsPerRotation
+      = Config::VRControllerActionSinkSecondsPerRotation;
+    const auto rotations = seconds / secondsPerRotation;
+    const auto radians = rotations * 2 * std::numbers::pi_v<float>;
+    if (controller->mRotationDirection == Rotation::Clockwise) {
+      controller->mRotationAngle -= radians;
+    } else {
+      controller->mRotationAngle += radians;
+    }
+    controller->mLastRotatedAt = predictedDisplayTime;
+  }
+
+  if (
+    std::abs(controller->mRotationAngle)
+    < std::numeric_limits<float>::epsilon()) {
     return;
   }
 
-  const float seconds
-    = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::nanoseconds(
-          predictedDisplayTime - controller->mRotationStartAt))
-        .count()
-    / 1000.0f;
-
-  const auto secondsPerRotation
-    = Config::VRControllerActionSinkSecondsPerRotation;
-  const auto rotations = seconds / secondsPerRotation
-    * (controller->mRotation == Rotation::Clockwise ? -1 : 1);
-
   const auto quat = Quaternion::CreateFromAxisAngle(
-    Vector3::UnitZ, (rotations * 2 * std::numbers::pi_v<float>));
+    Vector3::UnitZ, controller->mRotationAngle);
   controller->aimPose.orientation
     = SMQuatToXr(quat * XrQuatToSM(controller->aimPose.orientation));
 }

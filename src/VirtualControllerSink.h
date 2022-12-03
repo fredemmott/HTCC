@@ -138,8 +138,9 @@ class VirtualControllerSink final {
     XrActionStateBoolean triggerValue {XR_TYPE_ACTION_STATE_BOOLEAN};
     std::unordered_set<XrAction> triggerValueActions {};
 
-    Rotation mRotation {Rotation::None};
-    XrTime mRotationStartAt {};
+    Rotation mRotationDirection {Rotation::None};
+    float mRotationAngle {0};
+    XrTime mLastRotatedAt {};
   };
 
   bool mHaveSuggestedBindings {false};
