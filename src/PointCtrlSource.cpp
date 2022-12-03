@@ -195,10 +195,6 @@ std::tuple<InputState, InputState> PointCtrlSource::Update(
       = HAS_BUTTON(FCUB(L1)) || HAS_BUTTON(FCUB(L2)) || HAS_BUTTON(FCUB(L3));
     const auto anyRightButton
       = HAS_BUTTON(FCUB(R1)) || HAS_BUTTON(FCUB(R2)) || HAS_BUTTON(FCUB(R3));
-    /*
-  UpdateWakeState(anyLeftButton, mLeftWakeState, mLeftButtonAt);
-  UpdateWakeState(anyRightButton, mRightWakeState, mRightButtonAt);
-  */
   }
   auto& mX = mRaw.mX;
   auto& mY = mRaw.mY;
@@ -237,8 +233,6 @@ std::tuple<InputState, InputState> PointCtrlSource::Update(
     hand->mState.mPose = {};
     hand->mState.mDirection = {};
     hand->mState.mUpdatedAt = std::max(mLastMovedAt, hand->mInteractionAt);
-
-    // TODO:wake goes here to update mInteractionAT
 
     if (Config::PointCtrlFCUMapping == PointCtrlFCUMapping::Classic) {
       MapActionsClassic(hand, now, buttons);
