@@ -26,11 +26,10 @@
 #include <openxr/openxr.h>
 
 #include "Config.h"
+#include "InputState.h"
 #include "OpenXRNext.h"
 
 namespace HandTrackedCockpitClicking {
-
-struct InputState;
 
 class VirtualTouchScreenSink final {
  public:
@@ -64,10 +63,15 @@ class VirtualTouchScreenSink final {
 
   bool mLeftClick {false};
   bool mRightClick {false};
+  std::chrono::steady_clock::time_point mScrollStartTime {};
+  InputState::ValueChange mScrollDirection = InputState::ValueChange::None;
 
   std::chrono::steady_clock::time_point mLastWindowCheck {};
   std::chrono::steady_clock::time_point mLastWheelUp {};
   std::chrono::steady_clock::time_point mLastWheelDown {};
+
+  uint8_t GetScrollMultiplier(
+    const std::chrono::steady_clock::time_point& now) const;
 };
 
 }// namespace HandTrackedCockpitClicking

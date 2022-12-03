@@ -27,7 +27,6 @@
 
 #include "Config.h"
 #include "DebugPrint.h"
-#include "InputState.h"
 
 namespace HandTrackedCockpitClicking {
 
@@ -278,6 +277,15 @@ void VirtualTouchScreenSink::Update(const InputState& hand) {
 
   if (IsScrollActionSink()) {
     using ValueChange = InputState::ValueChange;
+    if (hand.mValueChange != mScrollDirection) {
+      mScrollDirection = hand.mValueChange;
+      if (hand.mValueChange == ValueChange::None) {
+        mScrollStartTime = {};
+      } else {
+        mScrollStartTime = now;
+      }
+    }
+    const auto multiplier = GetScrollMultiplier(now);
     if (
       hand.mValueChange == ValueChange::Decrease
       && (now - mLastWheelUp > std::chrono::milliseconds(Config::ScrollWheelMilliseconds))) {
@@ -308,6 +316,19 @@ void VirtualTouchScreenSink::Update(const InputState& hand) {
   if (!events.empty()) {
     SendInput(events.size(), events.data(), sizeof(INPUT));
   }
+}
+
+uint8_t VirtualTouchScreenSink::GetScrollMultiplier(
+  const std::chrono::steady_clock::time_point& now) const {
+  using ValueChange = InputState::ValueChange;
+  if (mScrollDirection == ValueChange::None) {
+    return 0;
+  }
+
+  const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    now - mScrollStartTime)
+                    .count();
+  return std::clamp<uint8_t>(ms / Config::ScrollAccelerationMilliseconds, 1, 4);
 }
 
 }// namespace HandTrackedCockpitClicking
