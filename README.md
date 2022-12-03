@@ -28,10 +28,9 @@ If you have neither, I recommend ordering a [PointCTRL].
 - MSFS
 
 If you have a PointCTRL:
-- the custom firmware is *optional* in DCS, however:
-  - DCS must be using [OpenComposite]
-- the custom firmware is **required** for MSFS
 - you must calibrate using the included calibration app instead of the standard calibration procedure
+- the custom firmware is **required** for MSFS
+- the custom firmware is *optional* in DCS, however if you are using the custom firmware, DCS **must** be using [OpenComposite]
 
 To use PointCTRL in DCS without OpenComposite, you must restore the standard firmware.
 
