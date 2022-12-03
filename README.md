@@ -24,9 +24,6 @@ If you have neither, I recommend ordering a [PointCTRL].
 
 ## Game Compatibility
 
-- DCS (if using [OpenComposite])
-- MSFS
-
 | Game | Compatible? | Notes |
 |------|-------------|-------|
 | MSFS | ✅ |  |
