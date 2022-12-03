@@ -1,8 +1,37 @@
 # EXPERIMENT: Hand-tracked cockpit clicking for VR flight simulators
 
-This project is an OpenXR API layer aimed to make it easy to click on cockpits in VR flight simulators. DCS and MSFS are currently supported.
+This project is an OpenXR API layer aimed to make it easy to click on cockpits in VR flight simulators.
 
 This is **not** intended to be or usable as general-purpose hand tracking support: it is designed to work well with specific games (DCS and MSFS), and does weird things to make that feel better, including doing things like mapping button presses to controller rotation if that's what works best in a particular game.
+
+## Requirements
+
+| VR Headset   | Have a PointCTRL? | Good to go? | Notes |
+|--------------|-------------------|-------------|-------|
+| Quest 2      | ✓                  | ✅ | |
+| Quest Pro    | ✓                  | ✅ | |
+| Quest 2      | ✗                 | ✅ | |
+| Quest Pro    | ✗                 | ✅ | |
+| Any other    | ✓                 | ✅ | Includes HP Reverb G2 |
+| Any other    | ✗                 | ❌ | Includes HP Reverb G2 |
+
+- **The HP Reverb G2 does not have the required hardware or driver support**
+- **The Varjo Aero does not have the required hardware support**
+
+If you have a Quest 2 or Quest Pro *and* a PointCTRL, you can use either, or combine them - e.g. pointing with Quest hand tracking but clicking with the PointCTRL FCUs.
+
+If you have neither, I recommend ordering a [PointCTRL].
+
+## Game Compatibility
+
+- DCS (if using [OpenComposite])
+- MSFS
+
+If you have a PointCTRL, the custom firmware is also supported in DCS, however:
+- DCS must be using [OpenComposite]
+- you must calibrate using the calibration app included in the installer, which is also installed to your start menu.
+
+To use PointCTRL in DCS without OpenComposite, you must restore the standard firmware.
 
 ## Installation and setup
 
@@ -23,7 +52,7 @@ I make this for my own use, and I share this in the hope others find it useful; 
 
 First, check the documentation links above; if you still need help, support may be available from the community via the #hand-tracking channel in [my Discord]. I am not able to respond to 1:1 requests for help via any means, including GitHub, Discord, Twitter, Reddit, or email.
 
-## Requirements
+## Detailed Requirements
 
 You need a pointing device, and a 'click' device
 
@@ -31,8 +60,6 @@ Supported pointing devices include:
 - [PointCTRL] with custom firmware
 - OpenXR hand tracking
   - Quest 2 or Quest Pro
-  - **The HP Reverb G2 does not have the required hardware or driver support**
-  - **The Varjo Aero does not have the required hardware support**
 
 Supported click devices include:
 - Hand tracking **on Oculus headsets**, including Quest 2 or Quest pro
