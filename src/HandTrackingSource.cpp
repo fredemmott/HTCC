@@ -160,6 +160,8 @@ void HandTrackingSource::UpdateHand(
 
   XrHandTrackingAimStateFB aimFB {XR_TYPE_HAND_TRACKING_AIM_STATE_FB};
   std::array<XrHandJointLocationEXT, XR_HAND_JOINT_COUNT_EXT> jointData;
+  jointData.fill({});
+
   XrHandJointLocationsEXT joints {
     .type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT,
     .jointCount = jointData.size(),
@@ -169,7 +171,6 @@ void HandTrackingSource::UpdateHand(
     joints.next = &aimFB;
   }
 
-  jointData.fill({});
   if (!mOpenXR->check_xrLocateHandJointsEXT(
         hand->mTracker, &locateInfo, &joints)) {
     state = {hand->mHand};
@@ -204,11 +205,16 @@ void HandTrackingSource::UpdateHand(
     state = {hand->mHand};
     return;
   }
+
   PopulateInteractions(aimFB.status, &state);
   const auto [raycastPose, direction] = RaycastPose(*state.mPose);
   state.mDirection = {direction};
   if (Config::HandTrackingOrientation == HandTrackingOrientation::RayCast) {
     state.mPose = raycastPose;
+  }
+
+  if (state.mPose) {
+    const auto pos = state.mPose->position;
   }
 }
 

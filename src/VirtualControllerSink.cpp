@@ -144,6 +144,7 @@ void VirtualControllerSink::UpdateHand(
     controller->haveAction = true;
     controller->savedAimPose = inputPose;
   }
+  controller->aimPose = {inputPose};
 
   SetControllerActions(predictedDisplayTime, hand, controller);
 }
@@ -619,7 +620,7 @@ XrResult VirtualControllerSink::xrLocateSpace(
       return XR_SUCCESS;
     }
 
-    mOpenXR->xrLocateSpace(mViewSpace, baseSpace, time, location);
+    mOpenXR->xrLocateSpace(mLocalSpace, baseSpace, time, location);
 
     const auto spacePose = location->pose;
     const auto aimPose = hand.aimPose;
