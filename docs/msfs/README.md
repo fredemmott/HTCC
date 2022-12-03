@@ -13,3 +13,5 @@ Touchscreen/mouse emulation is not supported for MSFS.
 - 'right click'/middle finger pinch: push the vr controller away (push button)
 - 'scroll up'/ring finger pinch: scroll wheel up (decrease value)
 - 'scroll down'/little finger pinch: scroll wheel down (decrease value)
+
+Movement will not be tracked for a few seconds after using scroll wheel up/down; this is a limitation of MSFS.
