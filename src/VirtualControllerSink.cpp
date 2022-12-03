@@ -106,10 +106,22 @@ bool VirtualControllerSink::IsPointerSink() {
   return false;
 }
 
+static bool IsActionSink(ActionSink actionSink) {
+  return (actionSink == ActionSink::VirtualVRController)
+    || ((actionSink == ActionSink::MatchPointerSink)
+        && VirtualControllerSink::IsPointerSink());
+}
+
+static bool IsClickActionSink() {
+  return IsActionSink(Config::ClickActionSink);
+}
+
+static bool IsScrollActionSink() {
+  return IsActionSink(Config::ScrollActionSink);
+}
+
 bool VirtualControllerSink::IsActionSink() {
-  return (Config::ActionSink == ActionSink::VirtualVRController)
-    || ((Config::ActionSink == ActionSink::MatchPointerSink)
-        && IsPointerSink());
+  return IsClickActionSink() || IsScrollActionSink();
 }
 
 void VirtualControllerSink::Update(
@@ -174,28 +186,31 @@ void VirtualControllerSink::SetControllerActions(
 void VirtualControllerSink::SetDCSControllerActions(
   const InputState& hand,
   ControllerState* controller) {
-  controller->thumbstickX.changedSinceLastSync = true;
-  controller->thumbstickY.changedSinceLastSync = true;
-
-  if (hand.mPrimaryInteraction) {
-    controller->thumbstickY.currentState = -1.0f;
-  } else if (hand.mSecondaryInteraction) {
-    controller->thumbstickY.currentState = 1.0f;
-  } else {
-    controller->thumbstickY.currentState = 0.0f;
+  if (IsClickActionSink()) {
+    controller->thumbstickX.changedSinceLastSync = true;
+    if (hand.mPrimaryInteraction) {
+      controller->thumbstickY.currentState = -1.0f;
+    } else if (hand.mSecondaryInteraction) {
+      controller->thumbstickY.currentState = 1.0f;
+    } else {
+      controller->thumbstickY.currentState = 0.0f;
+    }
   }
 
-  using ValueChange = InputState::ValueChange;
-  switch (hand.mValueChange) {
-    case ValueChange::Decrease:
-      controller->thumbstickX.currentState = -1.0f;
-      break;
-    case ValueChange::Increase:
-      controller->thumbstickX.currentState = 1.0f;
-      break;
-    case ValueChange::None:
-      controller->thumbstickX.currentState = 0.0f;
-      break;
+  if (IsScrollActionSink()) {
+    controller->thumbstickY.changedSinceLastSync = true;
+    using ValueChange = InputState::ValueChange;
+    switch (hand.mValueChange) {
+      case ValueChange::Decrease:
+        controller->thumbstickX.currentState = -1.0f;
+        break;
+      case ValueChange::Increase:
+        controller->thumbstickX.currentState = 1.0f;
+        break;
+      case ValueChange::None:
+        controller->thumbstickX.currentState = 0.0f;
+        break;
+    }
   }
 }
 
@@ -204,13 +219,18 @@ void VirtualControllerSink::SetMSFSControllerActions(
   const InputState& hand,
   ControllerState* controller) {
   using ValueChange = InputState::ValueChange;
-  const auto emulatePrimaryInteraction = (!hand.mPrimaryInteraction)
-    && (hand.mSecondaryInteraction || hand.mValueChange != ValueChange::None);
+  const auto rawPrimary = IsClickActionSink() && hand.mPrimaryInteraction;
+  const auto rawSecondary = IsClickActionSink() && hand.mSecondaryInteraction;
+  const auto rawValueChange
+    = IsScrollActionSink() ? hand.mValueChange : ValueChange::None;
+
+  const auto emulatePrimaryInteraction
+    = (!rawPrimary) && (rawSecondary || rawValueChange != ValueChange::None);
   const auto hadPrimaryInteraction = controller->triggerValue.currentState;
 
   controller->triggerValue.changedSinceLastSync = true;
   controller->triggerValue.currentState
-    = hand.mPrimaryInteraction || emulatePrimaryInteraction;
+    = rawPrimary || emulatePrimaryInteraction;
   controller->triggerValue.lastChangeTime = predictedDisplayTime;
 
   // Press trigger for one frame so MSFS recognizes it before the
@@ -224,7 +244,7 @@ void VirtualControllerSink::SetMSFSControllerActions(
   const auto skipThisFrame
     = predictedDisplayTime < controller->mBlockSecondaryActionsUntil;
 
-  if (hand.mSecondaryInteraction && !skipThisFrame) {
+  if (rawSecondary && !skipThisFrame) {
     // 'push' forward
     const auto worldOffset = Vector3::Transform(
       {0.0f, 0.0f, -0.02f}, XrQuatToSM(controller->aimPose.orientation));
@@ -239,10 +259,10 @@ void VirtualControllerSink::SetMSFSControllerActions(
   if (skipThisFrame) {
     controller->mRotationDirection = Rotation::None;
   } else {
-    switch (hand.mValueChange) {
+    switch (rawValueChange) {
       case ValueChange::None:
         controller->mRotationDirection = Rotation::None;
-        if (!hand.mPrimaryInteraction) {
+        if (!rawPrimary) {
           controller->mRotationAngle = 0.0f;
         }
         break;

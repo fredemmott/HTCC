@@ -4,7 +4,7 @@ Requirements:
 - you must be comfortable updating the firmware
 - you must have a PointCTRL v2, not v1
 
-**WARNING:** After installing the custom firmware, the PointCTRL will *only* work as a joystick, not as a mouse/touchscreen - you will not be able to use it without this project unless you restore the standard firmware.
+**WARNING:** After installing the custom firmware, the PointCTRL will *only* work as a joystick, not as a mouse/touchscreen - you will not be able to use it without this project unless you restore the standard firmware. The custom firmware does work for DCS, as long as you are using OpenComposite (OpenXR).
 
 1. Download [the latest standard firmware and firmware update tools](https://pointctrl.com/firmware/)
 2. Unzip it

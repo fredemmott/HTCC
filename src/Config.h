@@ -89,7 +89,11 @@ enum class VRControllerActionSinkWorldLock : DWORD {
     HandTrackedCockpitClicking::PointerSink::VirtualTouchScreen) \
   IT( \
     HandTrackedCockpitClicking::ActionSink, \
-    ActionSink, \
+    ClickActionSink, \
+    HandTrackedCockpitClicking::ActionSink::MatchPointerSink) \
+  IT( \
+    HandTrackedCockpitClicking::ActionSink, \
+    ScrollActionSink, \
     HandTrackedCockpitClicking::ActionSink::MatchPointerSink) \
   IT( \
     HandTrackedCockpitClicking::HandTrackingOrientation, \

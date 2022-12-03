@@ -22,9 +22,17 @@ DWORD: which device is emulated for pointing
 - 0: touch screen (classic PointCtrl)
 - 1: VR controllers
 
-## ActionSink
+## ClickActionSink
 
 DWORD: which device is emulated for clicking
+
+- 0: match PointerSink
+- 1: touch screen/mouse
+- 2: VR controllers
+
+## ScrollActionSink
+
+DWORD: which device is emulated for scrolling
 
 - 0: match PointerSink
 - 1: touch screen/mouse

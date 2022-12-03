@@ -159,10 +159,22 @@ bool VirtualTouchScreenSink::IsPointerSink() {
   return Config::PointerSink == PointerSink::VirtualTouchScreen;
 }
 
+static bool IsActionSink(ActionSink actionSink) {
+  return (actionSink == ActionSink::VirtualTouchScreen)
+    || ((actionSink == ActionSink::MatchPointerSink)
+        && VirtualTouchScreenSink::IsPointerSink());
+}
+
+static bool IsClickActionSink() {
+  return IsActionSink(Config::ClickActionSink);
+}
+
+static bool IsScrollActionSink() {
+  return IsActionSink(Config::ScrollActionSink);
+}
+
 bool VirtualTouchScreenSink::IsActionSink() {
-  return (Config::ActionSink == ActionSink::VirtualTouchScreen)
-    || ((Config::ActionSink == ActionSink::MatchPointerSink)
-        && IsPointerSink());
+  return IsClickActionSink() || IsScrollActionSink();
 }
 
 bool VirtualTouchScreenSink::RotationToCartesian(
@@ -240,7 +252,7 @@ void VirtualTouchScreenSink::Update(const InputState& hand) {
     });
   }
 
-  if (IsActionSink()) {
+  if (IsClickActionSink()) {
     const auto leftClick = hand.mPrimaryInteraction;
     if (leftClick != mLeftClick) {
       mLeftClick = leftClick;
@@ -262,7 +274,9 @@ void VirtualTouchScreenSink::Update(const InputState& hand) {
              rightClick ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_RIGHTUP),
          }});
     }
+  }
 
+  if (IsScrollActionSink()) {
     using ValueChange = InputState::ValueChange;
     if (
       hand.mValueChange == ValueChange::Decrease
