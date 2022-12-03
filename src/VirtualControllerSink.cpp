@@ -204,6 +204,7 @@ void VirtualControllerSink::SetMSFSControllerActions(
   XrTime predictedDisplayTime,
   const InputState& hand,
   ControllerState* controller) {
+  DebugPrint("h{} r{}", (int)hand.mHand, (int)hand.mValueChange);
   controller->triggerValue.changedSinceLastSync = true;
   controller->triggerValue.currentState = hand.mPrimaryInteraction;
 
@@ -247,7 +248,7 @@ void VirtualControllerSink::SetMSFSControllerActions(
   const auto secondsPerRotation
     = Config::VRControllerActionSinkSecondsPerRotation;
   const auto rotations = seconds / secondsPerRotation
-    * (controller->mRotation == Rotation::Clockwise ? 1 : -1);
+    * (controller->mRotation == Rotation::Clockwise ? -1 : 1);
 
   const auto quat = Quaternion::CreateFromAxisAngle(
     Vector3::UnitZ, (rotations * 2 * std::numbers::pi_v<float>));
