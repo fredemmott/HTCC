@@ -206,6 +206,7 @@ void VirtualControllerSink::SetMSFSControllerActions(
   ControllerState* controller) {
   controller->triggerValue.changedSinceLastSync = true;
   controller->triggerValue.currentState = hand.mPrimaryInteraction;
+  controller->triggerValue.lastChangeTime = predictedDisplayTime;
 
   if (hand.mSecondaryInteraction) {
     // 'push' forward
@@ -497,9 +498,16 @@ XrResult VirtualControllerSink::xrGetActionStateBoolean(
   XrSession session,
   const XrActionStateGetInfo* getInfo,
   XrActionStateBoolean* state) {
+  ResolvePath(getInfo->subactionPath);
   const auto action = getInfo->action;
 
   for (auto hand: {&mLeftController, &mRightController}) {
+    if (
+      getInfo->subactionPath != XR_NULL_PATH
+      && getInfo->subactionPath != hand->path) {
+      continue;
+    }
+
     if (hand->thumbstickTouchActions.contains(action)) {
       *state = hand->thumbstickTouch;
       return XR_SUCCESS;
@@ -526,6 +534,12 @@ XrResult VirtualControllerSink::xrGetActionStateFloat(
   const auto action = getInfo->action;
 
   for (auto hand: {&mLeftController, &mRightController}) {
+    if (
+      getInfo->subactionPath != XR_NULL_PATH
+      && getInfo->subactionPath != hand->path) {
+      continue;
+    }
+
     if (hand->squeezeValueActions.contains(action)) {
       *state = hand->squeezeValue;
       return XR_SUCCESS;
