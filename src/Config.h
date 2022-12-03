@@ -54,9 +54,10 @@ enum class VRControllerActionSinkMapping : DWORD {
   DCS = 0,
   MSFS = 1,
 };
-enum class VRControllerActionSinkWorldLock : DWORD {
+enum class VRControllerPointerSinkWorldLock : DWORD {
   Nothing = 0,
   Orientation = 1,
+  OrientationAndSoftPosition = 2,
 };
 }// namespace HandTrackedCockpitClicking
 
@@ -105,9 +106,10 @@ enum class VRControllerActionSinkWorldLock : DWORD {
     VRControllerActionSinkMapping, \
     HandTrackedCockpitClicking::VRControllerActionSinkMapping::DCS) \
   IT( \
-    HandTrackedCockpitClicking::VRControllerActionSinkWorldLock, \
-    VRControllerActionSinkWorldLock, \
-    HandTrackedCockpitClicking::VRControllerActionSinkWorldLock::Orientation) \
+    HandTrackedCockpitClicking::VRControllerPointerSinkWorldLock, \
+    VRControllerPointerSinkWorldLock, \
+    HandTrackedCockpitClicking::VRControllerPointerSinkWorldLock:: \
+      OrientationAndSoftPosition) \
   IT(uint16_t, PointCtrlVID, 0x04d8) \
   IT(uint16_t, PointCtrlPID, 0xeeec) \
   IT(uint8_t, PointCtrlFCUButtonL1, 0) \
@@ -124,7 +126,8 @@ enum class VRControllerActionSinkWorldLock : DWORD {
   IT(PointCtrlProjectionDistance, 0.3f) \
   IT(VRVerticalOffset, -0.04f) \
   IT(VRFarDistance, 0.8f) \
-  IT(VRControllerActionSinkSecondsPerRotation, 4.0f)
+  IT(VRControllerActionSinkSecondsPerRotation, 4.0f) \
+  IT(VRControllerPointerSinkSoftWorldLockDistance, 0.05f)
 
 #define HandTrackedCockpitClicking_STRING_SETTINGS \
   IT( \

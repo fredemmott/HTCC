@@ -132,6 +132,16 @@ void VirtualControllerSink::Update(
   UpdateHand(info, rightHand, &mRightController);
 }
 
+static bool WorldLockOrientation() {
+  switch (Config::VRControllerPointerSinkWorldLock) {
+    case VRControllerPointerSinkWorldLock::Nothing:
+      return false;
+    case VRControllerPointerSinkWorldLock::Orientation:
+    case VRControllerPointerSinkWorldLock::OrientationAndSoftPosition:
+      return true;
+  }
+}
+
 void VirtualControllerSink::UpdateHand(
   const FrameInfo& frameInfo,
   const InputState& hand,
@@ -144,14 +154,27 @@ void VirtualControllerSink::UpdateHand(
 
   auto inputPose = OffsetPointerPose(frameInfo, *hand.mPose);
   const auto haveAction = hand.AnyInteraction();
-  if (
-    haveAction
-    && Config::VRControllerActionSinkWorldLock
-      == VRControllerActionSinkWorldLock::Orientation) {
-    inputPose.orientation = controller->savedAimPose.orientation;
+  if (haveAction) {
+    if (WorldLockOrientation()) {
+      inputPose.orientation = controller->savedAimPose.orientation;
+    }
+    if (
+      Config::VRControllerPointerSinkWorldLock
+        == VRControllerPointerSinkWorldLock::OrientationAndSoftPosition
+      && !controller->mUnlockedPosition) {
+      const auto a = XrVecToSM(inputPose.position);
+      const auto b = XrVecToSM(controller->savedAimPose.position);
+      const auto distance = std::abs(Vector3::Distance(a, b));
+      if (distance < Config::VRControllerPointerSinkSoftWorldLockDistance) {
+        inputPose.position = controller->savedAimPose.position;
+      } else {
+        controller->mUnlockedPosition = true;
+      }
+    }
   } else if (!haveAction) {
     controller->haveAction = false;
     controller->savedAimPose = inputPose;
+    controller->mUnlockedPosition = false;
   } else if (!controller->haveAction) {
     controller->haveAction = true;
   }

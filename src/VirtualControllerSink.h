@@ -107,6 +107,7 @@ class VirtualControllerSink final {
     bool presentLastPollEvent {false};
 
     XrPosef savedAimPose {};
+    bool mUnlockedPosition {false};
     XrPosef aimPose {};
     XrSpace aimSpace {};
     std::unordered_set<XrAction> aimActions {};

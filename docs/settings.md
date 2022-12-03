@@ -137,12 +137,19 @@ DWORD:
 
 Which game's mappings are used for VR controllers.
 
-# VRControllerActionSinkWorldLock 
+# VRControllerPointerSinkWorldLock 
 
 DWORD
 
 - 0: clicking does not affect tracking
 - 1 - orientation: any click/wheel action locks the angle of the pointer, but not the position
+- 2 - hard-lock orientation, soft-lock position: as above, however the position will also be unlocked until your hand moves a certain distance
+
+# VRControllerPointerSinkSoftWorldLockDistance
+
+STRING
+
+Distance in meters (e.g. "0.05" for 5cm). While 'clicking', the virtual controllers will stay locked in position until your hand moves this far from the original position.
 
 # VRControllerActionSinkSecondsPerRotation
 
