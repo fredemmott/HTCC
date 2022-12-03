@@ -227,10 +227,14 @@ std::tuple<InputState, InputState> PointCtrlSource::Update(
     hand->mState.mDirection = {};
     hand->mState.mUpdatedAt = std::max(mLastMovedAt, hand->mInteractionAt);
 
-    if (Config::PointCtrlFCUMapping == PointCtrlFCUMapping::Classic) {
-      MapActionsClassic(hand, now, buttons);
-    } else if (Config::PointCtrlFCUMapping == PointCtrlFCUMapping::Modal) {
-      MapActionsModal(hand, now, buttons);
+    switch (Config::PointCtrlFCUMapping) {
+      case PointCtrlFCUMapping::Classic:
+        MapActionsClassic(hand, now, buttons);
+        break;
+      case PointCtrlFCUMapping::Modal:
+      case PointCtrlFCUMapping::ModalWithLeftLock:
+        MapActionsModal(hand, now, buttons);
+        break;
     }
   }
 
@@ -345,7 +349,10 @@ void PointCtrlSource::MapActionsModal(
   // Update state
   switch (hand->mScrollMode) {
     case LockState::Unlocked:
-      if (b1 && b2) {
+      if (
+        b1 && b2
+        && Config::PointCtrlFCUMapping
+          == PointCtrlFCUMapping::ModalWithLeftLock) {
         hand->mScrollMode = LockState::MaybeLockingWithLeftHold;
         hand->mModeSwitchStart = now;
       } else if (b3) {

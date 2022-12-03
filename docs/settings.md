@@ -98,6 +98,7 @@ DWORD:
 
 - 0: Classic
 - 1: Modal (MSFS)
+- 2: Modal, but long-pressing buttons 1 & 2 together enters scroll lock mode but with  button 1 held
 
 ## VRVerticalOffset
 

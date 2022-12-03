@@ -44,6 +44,7 @@ enum class ActionSink : DWORD {
 enum class PointCtrlFCUMapping : DWORD {
   Classic = 0,
   Modal = 1,
+  ModalWithLeftLock = 2,
 };
 enum class HandTrackingOrientation : DWORD {
   Raw = 0,
