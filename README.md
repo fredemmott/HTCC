@@ -10,8 +10,8 @@ This is **not** intended to be or usable as general-purpose hand tracking suppor
 |--------------|-------------------|-------------|-------|
 | Quest 2      | ✓                  | ✅ | |
 | Quest Pro    | ✓                  | ✅ | |
-| Quest 2      | ✗                 | ✅ | |
-| Quest Pro    | ✗                 | ✅ | |
+| Quest 2      | ✗                 | ✅ | Requires an Oculus developer account |
+| Quest Pro    | ✗                 | ✅ | Requires an Oculus developer account |
 | Any other    | ✓                 | ✅ | Includes HP Reverb G2 |
 | Any other    | ✗                 | ❌ | Includes HP Reverb G2 |
 
