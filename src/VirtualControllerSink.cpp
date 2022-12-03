@@ -222,6 +222,7 @@ void VirtualControllerSink::SetMSFSControllerActions(
   using ValueChange = InputState::ValueChange;
   switch (hand.mValueChange) {
     case ValueChange::None:
+      controller->mRotation = Rotation::None;
       return;
     case ValueChange::Increase:
       controller->mRotation = Rotation::Clockwise;
