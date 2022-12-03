@@ -67,12 +67,9 @@ static constexpr bool HasFlags(Actual actual, Wanted wanted) {
 }
 
 std::tuple<XrPosef, XrVector2f> HandTrackingSource::RaycastPose(
-  XrTime displayTime,
+  const FrameInfo& frameInfo,
   const XrPosef& pose) {
-  XrSpaceLocation localToView {XR_TYPE_SPACE_LOCATION};
-  mOpenXR->xrLocateSpace(mLocalSpace, mViewSpace, displayTime, &localToView);
-
-  const auto& p = (pose * localToView.pose).position;
+  const auto& p = (pose * frameInfo.mLocalInView).position;
   const auto rx = std::atan2f(p.y, -p.z);
   const auto ry = std::atan2f(p.x, -p.z);
 
@@ -83,11 +80,9 @@ std::tuple<XrPosef, XrVector2f> HandTrackingSource::RaycastPose(
     pose.position,
   };
 
-  XrSpaceLocation viewToLocal {XR_TYPE_SPACE_LOCATION};
-  mOpenXR->xrLocateSpace(mViewSpace, mLocalSpace, displayTime, &viewToLocal);
   return {
     {
-      (retView * viewToLocal.pose).orientation,
+      (retView * frameInfo.mViewInLocal).orientation,
       pose.position,
     },
     {rx, ry},
@@ -120,10 +115,11 @@ static bool UseHandTrackingAimPointFB() {
     && Environment::Have_XR_FB_HandTracking_Aim;
 }
 
-std::tuple<InputState, InputState>
-HandTrackingSource::Update(PointerMode, XrTime now, XrTime displayTime) {
-  this->UpdateHand(now, displayTime, &mLeftHand);
-  this->UpdateHand(now, displayTime, &mRightHand);
+std::tuple<InputState, InputState> HandTrackingSource::Update(
+  PointerMode,
+  const FrameInfo& frameInfo) {
+  this->UpdateHand(frameInfo, &mLeftHand);
+  this->UpdateHand(frameInfo, &mRightHand);
 
   const auto& leftState = mLeftHand.mState;
   const auto& rightState = mRightHand.mState;
@@ -157,10 +153,8 @@ HandTrackingSource::Update(PointerMode, XrTime now, XrTime displayTime) {
   return {{XR_HAND_LEFT_EXT}, rightState};
 }
 
-void HandTrackingSource::UpdateHand(
-  XrTime now,
-  XrTime displayTime,
-  Hand* hand) {
+void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
+  const auto displayTime = frameInfo.mPredictedDisplayTime;
   InitHandTracker(hand);
   auto& state = hand->mState;
 
@@ -210,7 +204,7 @@ void HandTrackingSource::UpdateHand(
     }
   }
 
-  const auto age = std::chrono::nanoseconds(now - state.mUpdatedAt);
+  const auto age = std::chrono::nanoseconds(frameInfo.mNow - state.mUpdatedAt);
   const auto stale = age > std::chrono::milliseconds(200);
 
   if (stale) {
@@ -219,14 +213,10 @@ void HandTrackingSource::UpdateHand(
   }
 
   PopulateInteractions(aimFB.status, &state);
-  const auto [raycastPose, direction] = RaycastPose(displayTime, *state.mPose);
+  const auto [raycastPose, direction] = RaycastPose(frameInfo, *state.mPose);
   state.mDirection = {direction};
   if (Config::HandTrackingOrientation == HandTrackingOrientation::RayCast) {
     state.mPose = raycastPose;
-  }
-
-  if (state.mPose) {
-    const auto pos = state.mPose->position;
   }
 }
 

@@ -28,6 +28,7 @@ add_library(
   Config.cpp
   DebugPrint.cpp
   Environment.cpp
+  FrameInfo.cpp
   HandTrackingSource.cpp
   OpenXRNext.cpp
   PointCtrlSource.cpp
@@ -58,6 +59,7 @@ add_executable(
   Config.cpp
   Environment.cpp
   DebugPrint.cpp
+  FrameInfo.cpp
   OpenXRNext.cpp
   PointCtrlCalibration.cpp
   PointCtrlSource.cpp

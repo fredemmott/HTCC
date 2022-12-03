@@ -21,16 +21,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#pragma once
-
 #include "FrameInfo.h"
-#include "InputState.h"
+
+#include <Windows.h>
+
+#include "OpenXRNext.h"
 
 namespace HandTrackedCockpitClicking {
 
-class InputSource {
- public:
-  virtual std::tuple<InputState, InputState>
-  Update(PointerMode pointerMode, const FrameInfo& info) = 0;
-};
+class OpenXRNext;
+
+FrameInfo::FrameInfo(
+  OpenXRNext* openXR,
+  XrInstance instance,
+  XrSpace localSpace,
+  XrSpace viewSpace,
+  XrTime predictedDisplayTime)
+  : mPredictedDisplayTime(predictedDisplayTime) {
+  LARGE_INTEGER nowPC;
+  QueryPerformanceCounter(&nowPC);
+  openXR->xrConvertWin32PerformanceCounterToTimeKHR(instance, &nowPC, &mNow);
+
+  XrSpaceLocation location {XR_TYPE_SPACE_LOCATION};
+  if (openXR->check_xrLocateSpace(
+        localSpace, viewSpace, predictedDisplayTime, &location)) {
+    mLocalInView = location.pose;
+  }
+  if (openXR->check_xrLocateSpace(
+        viewSpace, localSpace, predictedDisplayTime, &location)) {
+    mViewInLocal = location.pose;
+  }
+}
+
 }// namespace HandTrackedCockpitClicking

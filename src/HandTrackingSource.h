@@ -42,8 +42,8 @@ class HandTrackingSource final : public InputSource {
     XrSpace localSpace);
   ~HandTrackingSource();
 
-  std::tuple<InputState, InputState>
-  Update(PointerMode, XrTime now, XrTime displayTime) override;
+  std::tuple<InputState, InputState> Update(PointerMode, const FrameInfo&)
+    override;
 
  private:
   std::shared_ptr<OpenXRNext> mOpenXR;
@@ -62,9 +62,9 @@ class HandTrackingSource final : public InputSource {
   Hand mRightHand {XR_HAND_RIGHT_EXT};
 
   void InitHandTracker(Hand* hand);
-  void UpdateHand(XrTime now, XrTime displayTime, Hand* hand);
+  void UpdateHand(const FrameInfo&, Hand* hand);
   std::tuple<XrPosef, XrVector2f> RaycastPose(
-    XrTime displayTime,
+    const FrameInfo&,
     const XrPosef& pose);
 };
 

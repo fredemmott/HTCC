@@ -29,6 +29,7 @@
 #include <unordered_set>
 
 #include "Config.h"
+#include "FrameInfo.h"
 #include "OpenXRNext.h"
 
 namespace HandTrackedCockpitClicking {
@@ -44,7 +45,7 @@ class VirtualControllerSink final {
     XrSpace viewSpace);
 
   void Update(
-    XrTime predictedDisplayTime,
+    const FrameInfo&,
     const InputState& leftHand,
     const InputState& rightHand);
 
@@ -93,9 +94,7 @@ class VirtualControllerSink final {
  private:
   // Move the pose down, and angle upwards, so it's not blocked by the
   // controller model
-  XrPosef OffsetPointerPose(
-    XrTime predictedDisplayTime,
-    const XrPosef& original);
+  XrPosef OffsetPointerPose(const FrameInfo&, const XrPosef& original);
 
   enum class Rotation { None, Clockwise, CounterClockwise };
   struct ControllerState {
@@ -172,7 +171,7 @@ class VirtualControllerSink final {
     ControllerState* controller);
 
   void UpdateHand(
-    XrTime predictedDisplayTime,
+    const FrameInfo& frameInfo,
     const InputState& hand,
     ControllerState* controller);
 

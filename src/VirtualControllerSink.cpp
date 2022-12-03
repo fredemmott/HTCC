@@ -115,15 +115,15 @@ bool VirtualControllerSink::IsActionSink() {
 }
 
 void VirtualControllerSink::Update(
-  XrTime predictedDisplayTime,
+  const FrameInfo& info,
   const InputState& leftHand,
   const InputState& rightHand) {
-  UpdateHand(predictedDisplayTime, leftHand, &mLeftController);
-  UpdateHand(predictedDisplayTime, rightHand, &mRightController);
+  UpdateHand(info, leftHand, &mLeftController);
+  UpdateHand(info, rightHand, &mRightController);
 }
 
 void VirtualControllerSink::UpdateHand(
-  XrTime predictedDisplayTime,
+  const FrameInfo& frameInfo,
   const InputState& hand,
   ControllerState* controller) {
   if (!hand.mPose) {
@@ -132,7 +132,7 @@ void VirtualControllerSink::UpdateHand(
   }
   controller->present = true;
 
-  auto inputPose = OffsetPointerPose(predictedDisplayTime, *hand.mPose);
+  auto inputPose = OffsetPointerPose(frameInfo, *hand.mPose);
   const auto haveAction = hand.AnyInteraction();
   if (
     haveAction
@@ -147,7 +147,7 @@ void VirtualControllerSink::UpdateHand(
   }
   controller->aimPose = {inputPose};
 
-  SetControllerActions(predictedDisplayTime, hand, controller);
+  SetControllerActions(frameInfo.mPredictedDisplayTime, hand, controller);
 }
 
 void VirtualControllerSink::SetControllerActions(
@@ -607,16 +607,9 @@ XrResult VirtualControllerSink::xrGetActionStatePose(
 }
 
 XrPosef VirtualControllerSink::OffsetPointerPose(
-  XrTime predictedDisplayTime,
-  const XrPosef& handInWorld) {
-  XrSpaceLocation localInView {XR_TYPE_SPACE_LOCATION};
-  XrSpaceLocation viewInLocal {XR_TYPE_SPACE_LOCATION};
-  mOpenXR->xrLocateSpace(
-    mLocalSpace, mViewSpace, predictedDisplayTime, &localInView);
-  mOpenXR->xrLocateSpace(
-    mViewSpace, mLocalSpace, predictedDisplayTime, &viewInLocal);
-
-  const auto handInView = handInWorld * localInView.pose;
+  const FrameInfo& frameInfo,
+  const XrPosef& handInLocal) {
+  const auto handInView = handInLocal * frameInfo.mLocalInView;
 
   const auto nearDistance
     = Vector3(
@@ -640,7 +633,7 @@ XrPosef VirtualControllerSink::OffsetPointerPose(
     * Quaternion::CreateFromAxisAngle(Vector3::UnitX, -rx);
   const XrQuaternionf orientation {q.x, q.y, q.z, q.w};
 
-  return XrPosef {orientation, position} * viewInLocal.pose;
+  return XrPosef {orientation, position} * frameInfo.mViewInLocal;
 }
 
 XrResult VirtualControllerSink::xrLocateSpace(

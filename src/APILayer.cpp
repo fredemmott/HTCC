@@ -63,17 +63,17 @@ APILayer::APILayer(
   }
   referenceSpace.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL;
   if (!oxr->check_xrCreateReferenceSpace(
-        session, &referenceSpace, &mWorldSpace)) {
+        session, &referenceSpace, &mLocalSpace)) {
     DebugPrint("Failed to create world space");
     return;
   }
 
   if (Environment::Have_XR_EXT_HandTracking) {
     mHandTracking = std::make_unique<HandTrackingSource>(
-      next, instance, session, mViewSpace, mWorldSpace);
+      next, instance, session, mViewSpace, mLocalSpace);
   }
   mPointCtrl = std::make_unique<PointCtrlSource>(
-    next, instance, session, mViewSpace, mWorldSpace);
+    next, instance, session, mViewSpace, mLocalSpace);
 
   if (
     VirtualControllerSink::IsActionSink()
@@ -89,8 +89,8 @@ APILayer::~APILayer() {
   if (mViewSpace) {
     mOpenXR->xrDestroySpace(mViewSpace);
   }
-  if (mWorldSpace) {
-    mOpenXR->xrDestroySpace(mWorldSpace);
+  if (mLocalSpace) {
+    mOpenXR->xrDestroySpace(mLocalSpace);
   }
 }
 
@@ -195,12 +195,12 @@ XrResult APILayer::xrWaitFrame(
     return nextResult;
   }
 
-  XrTime now {state->predictedDisplayTime};
-  {
-    LARGE_INTEGER nowPC;
-    QueryPerformanceCounter(&nowPC);
-    mOpenXR->xrConvertWin32PerformanceCounterToTimeKHR(mInstance, &nowPC, &now);
-  }
+  FrameInfo frameInfo(
+    mOpenXR.get(),
+    mInstance,
+    mLocalSpace,
+    mViewSpace,
+    state->predictedDisplayTime);
 
   if (
     (!mVirtualTouchScreen)
@@ -221,8 +221,7 @@ XrResult APILayer::xrWaitFrame(
       (Config::PointerSource == PointerSource::OculusHandTracking)
         ? pointerMode
         : PointerMode::None,
-      now,
-      state->predictedDisplayTime);
+      frameInfo);
     if (Config::PointerSource == PointerSource::OculusHandTracking) {
       leftHand.mPose = l.mPose;
       leftHand.mDirection = l.mDirection;
@@ -242,8 +241,7 @@ XrResult APILayer::xrWaitFrame(
   }
 
   if (mPointCtrl) {
-    const auto [l, r]
-      = mPointCtrl->Update(pointerMode, now, state->predictedDisplayTime);
+    const auto [l, r] = mPointCtrl->Update(pointerMode, frameInfo);
     if (Config::PointerSource == PointerSource::PointCtrl) {
       leftHand.mPose = l.mPose;
       leftHand.mDirection = l.mDirection;
@@ -273,8 +271,7 @@ XrResult APILayer::xrWaitFrame(
   }
 
   if (mVirtualController) {
-    mVirtualController->Update(
-      state->predictedDisplayTime, leftHand, rightHand);
+    mVirtualController->Update(frameInfo, leftHand, rightHand);
   }
 
   return XR_SUCCESS;

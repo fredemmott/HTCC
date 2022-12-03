@@ -46,8 +46,8 @@ class PointCtrlSource final : public InputSource {
 
   bool IsConnected() const;
 
-  std::tuple<InputState, InputState>
-  Update(PointerMode, XrTime now, XrTime displayTime) override;
+  std::tuple<InputState, InputState> Update(PointerMode, const FrameInfo&)
+    override;
 
   struct RawValues {
     uint16_t mX {};
@@ -119,7 +119,7 @@ class PointCtrlSource final : public InputSource {
   XrSpace mLocalSpace {};
   std::shared_ptr<OpenXRNext> mOpenXR;
 
-  void UpdatePose(XrTime predictedDisplayTime, InputState* hand);
+  void UpdatePose(const FrameInfo&, InputState* hand);
   void UpdateWakeState(bool hasButtons, XrTime now, Hand* hand);
   void MapActionsClassic(
     Hand*,

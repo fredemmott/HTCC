@@ -23,14 +23,25 @@
  */
 #pragma once
 
-#include "FrameInfo.h"
-#include "InputState.h"
+#include "openxr.h"
 
 namespace HandTrackedCockpitClicking {
 
-class InputSource {
- public:
-  virtual std::tuple<InputState, InputState>
-  Update(PointerMode pointerMode, const FrameInfo& info) = 0;
+class OpenXRNext;
+
+struct FrameInfo {
+  FrameInfo() = default;
+  FrameInfo(
+    OpenXRNext* next,
+    XrInstance instance,
+    XrSpace localSpace,
+    XrSpace viewSpace,
+    XrTime predictedDisplayTime);
+
+  XrTime mNow {};
+  XrTime mPredictedDisplayTime {};
+  XrPosef mLocalInView {XR_POSEF_IDENTITY};
+  XrPosef mViewInLocal {XR_POSEF_IDENTITY};
 };
+
 }// namespace HandTrackedCockpitClicking

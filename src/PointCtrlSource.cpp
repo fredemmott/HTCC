@@ -134,19 +134,11 @@ BOOL PointCtrlSource::EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi) {
   return DIENUM_STOP;
 }
 
-void PointCtrlSource::UpdatePose(
-  XrTime predictedDisplayTime,
-  InputState* hand) {
+void PointCtrlSource::UpdatePose(const FrameInfo& frameInfo, InputState* hand) {
   hand->mPose = {};
   if (!hand->mDirection) {
     return;
   }
-  XrSpaceLocation viewToWorld {XR_TYPE_SPACE_LOCATION};
-  if (!mOpenXR->check_xrLocateSpace(
-        mViewSpace, mLocalSpace, predictedDisplayTime, &viewToWorld)) {
-    return;
-  }
-
   const auto rx = hand->mDirection->x;
   const auto ry = hand->mDirection->y;
 
@@ -163,14 +155,15 @@ void PointCtrlSource::UpdatePose(
     .position = {p.x, p.y, p.z},
   };
 
-  const auto worldPose = viewPose * viewToWorld.pose;
+  const auto worldPose = viewPose * frameInfo.mViewInLocal;
   hand->mPose = worldPose;
 }
 
 std::tuple<InputState, InputState> PointCtrlSource::Update(
   PointerMode pointerMode,
-  XrTime now,
-  XrTime displayTime) {
+  const FrameInfo& frameInfo) {
+  const auto now = frameInfo.mNow;
+
   ConnectDevice();
   if (!mDevice) {
     return {{XR_HAND_LEFT_EXT}, {XR_HAND_RIGHT_EXT}};
@@ -263,7 +256,7 @@ std::tuple<InputState, InputState> PointCtrlSource::Update(
   if (mLeftHand.mInteractionAt > mRightHand.mInteractionAt) {
     mLeftHand.mState.mDirection = direction;
     if (pointerMode == PointerMode::Pose) {
-      UpdatePose(displayTime, &mLeftHand.mState);
+      UpdatePose(frameInfo, &mLeftHand.mState);
     }
 
     return {mLeftHand.mState, {XR_HAND_RIGHT_EXT}};
@@ -271,7 +264,7 @@ std::tuple<InputState, InputState> PointCtrlSource::Update(
 
   mRightHand.mState.mDirection = direction;
   if (pointerMode == PointerMode::Pose) {
-    UpdatePose(displayTime, &mRightHand.mState);
+    UpdatePose(frameInfo, &mRightHand.mState);
   }
   return {{XR_HAND_LEFT_EXT}, mRightHand.mState};
 }

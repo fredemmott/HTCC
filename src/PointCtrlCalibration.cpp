@@ -359,12 +359,9 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     };
     xrCreateReferenceSpace(session, &createInfo, &localSpace);
   }
-  PointCtrlSource pointCtrl(
-    std::make_shared<OpenXRNext>(instance, &xrGetInstanceProcAddr),
-    instance,
-    session,
-    viewSpace,
-    localSpace);
+  const auto openXR
+    = std::make_shared<OpenXRNext>(instance, &xrGetInstanceProcAddr);
+  PointCtrlSource pointCtrl(openXR, instance, session, viewSpace, localSpace);
   while (!pointCtrl.IsConnected()) {
     const auto result = MessageBoxW(
       NULL,
@@ -374,7 +371,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     if (result == IDCANCEL) {
       return 0;
     }
-    pointCtrl.Update(PointerMode::Direction, 0, 0);
+    pointCtrl.Update(PointerMode::Direction, {});
   }
 
   bool xrRunning = false;
@@ -487,8 +484,13 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
 
       const auto [l, r] = pointCtrl.Update(
         PointerMode::Direction,
-        frameState.predictedDisplayTime,
-        frameState.predictedDisplayTime);
+        {
+          openXR.get(),
+          instance,
+          localSpace,
+          viewSpace,
+          frameState.predictedDisplayTime,
+        });
       const auto newRaw = pointCtrl.GetRawValuesForCalibration();
       const auto x = newRaw.mX;
       const auto y = newRaw.mY;
