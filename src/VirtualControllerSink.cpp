@@ -247,7 +247,6 @@ void VirtualControllerSink::SetDCSControllerActions(
     minimumRate * (1 + (ms / Config::ScrollAccelerationMilliseconds)),
     0.0f,
     1.0f);
-  DebugPrint("rate: {}", rate);
 
   switch (hand.mValueChange) {
     case ValueChange::Decrease:
