@@ -204,7 +204,6 @@ void VirtualControllerSink::SetMSFSControllerActions(
   XrTime predictedDisplayTime,
   const InputState& hand,
   ControllerState* controller) {
-  DebugPrint("h{} r{}", (int)hand.mHand, (int)hand.mValueChange);
   controller->triggerValue.changedSinceLastSync = true;
   controller->triggerValue.currentState = hand.mPrimaryInteraction;
 
