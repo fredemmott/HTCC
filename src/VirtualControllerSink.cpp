@@ -140,9 +140,9 @@ void VirtualControllerSink::UpdateHand(
     inputPose.orientation = controller->savedAimPose.orientation;
   } else if (!haveAction) {
     controller->haveAction = false;
+    controller->savedAimPose = inputPose;
   } else if (!controller->haveAction) {
     controller->haveAction = true;
-    controller->savedAimPose = inputPose;
   }
   controller->aimPose = {inputPose};
 
