@@ -1,6 +1,8 @@
 # EXPERIMENT: Hand-tracked cockpit clicking for VR flight simulators
 
-This project is an OpenXR API layer aimed to make it easy to click on cockpits in VR flight simulators. Currently only DCS World is supported.
+This project is an OpenXR API layer aimed to make it easy to click on cockpits in VR flight simulators. DCS and MSFS are currently supported.
+
+This is **not** intended to be or usable as general-purpose hand tracking support: it is designed to work well with specific games (DCS and MSFS), and does weird things to make that feel better, including doing things like mapping button presses to controller rotation if that's what works best in a particular game.
 
 ## Installation and setup
 
