@@ -109,7 +109,7 @@ These values should be set with the included `PointCtrlCalibration.exe` program.
 DWORD:
 
 - 0: Classic
-- 1: Modal (MSFS)
+- 1: Modal (intended for MSFS, but no longer required due to other changes)
 - 2: Modal, but long-pressing buttons 1 & 2 together enters scroll lock mode but with  button 1 held
 
 ## VRVerticalOffset

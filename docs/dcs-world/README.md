@@ -11,12 +11,10 @@
 
 ## Controls
 
-### Oculus hand tracking gesture controls
-
-- Index finger pinch to thumb: left click/VR thumbstick down
-- Middle finger pinch to thumb: right click/VR thumbstick up
-- Ring finger pinch to thumb: scroll wheel up/VR thumbstick left
-- Little finger pinch to thumb: scroll wheel down/VR thumbstick right
+- 'left click'/index finger pinch to thumb: left click/VR thumbstick down
+- 'right click'/ Middle finger pinch to thumb: right click/VR thumbstick up
+- 'scroll up'/Ring finger pinch to thumb: scroll wheel/VRthumbstick left (decrease value)
+- 'scroll down'/Little finger pinch to thumb: scroll wheel/VR thumbstick right (increase value)
 
 ### PointCTRL FCU buttons
 

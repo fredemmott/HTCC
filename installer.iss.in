@@ -98,10 +98,10 @@ begin
   MirrorEyePage.SelectedValueIndex := MirrorEyeLeft;
   AfterID := MirrorEyePage.ID
 
-  PointCtrlFCUMappingPage := CreateInputOptionPage(AfterID, 'Configuration', 'PointCTRL button mapping', 'If you have a PointCTRL, which mappings would you like to use in games other than MSFS? The modal mapping will always be used in MSFS, regardless of this setting.', True, false)
-  PointCtrlFCUModalMapping := PointCtrlFCUMappingPage.Add('&Modal (match MSFS) - FCU3 switches between click mode and scroll mode');
+  PointCtrlFCUMappingPage := CreateInputOptionPage(AfterID, 'Configuration', 'PointCTRL button mapping', 'If you have a PointCTRL, which button mappings would you like?', True, false)
   PointCtrlFCUClassicMapping := PointCtrlFCUMappingPage.Add('&Classic - FCU3 scrolls in the direction previously set by FCU1 or 2');
-  PointCtrlFCUMappingPage.SelectedValueIndex := PointCtrlFCUModalMapping;
+  PointCtrlFCUModalMapping := PointCtrlFCUMappingPage.Add('&Modal - FCU3 switches between click mode and scroll mode');
+  PointCtrlFCUMappingPage.SelectedValueIndex := PointCtrlFCUClassicMapping;
 end;
 
 function ConfigPointerSource(Param: String): String;

@@ -4,6 +4,8 @@ Requirements:
 - you must be comfortable updating the firmware
 - you must have a PointCTRL v2, not v1
 
+## Custom Firmware (required)
+
 **WARNING:** After installing the custom firmware, the PointCTRL will *only* work as a joystick, not as a mouse/touchscreen - you will not be able to use it without this project unless you restore the standard firmware. The custom firmware does work for DCS, as long as you are using OpenComposite (OpenXR).
 
 1. Download [the latest standard firmware and firmware update tools](https://pointctrl.com/firmware/)
@@ -15,6 +17,26 @@ Requirements:
 [GitHub Releases]: https://github.com/fredemmott/hand-tracked-cockpit-clicking/releases/latest
 [my Discord]: https://go.fredemmott.com/discord
 [PointCTRL Discord]: https://discord.gg/JktNJ2ptKm
+
+## Button Mappings
+
+The PointCTRL FCUs have 3 buttons, but we need 4 actions: left click, right click, scroll up, scroll down. The installer lets you choose between 2 ways to do this:
+
+### Classic
+
+- FCU1: left click
+- FCU2: right click
+- FCU3: if FCU2 was pressed more recently than FCU1, scroll up; otherwise, scroll down
+
+### Modal
+
+There are two modes:
+- normal mode: FCU1 is left click, FCU2 is right click
+- scroll mode: FCU1 is scroll up, FCU2 is scroll down
+
+In both modes:
+- short-tap FCU3 to switch to normal mode
+- long-press FCU3 to switch to scroll mode
 
 ## Projection distance
 
