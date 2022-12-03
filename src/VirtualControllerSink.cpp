@@ -211,7 +211,7 @@ void VirtualControllerSink::SetMSFSControllerActions(
     // 'push' forward
     const auto worldOffset = Vector3::Transform(
       {0.0f, 0.0f, -0.02f}, XrQuatToSM(controller->aimPose.orientation));
-    auto& o = controller->aimPose.orientation;
+    auto& o = controller->aimPose.position;
     o.x += worldOffset.x;
     o.y += worldOffset.y;
     o.z += worldOffset.z;
