@@ -93,7 +93,9 @@ class VirtualControllerSink final {
  private:
   // Move the pose down, and angle upwards, so it's not blocked by the
   // controller model
-  XrPosef OffsetPointerPose(const XrPosef& original);
+  XrPosef OffsetPointerPose(
+    XrTime predictedDisplayTime,
+    const XrPosef& original);
 
   enum class Rotation { None, Clockwise, CounterClockwise };
   struct ControllerState {

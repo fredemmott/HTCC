@@ -132,7 +132,7 @@ void VirtualControllerSink::UpdateHand(
   }
   controller->present = true;
 
-  auto inputPose = OffsetPointerPose(*hand.mPose);
+  auto inputPose = OffsetPointerPose(predictedDisplayTime, *hand.mPose);
   const auto haveAction = hand.AnyInteraction();
   if (
     haveAction
@@ -606,31 +606,41 @@ XrResult VirtualControllerSink::xrGetActionStatePose(
   return mOpenXR->xrGetActionStatePose(session, getInfo, state);
 }
 
-XrPosef VirtualControllerSink::OffsetPointerPose(const XrPosef& original) {
-  if (!Config::IsRaycastOrientation()) {
-    return original;
-  }
+XrPosef VirtualControllerSink::OffsetPointerPose(
+  XrTime predictedDisplayTime,
+  const XrPosef& handInWorld) {
+  XrSpaceLocation localInView {XR_TYPE_SPACE_LOCATION};
+  XrSpaceLocation viewInLocal {XR_TYPE_SPACE_LOCATION};
+  mOpenXR->xrLocateSpace(
+    mLocalSpace, mViewSpace, predictedDisplayTime, &localInView);
+  mOpenXR->xrLocateSpace(
+    mViewSpace, mLocalSpace, predictedDisplayTime, &viewInLocal);
+
+  const auto handInView = handInWorld * localInView.pose;
+
   const auto nearDistance
-    = Vector3(original.position.x, original.position.y, original.position.z)
+    = Vector3(
+        handInView.position.x, handInView.position.y, handInView.position.z)
         .Length();
   const auto nearFarDistance = Config::VRFarDistance - nearDistance;
+
   const auto rx = std::atan2f(Config::VRVerticalOffset, nearFarDistance);
 
   const XrVector3f position {
-    original.position.x,
-    original.position.y + Config::VRVerticalOffset,
-    original.position.z,
+    handInView.position.x,
+    handInView.position.y + Config::VRVerticalOffset,
+    handInView.position.z,
   };
 
   const auto q = Quaternion(
-                   original.orientation.x,
-                   original.orientation.y,
-                   original.orientation.z,
-                   original.orientation.w)
+                   handInView.orientation.x,
+                   handInView.orientation.y,
+                   handInView.orientation.z,
+                   handInView.orientation.w)
     * Quaternion::CreateFromAxisAngle(Vector3::UnitX, -rx);
   const XrQuaternionf orientation {q.x, q.y, q.z, q.w};
 
-  return {orientation, position};
+  return XrPosef {orientation, position} * viewInLocal.pose;
 }
 
 XrResult VirtualControllerSink::xrLocateSpace(
