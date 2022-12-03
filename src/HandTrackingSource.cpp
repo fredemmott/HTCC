@@ -66,16 +66,28 @@ static constexpr bool HasFlags(Actual actual, Wanted wanted) {
   return (actual & wanted) == wanted;
 }
 
-static std::tuple<XrPosef, XrVector2f> RaycastPose(const XrPosef& pose) {
-  const auto& p = pose.position;
+std::tuple<XrPosef, XrVector2f> HandTrackingSource::RaycastPose(
+  XrTime displayTime,
+  const XrPosef& pose) {
+  XrSpaceLocation localToView {XR_TYPE_SPACE_LOCATION};
+  mOpenXR->xrLocateSpace(mLocalSpace, mViewSpace, displayTime, &localToView);
+
+  const auto& p = (pose * localToView.pose).position;
   const auto rx = std::atan2f(p.y, -p.z);
   const auto ry = std::atan2f(p.x, -p.z);
 
   const auto o = Quaternion::CreateFromAxisAngle(Vector3::UnitX, rx)
     * Quaternion::CreateFromAxisAngle(Vector3::UnitY, -ry);
+  const XrPosef retView = {
+    {o.x, o.y, o.z, o.w},
+    pose.position,
+  };
+
+  XrSpaceLocation viewToLocal {XR_TYPE_SPACE_LOCATION};
+  mOpenXR->xrLocateSpace(mViewSpace, mLocalSpace, displayTime, &viewToLocal);
   return {
     {
-      {o.x, o.y, o.z, o.w},
+      (retView * viewToLocal.pose).orientation,
       pose.position,
     },
     {rx, ry},
@@ -207,7 +219,7 @@ void HandTrackingSource::UpdateHand(
   }
 
   PopulateInteractions(aimFB.status, &state);
-  const auto [raycastPose, direction] = RaycastPose(*state.mPose);
+  const auto [raycastPose, direction] = RaycastPose(displayTime, *state.mPose);
   state.mDirection = {direction};
   if (Config::HandTrackingOrientation == HandTrackingOrientation::RayCast) {
     state.mPose = raycastPose;

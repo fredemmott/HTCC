@@ -25,6 +25,8 @@
 
 #include <openxr/openxr.h>
 
+#include <tuple>
+
 #include "InputSource.h"
 #include "OpenXRNext.h"
 
@@ -61,6 +63,9 @@ class HandTrackingSource final : public InputSource {
 
   void InitHandTracker(Hand* hand);
   void UpdateHand(XrTime now, XrTime displayTime, Hand* hand);
+  std::tuple<XrPosef, XrVector2f> RaycastPose(
+    XrTime displayTime,
+    const XrPosef& pose);
 };
 
 }// namespace HandTrackedCockpitClicking
