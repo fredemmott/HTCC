@@ -142,6 +142,8 @@ class VirtualControllerSink final {
     Rotation mRotationDirection {Rotation::None};
     float mRotationAngle {0};
     XrTime mLastRotatedAt {};
+
+    XrTime mBlockSecondaryActionsUntil {};
   };
 
   bool mHaveSuggestedBindings {false};

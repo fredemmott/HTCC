@@ -50,8 +50,6 @@ static constexpr std::string_view gThumbstickYPath {"/input/thumbstick/y"};
 static constexpr std::string_view gTriggerTouchPath {"/input/trigger/touch"};
 static constexpr std::string_view gTriggerValuePath {"/input/trigger/value"};
 
-static constexpr XrVector3f gPushOffset {0.0f, 0.0f, -0.02f};
-
 static bool UseDCSActions() {
   return VirtualControllerSink::IsActionSink()
     && (Config::VRControllerActionSinkMapping
@@ -205,11 +203,28 @@ void VirtualControllerSink::SetMSFSControllerActions(
   XrTime predictedDisplayTime,
   const InputState& hand,
   ControllerState* controller) {
+  using ValueChange = InputState::ValueChange;
+  const auto emulatePrimaryInteraction = (!hand.mPrimaryInteraction)
+    && (hand.mSecondaryInteraction || hand.mValueChange != ValueChange::None);
+  const auto hadPrimaryInteraction = controller->triggerValue.currentState;
+
   controller->triggerValue.changedSinceLastSync = true;
-  controller->triggerValue.currentState = hand.mPrimaryInteraction;
+  controller->triggerValue.currentState
+    = hand.mPrimaryInteraction || emulatePrimaryInteraction;
   controller->triggerValue.lastChangeTime = predictedDisplayTime;
 
-  if (hand.mSecondaryInteraction) {
+  // Press trigger for one frame so MSFS recognizes it before the
+  // other action
+  if (emulatePrimaryInteraction && !hadPrimaryInteraction) {
+    constexpr auto delayMS = std::chrono::milliseconds(100);
+    constexpr auto delayUS
+      = std::chrono::duration_cast<std::chrono::nanoseconds>(delayMS).count();
+    controller->mBlockSecondaryActionsUntil = predictedDisplayTime + delayUS;
+  }
+  const auto skipThisFrame
+    = predictedDisplayTime < controller->mBlockSecondaryActionsUntil;
+
+  if (hand.mSecondaryInteraction && !skipThisFrame) {
     // 'push' forward
     const auto worldOffset = Vector3::Transform(
       {0.0f, 0.0f, -0.02f}, XrQuatToSM(controller->aimPose.orientation));
@@ -221,17 +236,23 @@ void VirtualControllerSink::SetMSFSControllerActions(
 
   // Just increase/decrease value from here
   const auto oldRotationDirection = controller->mRotationDirection;
-  using ValueChange = InputState::ValueChange;
-  switch (hand.mValueChange) {
-    case ValueChange::None:
-      controller->mRotationDirection = Rotation::None;
-      break;
-    case ValueChange::Increase:
-      controller->mRotationDirection = Rotation::Clockwise;
-      break;
-    case ValueChange::Decrease:
-      controller->mRotationDirection = Rotation::CounterClockwise;
-      break;
+  if (skipThisFrame) {
+    controller->mRotationDirection = Rotation::None;
+  } else {
+    switch (hand.mValueChange) {
+      case ValueChange::None:
+        controller->mRotationDirection = Rotation::None;
+        if (!hand.mPrimaryInteraction) {
+          controller->mRotationAngle = 0.0f;
+        }
+        break;
+      case ValueChange::Increase:
+        controller->mRotationDirection = Rotation::Clockwise;
+        break;
+      case ValueChange::Decrease:
+        controller->mRotationDirection = Rotation::CounterClockwise;
+        break;
+    }
   }
 
   if (controller->mRotationDirection != oldRotationDirection) {
