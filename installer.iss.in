@@ -35,7 +35,7 @@ Root: HKLM; Subkey: "{#ConfigSubkey}"; ValueType: dword; ValueName: "PinchToScro
 Root: HKLM; Subkey: "{#ConfigSubkey}"; ValueType: dword; ValueName: "MirrorEye"; ValueData: "{code:ConfigMirrorEye}"
 
 [Icons]
-Name: "{group}\PointCTRL Calibration"; Filename: "PointCtrlCalibration.exe"
+Name: "{group}\PointCTRL Calibration"; Filename: "{app}\PointCtrlCalibration.exe"
 Name: "{group}\Uninstall Hand Tracked Cockpit Clicking"; Filename: "{uninstallexe}"
 
 [Run]
