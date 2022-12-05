@@ -250,6 +250,17 @@ void DrawLayer(
 
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   winrt::init_apartment(winrt::apartment_type::single_threaded);
+  {
+    const auto result = MessageBoxW(
+      NULL,
+      L"Please plug in your PointCTRL and VR headset, activate your headset, "
+      L"then press OK.",
+      L"PointCTRL Calibration",
+      MB_OKCANCEL | MB_DEFBUTTON1);
+    if (result == IDCANCEL) {
+      return 0;
+    }
+  }
   Config::Load();
   Environment::IsPointCtrlCalibration = true;
 
