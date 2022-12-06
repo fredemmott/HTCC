@@ -1,0 +1,31 @@
+<Window
+  x:Class="DemoApp.MainWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:local="using:OpenKneeboardApp"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d"
+  >
+  <NavigationView
+    x:Name="Navigation"
+    IsBackEnabled="{x:Bind Frame.CanGoBack, Mode=OneWay}"
+    BackRequested="GoBack"
+    ItemInvoked="Navigate">
+    <NavigationView.MenuItems>
+      <NavigationViewItem Content="How to jump">
+        <NavigationViewItem.Icon><FontIcon Glyph="&#xF093;" /></NavigationViewItem.Icon>
+      </NavigationViewItem>
+      <NavigationViewItem Content="How to crouch">
+        <NavigationViewItem.Icon><FontIcon Glyph="&#xF094;" /></NavigationViewItem.Icon>
+      </NavigationViewItem>
+      <NavigationViewItem Content="How to reload">
+        <NavigationViewItem.Icon><FontIcon Glyph="&#xF096;" /></NavigationViewItem.Icon>
+      </NavigationViewItem>
+      <NavigationViewItem Content="Indecisiveness">
+        <NavigationViewItem.Icon><FontIcon Glyph="&#xF095;" /></NavigationViewItem.Icon>
+      </NavigationViewItem>
+    </NavigationView.MenuItems>
+    <Frame x:Name="Frame" />
+  </NavigationView>
+</Window>

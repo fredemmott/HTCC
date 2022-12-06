@@ -1,0 +1,14 @@
+<Page
+  x:Class="DemoApp.DemoPage"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  mc:Ignorable="d">
+  <StackPanel Orientation="Vertical" Margin="12">
+    <TextBlock x:Name="Title" Style="{StaticResource TitleTextBlockStyle}" />
+    <TextBlock Margin="0,8,0,0" Style="{StaticResource BodyTextBlockStyle}">
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla vel massa vitae tellus convallis varius non ut odio. Morbi vel justo pellentesque, tempus turpis in, consequat lectus. Aenean sed commodo augue. Mauris felis lorem, placerat ut lectus et, egestas pharetra lacus. Duis nec dapibus nunc. Integer massa erat, congue vel maximus eget, malesuada sed tortor. Nunc eu elit vitae est auctor sagittis ut et nisi. Proin vel vestibulum dolor.
+    </TextBlock>
+  </StackPanel>
+</Page>

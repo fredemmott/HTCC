@@ -1,0 +1,8 @@
+namespace DemoApp
+{
+    [default_interface]
+    runtimeclass DemoPage: Microsoft.UI.Xaml.Controls.Page
+    {
+        DemoPage();
+    }
+}
