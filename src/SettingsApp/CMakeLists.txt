@@ -46,5 +46,6 @@ target_compile_options(
   PRIVATE
   "/FI${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/HTCCSettings.dir/$<CONFIG>/cmake_pch.hxx"
 )
+sign_target(HTCCSettings)
 
 include(winui3-boilerplate.cmake)
