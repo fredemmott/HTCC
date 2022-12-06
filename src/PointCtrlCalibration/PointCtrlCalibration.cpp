@@ -493,7 +493,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
       };
       check_xr(xrWaitSwapchainImage(swapchain, &waitInfo));
 
-      const auto [l, r] = pointCtrl.Update(
+      pointCtrl.Update(
         PointerMode::Direction,
         {
           openXR.get(),

@@ -1,0 +1,48 @@
+add_library(
+  HTCCLibCommon
+  STATIC
+  Config.cpp
+  DebugPrint.cpp
+  Environment.cpp
+  FrameInfo.cpp
+  OpenXRNext.cpp
+)
+target_precompile_headers(
+  HTCCLibCommon
+  PUBLIC
+  pch.h
+)
+target_include_directories(
+  HTCCLibCommon
+  PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+target_link_libraries(
+  HTCCLibCommon
+  PRIVATE
+  System::Dinput8
+  System::Dxguid
+)
+target_link_libraries(
+  HTCCLibCommon
+  PUBLIC
+  ThirdParty::CppWinRT
+  ThirdParty::OpenXR
+  ThirdParty::DirectXTK
+)
+
+add_library(
+  HTCCLibPointCtrl
+  STATIC
+  PointCtrlSource.cpp
+)
+target_include_directories(
+  HTCCLibPointCtrl
+  PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+target_link_libraries(
+  HTCCLibPointCtrl
+  PUBLIC
+  HTCCLibCommon
+)

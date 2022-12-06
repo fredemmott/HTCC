@@ -93,7 +93,7 @@ class PointCtrlSource final : public InputSource {
   };
   using ScrollDirection = InputState::ValueChange;
   struct Hand {
-    XrHandEXT mHand;
+    XrHandEXT mHand {};
     WakeState mWakeState {WakeState::Default};
 
     InputState mState {mHand};

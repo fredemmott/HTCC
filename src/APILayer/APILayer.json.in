@@ -2,7 +2,7 @@
   "file_format_version": "1.0.0",
   "api_layer": {
     "name": "XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking",
-    "library_path": ".\\$<TARGET_FILE_NAME:XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking>",
+    "library_path": ".\\$<TARGET_FILE_NAME:HTCCAPILayer>",
     "api_version": "1.0",
     "implementation_version": "1",
     "description": "Hand-tracked cockpit clicking for flight simulators - https://github.com/fredemmott/hand-tracked-cockpit-clicking",

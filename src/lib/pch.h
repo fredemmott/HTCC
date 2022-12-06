@@ -35,9 +35,9 @@
 #include <winrt/base.h>
 // clang-format on
 
-#include <openxr/openxr.h>
-
 #include <format>
+
+#include "openxr.h"
 
 template <class CharT>
 struct std::formatter<XrResult, CharT> : std::formatter<int, CharT> {};
