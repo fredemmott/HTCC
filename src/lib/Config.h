@@ -62,7 +62,8 @@ enum class VRControllerPointerSinkWorldLock : DWORD {
 }// namespace HandTrackedCockpitClicking
 
 #define HandTrackedCockpitClicking_DWORD_SETTINGS \
-  IT(bool, Enabled, false) \
+  IT(bool, GlobalDisabled, false) \
+  IT(bool, AppEnabled, false) \
   IT(uint8_t, VerboseDebug, 0) \
   IT(uint8_t, MirrorEye, 1) \
   IT(bool, EnableFBOpenXRExtensions, true) \
@@ -157,6 +158,10 @@ HandTrackedCockpitClicking_DWORD_SETTINGS
   return (
     (Config::PointerSource == PointerSource::PointCtrl)
     || Config::HandTrackingOrientation == HandTrackingOrientation::RayCast);
+}
+
+inline bool IsEnabled() {
+  return Config::AppEnabled && !Config::GlobalDisabled;
 }
 
 void Load();

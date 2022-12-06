@@ -157,7 +157,7 @@ static XrResult xrCreateSession(
     return nextResult;
   }
 
-  if (!Config::Enabled) {
+  if (!Config::IsEnabled()) {
     DebugPrint("Not enabled, doing nothing");
     return XR_SUCCESS;
   }
@@ -355,7 +355,7 @@ static XrResult xrCreateApiLayerInstance(
   OpenXRNext next(NULL, layerInfo->nextInfo->nextGetInstanceProcAddr);
 
   std::vector<const char*> enabledExtensions;
-  if (Config::Enabled) {
+  if (Config::IsEnabled()) {
     EnumerateExtensions(&next);
     if (Environment::Have_XR_EXT_HandTracking) {
       DebugPrint("Original extensions:");
