@@ -102,7 +102,7 @@ jobs:
               /t http://timestamp.digicert.com `
               /fd SHA256 `
               /f "${{steps.fetchKey.outputs.PATH}}" `
-              "${{steps.installer.PATH}}"
+              "${{steps.installer.outputs.PATH}}"
       - name: Attach installer to build
         if: ${{matrix.config != 'Debug' }}
         uses: actions/upload-artifact@v2
