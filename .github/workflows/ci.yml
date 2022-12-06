@@ -33,7 +33,8 @@ jobs:
             $args += "-DSIGNTOOL_KEY_ARGS=/f;${{steps.fetchKey.outputs.PATH}}"
           }
           cmake ${{github.workspace}}/source @args
-      - name: Compile
+      - name: Build
+        id: build
         working-directory: build
         run: |
           cmake --build . `
@@ -41,22 +42,8 @@ jobs:
             --parallel `
             -- `
             /p:CL_MPCount=
-      - name: Install files
-        working-directory: build
-        id: build
-        run: |
-          cmake --install . `
-            --config ${{matrix.config}} `
-            --prefix install-prefix `
-            --component Default
           $version="$(Get-Content version.txt)"
           Add-Content $Env:GITHUB_OUTPUT "VERSION=${version}"
-      - name: Attach binaries to build
-        if: ${{matrix.config != 'Debug' }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: HandTrackedCockpitClicking-GHA-${{github.run_number}}-Binaries
-          path: build/install-prefix/**
       - name: Install debug symbols
         working-directory: build
         run: |
