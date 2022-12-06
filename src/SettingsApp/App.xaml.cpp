@@ -2,7 +2,7 @@
 
 #include "MainWindow.xaml.h"
 
-namespace winrt::DemoApp::implementation {
+namespace winrt::HTCCSettings::implementation {
 
 App::App() {
   InitializeComponent();
@@ -19,10 +19,9 @@ App::App() {
 }
 
 void App::OnLaunched(
-  Microsoft::UI::Xaml::LaunchActivatedEventArgs const&
-) noexcept {
+  Microsoft::UI::Xaml::LaunchActivatedEventArgs const&) noexcept {
   window = make<MainWindow>();
   window.Activate();
 }
 
-}
+}// namespace winrt::HTCCSettings::implementation

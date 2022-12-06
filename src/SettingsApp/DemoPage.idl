@@ -1,4 +1,4 @@
-namespace DemoApp
+namespace HTCCSettings
 {
     [default_interface]
     runtimeclass DemoPage: Microsoft.UI.Xaml.Controls.Page

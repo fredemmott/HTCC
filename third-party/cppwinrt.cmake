@@ -1,6 +1,6 @@
 include(ExternalProject)
 
-set(CPPWINRT_VERSION "2.0.220912.1")
+set(CPPWINRT_VERSION "2.0.220912.1" CACHE INTERNAL "C++/WinRT Version")
 
 ExternalProject_Add(
   CppWinRTNuget

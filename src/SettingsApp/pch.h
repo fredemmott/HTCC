@@ -2,8 +2,7 @@
 
 ///// These are all required for the generated code to work /////
 
-#include <Unknwn.h>
-#include <winrt/base.h>
+#include "../lib/pch.h"
 
 #undef GetCurrentTime
 

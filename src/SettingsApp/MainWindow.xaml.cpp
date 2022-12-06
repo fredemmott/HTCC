@@ -3,7 +3,7 @@
 #include "MainWindow.g.cpp"
 #endif
 
-namespace winrt::DemoApp::implementation {
+namespace winrt::HTCCSettings::implementation {
 
 MainWindow::MainWindow() {
   InitializeComponent();
@@ -11,15 +11,15 @@ MainWindow::MainWindow() {
 
 void MainWindow::Navigate(
   const IInspectable& sender,
-  const Microsoft::UI::Xaml::Controls::NavigationViewItemInvokedEventArgs& args) noexcept {
+  const Microsoft::UI::Xaml::Controls::NavigationViewItemInvokedEventArgs&
+    args) noexcept {
   if (args.IsSettingsInvoked()) {
     // TODO
     return;
   }
 
-  auto item = args.InvokedItemContainer().try_as<
-    Microsoft::UI::Xaml::Controls::NavigationViewItem
-  >();
+  auto item = args.InvokedItemContainer()
+                .try_as<Microsoft::UI::Xaml::Controls::NavigationViewItem>();
 
   if (!item) {
     // FIXME: show an error?
@@ -32,8 +32,9 @@ void MainWindow::Navigate(
 
 void MainWindow::GoBack(
   const IInspectable& sender,
-  const Microsoft::UI::Xaml::Controls::NavigationViewBackRequestedEventArgs&) noexcept {
+  const Microsoft::UI::Xaml::Controls::
+    NavigationViewBackRequestedEventArgs&) noexcept {
   Frame().GoBack();
 }
 
-}
+}// namespace winrt::HTCCSettings::implementation

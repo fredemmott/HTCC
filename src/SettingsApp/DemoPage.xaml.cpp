@@ -5,16 +5,15 @@
 
 #include <winrt/Microsoft.UI.Xaml.Navigation.h>
 
-namespace winrt::DemoApp::implementation {
+namespace winrt::HTCCSettings::implementation {
 
 DemoPage::DemoPage() {
   InitializeComponent();
 }
 
 void DemoPage::OnNavigatedTo(
-  const Microsoft::UI::Xaml::Navigation::NavigationEventArgs& args
-) noexcept {
+  const Microsoft::UI::Xaml::Navigation::NavigationEventArgs& args) noexcept {
   Title().Text(winrt::unbox_value<winrt::hstring>(args.Parameter()));
 }
 
-}
+}// namespace winrt::HTCCSettings::implementation

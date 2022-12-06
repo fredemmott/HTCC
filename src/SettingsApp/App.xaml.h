@@ -1,9 +1,9 @@
 #pragma once
 
-#include "pch.h"
 #include "App.xaml.g.h"
+#include "pch.h"
 
-namespace winrt::DemoApp::implementation {
+namespace winrt::HTCCSettings::implementation {
 struct App : AppT<App> {
   App();
 
@@ -14,4 +14,4 @@ struct App : AppT<App> {
   winrt::Microsoft::UI::Xaml::Window window {nullptr};
 };
 
-}
+}// namespace winrt::HTCCSettings::implementation

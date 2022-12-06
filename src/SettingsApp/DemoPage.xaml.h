@@ -1,17 +1,17 @@
 #pragma once
 
-#include "pch.h"
 #include "DemoPage.g.h"
+#include "pch.h"
 
-namespace winrt::DemoApp::implementation {
+namespace winrt::HTCCSettings::implementation {
 struct DemoPage : DemoPageT<DemoPage> {
   DemoPage();
 
-  void OnNavigatedTo(const Microsoft::UI::Xaml::Navigation::NavigationEventArgs&) noexcept;
+  void OnNavigatedTo(
+    const Microsoft::UI::Xaml::Navigation::NavigationEventArgs&) noexcept;
 };
-}
+}// namespace winrt::HTCCSettings::implementation
 
-namespace winrt::DemoApp::factory_implementation {
+namespace winrt::HTCCSettings::factory_implementation {
 struct DemoPage : DemoPageT<DemoPage, implementation::DemoPage> {};
-}
-
+}// namespace winrt::HTCCSettings::factory_implementation
