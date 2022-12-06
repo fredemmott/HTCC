@@ -10,9 +10,9 @@ jobs:
         env:
           CODE_SIGNING_PFX_BASE64: ${{ secrets.CODE_SIGNING_KEY_PFX_BASE64 }}
         if: ${{ (matrix.config != 'Debug') && (github.repository == 'fredemmott/hand-tracked-cockpit-clicking') && (github.event_name == 'push')}}
-        run:
+        run: |
           $pfxPath="${{runner.temp}}/MyCert.pfx"
-          '[System.Convert]::FromBase64String($Env:CODE_SIGNING_PFX_BASE64) | Set-Content $pfxPath -AsByteStream'
+          [System.Convert]::FromBase64String($Env:CODE_SIGNING_PFX_BASE64) | Set-Content $pfxPath -AsByteStream
           Add-Content $Env:GITHUB_OUTPUT "HAVE_KEY=true"
           Add-Content $Env:GITHUB_OUTPUT "PATH=$pfxPath"
       - uses: actions/checkout@v2
