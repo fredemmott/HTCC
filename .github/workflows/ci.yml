@@ -86,8 +86,7 @@ jobs:
           echo "::endgroup::"
           $version="${{steps.build.outputs.VERSION}}"
           $installer="Hand Tracked Cockpit Clicking v${version}.msi"
-          ls
-          $installerPath=(Get-ChildItem "${installer}").FullPath
+          $installerPath=(Get-ChildItem "${installer}").FullName
           echo "File name: ${installer}"
           echo "File path: ${installerPath}"
           Add-Content $Env:GITHUB_OUTPUT "NAME=${installer}"
