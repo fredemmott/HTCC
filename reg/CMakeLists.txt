@@ -12,10 +12,10 @@ find_program(
   HEAT_EXE
   heat.exe
   DOC "Path to heat.exe from the WiX toolset"
-  HINTS
-  "${WIX_ROOT_DIR}/bin/heat.exe"
-  "$ENV{WIX}/bin/heat.exe"
-  "$ENV{WIX_ROOT_DIR}/heat.exe"
+  PATHS
+  "${WIX_ROOT_DIR}/bin"
+  "$ENV{WIX}/bin"
+  "$ENV{WIX_ROOT_DIR}/bin"
 )
 
 if("${HEAT_EXE}" STREQUAL "HEAT_EXE-NOTFOUND")
