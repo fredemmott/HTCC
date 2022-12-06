@@ -11,11 +11,6 @@ struct MainWindow : MainWindowT<MainWindow> {
     const IInspectable& sender,
     const Microsoft::UI::Xaml::Controls::
       NavigationViewItemInvokedEventArgs&) noexcept;
-
-  void GoBack(
-    const IInspectable& sender,
-    const Microsoft::UI::Xaml::Controls::
-      NavigationViewBackRequestedEventArgs&) noexcept;
 };
 }// namespace winrt::HTCCSettings::implementation
 

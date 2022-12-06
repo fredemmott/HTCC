@@ -4,7 +4,6 @@
 #endif
 
 namespace winrt::HTCCSettings::implementation {
-
 MainWindow::MainWindow() {
   InitializeComponent();
 }
@@ -28,13 +27,6 @@ void MainWindow::Navigate(
 
   // TODO: you probably want to use item.Tag() to identify a specific item
   Frame().Navigate(xaml_typename<DemoPage>(), item.Content());
-}
-
-void MainWindow::GoBack(
-  const IInspectable& sender,
-  const Microsoft::UI::Xaml::Controls::
-    NavigationViewBackRequestedEventArgs&) noexcept {
-  Frame().GoBack();
 }
 
 }// namespace winrt::HTCCSettings::implementation

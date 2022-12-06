@@ -9,23 +9,18 @@
   >
   <NavigationView
     x:Name="Navigation"
-    IsBackEnabled="{x:Bind Frame.CanGoBack, Mode=OneWay}"
-    BackRequested="GoBack"
+    IsBackButtonVisible="Collapsed"
+    IsSettingsVisible="false"
+    PaneDisplayMode="Top"
     ItemInvoked="Navigate">
     <NavigationView.MenuItems>
-      <NavigationViewItem Content="How to jump">
-        <NavigationViewItem.Icon><FontIcon Glyph="&#xF093;" /></NavigationViewItem.Icon>
-      </NavigationViewItem>
-      <NavigationViewItem Content="How to crouch">
-        <NavigationViewItem.Icon><FontIcon Glyph="&#xF094;" /></NavigationViewItem.Icon>
-      </NavigationViewItem>
-      <NavigationViewItem Content="How to reload">
-        <NavigationViewItem.Icon><FontIcon Glyph="&#xF096;" /></NavigationViewItem.Icon>
-      </NavigationViewItem>
-      <NavigationViewItem Content="Indecisiveness">
-        <NavigationViewItem.Icon><FontIcon Glyph="&#xF095;" /></NavigationViewItem.Icon>
-      </NavigationViewItem>
+      <NavigationViewItem Content="General" />
+      <NavigationViewItem Content="PointCTRL" />
+      <NavigationViewItem Content="Quest" />
     </NavigationView.MenuItems>
+    <NavigationView.FooterMenuItems>
+      <NavigationViewItem Icon="Help" />
+    </NavigationView.FooterMenuItems>
     <Frame x:Name="Frame" />
   </NavigationView>
 </Window>
