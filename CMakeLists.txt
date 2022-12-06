@@ -112,3 +112,5 @@ configure_file(
   @ONLY
   NEWLINE_STYLE UNIX
 )
+
+add_subdirectory(installer)
