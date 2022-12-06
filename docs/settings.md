@@ -2,25 +2,11 @@
 
 All settings are in the registry, in `HKEY_LOCAL_MACHINE\SOFTWARE\FredEmmott\HandTrackedCockpitClicking`; per-app overrides are in `HKEY_LOCAL_MACHINE\SOFTWARE\FredEmmott\HandTrackedCockpitClicking\AppOverrides\EXECUTABLE_NAME.exe\`, e.g. `AppOverrides\DCS.exe\`
 
-## GlobalDisabled
-
-DWORD 0 (enabled) or 1 (disabled); enable or disable the entire API layer.
-
-This should usually be 0, but with `AppEnabled` set to `0` except for specific games.
-
-For the layer to work, `AppEnabled` must also be true. It is expected that:
-- `GlobalDisabled` is set for all apps
-- `AppEnabled` is set per-app
-
-## AppEnabled
+## Enabled
 
 DWORD 0 (disabled) or 1 (enabled); enable or disable the entire API layer.
 
 This should usually be 0 to disable for the majority of games, but overriden to 1 in `AppOverrides\DCS.exe`.
-
-For the layer to work, `GlobalDisabled` must also be false. It is expected that:
-- `GlobalDisabled` is set for all apps
-- `AppEnabled` is set per-app
 
 ## PointerSource
 
