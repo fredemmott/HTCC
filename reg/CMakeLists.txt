@@ -8,7 +8,15 @@ install(
 )
 
 # Convert the .reg files to the Windows Installer's source format
-find_program(HEAT_EXE heat.exe DOC "Path to heat.exe from the WiX toolset")
+find_program(
+  HEAT_EXE
+  heat.exe
+  DOC "Path to heat.exe from the WiX toolset"
+  HINTS
+  "${WIX_ROOT_DIR}/bin/heat.exe"
+  "$ENV{WIX}/bin/heat.exe"
+  "$ENV{WIX_ROOT_DIR}/heat.exe"
+)
 
 if("${HEAT_EXE}" STREQUAL "HEAT_EXE-NOTFOUND")
   message(WARNING "Couldn't find heat.exe from the WiX toolset; building an MSI will fail")
