@@ -92,7 +92,7 @@ jobs:
 
           $version="${{steps.build.outputs.VERSION}}"
           $installer="Hand Tracked Cockpit Clicking v${version}.msi"
-          $installerPath=(Get-Location $installer).FullPath
+          $installerPath=(Get-ChildItem $installer).FullPath
           Add-Content $Env:GITHUB_OUTPUT "NAME=${installer}"
           Add-Content $Env:GITHUB_OUTPUT "PATH=${installerPath}"
       - name: Attach installer to build
