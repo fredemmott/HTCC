@@ -29,6 +29,7 @@
 namespace winrt::HTCCSettings::implementation {
 MainWindow::MainWindow() {
   InitializeComponent();
+  Title(L"HTCC Settings");
 }
 
 void MainWindow::Navigate(
