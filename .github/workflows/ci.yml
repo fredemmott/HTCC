@@ -27,6 +27,7 @@ jobs:
           )
           if (Test-Path -Path "${{runner.temp}}/MyCert.pfx") {
             $args += '-DINNOSETUP_SIGNTOOL_STATEMENT="SignTool=signtool"'
+            $args += "-DSIGNTOOL_KEY_ARGS=/f;${{runner.temp}}/MyCert.pfx" `
           }
           cmake ${{github.workspace}}/source @args
       - name: Compile
@@ -39,18 +40,21 @@ jobs:
             /p:CL_MPCount=
       - name: Install files
         working-directory: build
+        id: build
         run: |
           cmake --install . `
             --config ${{matrix.config}} `
             --prefix install-prefix `
             --component Default
+          $version="$(Get-Content version.txt)"
+          Add-Content $Env:GITHUB_OUTPUT "VERSION=${version}"
       - name: Attach binaries to build
         if: ${{matrix.config != 'Debug' }}
         uses: actions/upload-artifact@v2
         with:
           name: HandTrackedCockpitClicking-GHA-${{github.run_number}}-Binaries
           path: build/install-prefix/**
-      - name: Create debug symbols zip
+      - name: Install debug symbols
         working-directory: build
         run: |
           cmake --install . `
@@ -64,22 +68,39 @@ jobs:
           name: HandTrackedCockpitClicking-GHA-${{github.run_number}}-Symbols
           path: build/symbols/*.pdb
       - name: Create installer
+        id: installer
         working-directory: build
         run: |
-          Copy-Item installer.iss install-prefix
-          cd install-prefix
-          $args = $()
-          if (Test-Path -Path "${{runner.temp}}/MyCert.pfx") {
-            iscc /S"signtool=C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\signtool.exe sign /f ${{runner.temp}}/MyCert.pfx /t http://timestamp.digicert.com /fd sha256 `$f" installer.iss
-          } else {
-            iscc installer.iss
+          # Create MSI
+          echo "::group::Build 'package' target"
+          cmake --build . `
+            --config ${{matrix.config}} `
+            --target package
+          echo "::endgroup::"
+
+          if (Test-Path -Path "${{runner.temp}}\MyCert.pfx") {
+            echo "::group::Signing MSI"
+            # Known path for the GitHub Actions windows 2022 runner, may need updating
+            & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\signtool.exe' `
+              sign `
+              /t http://timestamp.digicert.com `
+              /fd SHA256 `
+              /f "${{runner.temp}}/MyCert.pfx" `
+              $installer
+            echo "::endgroup::"
           }
+
+          $version="${{steps.build.outputs.VERSION}}"
+          $installer="Hand Tracked Cockpit Clicking v${version}.msi"
+          $installerPath=(Get-Location $installer).FullPath
+          Add-Content $Env:GITHUB_OUTPUT "NAME=${installer}"
+          Add-Content $Env:GITHUB_OUTPUT "PATH=${installerPath}"
       - name: Attach installer to build
         if: ${{matrix.config != 'Debug' }}
         uses: actions/upload-artifact@v2
         with:
-          name: HandTrackedCockpitClicking-GHA-${{github.run_number}}-Setup
-          path: build/install-prefix/HandTrackedCockpitClicking-v*.exe
+          name: ${{steps.installer.outputs.NAME}}
+          path: ${{steps.installer.outputs.PATH}}
     strategy:
       matrix:
         config: [RelWithDebInfo, Debug]

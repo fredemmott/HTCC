@@ -7,6 +7,7 @@ add_library(
   VirtualControllerSink.cpp
   VirtualTouchScreenSink.cpp
 )
+sign_target(HTCCAPILayer)
 set_target_properties(
   HTCCAPILayer
   PROPERTIES

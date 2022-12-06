@@ -57,6 +57,9 @@ endif()
 project(XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking VERSION 0.0.1.${VERSION_BUILD} LANGUAGES CXX C)
 message(STATUS "${CMAKE_PROJECT_NAME} v${CMAKE_PROJECT_VERSION}")
 
+# Handy for CI
+file(WRITE "${CMAKE_BINARY_DIR}/version.txt" "${CMAKE_PROJECT_VERSION}")
+
 if(MSVC AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CLANG_CL 1 CACHE BOOL "Whether we're using clang-cl")
 else()
@@ -88,6 +91,8 @@ endif()
 add_compile_options(${COMMON_COMPILE_OPTIONS})
 
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME Default)
+
+include(sign_target.cmake)
 
 add_subdirectory("third-party")
 add_subdirectory("src")
