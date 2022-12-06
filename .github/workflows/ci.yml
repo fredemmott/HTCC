@@ -6,11 +6,15 @@ jobs:
     runs-on: windows-2022
     steps:
       - name: Fetch code-signing key
+        id: fetchKey
         env:
           CODE_SIGNING_PFX_BASE64: ${{ secrets.CODE_SIGNING_KEY_PFX_BASE64 }}
         if: ${{ (matrix.config != 'Debug') && (github.repository == 'fredemmott/hand-tracked-cockpit-clicking') && (github.event_name == 'push')}}
         run:
-          '[System.Convert]::FromBase64String($Env:CODE_SIGNING_PFX_BASE64) | Set-Content ${{runner.temp}}/MyCert.pfx -AsByteStream'
+          $pfxPath="${{runner.temp}}/MyCert.pfx"
+          '[System.Convert]::FromBase64String($Env:CODE_SIGNING_PFX_BASE64) | Set-Content $pfxPath -AsByteStream'
+          Add-Content $Env:GITHUB_OUTPUT "HAVE_KEY=true"
+          Add-Content $Env:GITHUB_OUTPUT "PATH=$pfxPath"
       - uses: actions/checkout@v2
         with:
           path: source
@@ -25,9 +29,9 @@ jobs:
             "-DGITHUB_REF_TYPE=${{github.ref_type}}",
             "-DGITHUB_REF_NAME=${{github.ref_name}}"
           )
-          if (Test-Path -Path "${{runner.temp}}/MyCert.pfx") {
+          if ("${{steps.fetchKey.outputs.HAVE_KEY}}" -eq "true") {
             $args += '-DINNOSETUP_SIGNTOOL_STATEMENT="SignTool=signtool"'
-            $args += "-DSIGNTOOL_KEY_ARGS=/f;${{runner.temp}}/MyCert.pfx" `
+            $args += "-DSIGNTOOL_KEY_ARGS=/f;${{steps.fetchKey.outputs.PATH}}"
           }
           cmake ${{github.workspace}}/source @args
       - name: Compile
@@ -67,7 +71,7 @@ jobs:
         with:
           name: HandTrackedCockpitClicking-GHA-${{github.run_number}}-Symbols
           path: build/symbols/*.pdb
-      - name: Create installer
+      - name: Create MSI
         id: installer
         working-directory: build
         run: |
@@ -80,24 +84,23 @@ jobs:
           echo "::group::WiX debug log"
           Get-Content _CPack_Packages/win64/WIX/wix.log
           echo "::endgroup::"
-
-          if (Test-Path -Path "${{runner.temp}}\MyCert.pfx") {
-            echo "::group::Signing MSI"
-            # Known path for the GitHub Actions windows 2022 runner, may need updating
-            & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\signtool.exe' `
-              sign `
-              /t http://timestamp.digicert.com `
-              /fd SHA256 `
-              /f "${{runner.temp}}/MyCert.pfx" `
-              $installer
-            echo "::endgroup::"
-          }
-
           $version="${{steps.build.outputs.VERSION}}"
           $installer="Hand Tracked Cockpit Clicking v${version}.msi"
           $installerPath=(Get-ChildItem $installer).FullPath
           Add-Content $Env:GITHUB_OUTPUT "NAME=${installer}"
           Add-Content $Env:GITHUB_OUTPUT "PATH=${installerPath}"
+      - name: Sign MSI
+        working-directory: build
+        if: ${{steps.fetchKey.HAVE_KEY}}
+        run: |
+            # Sign MSI
+            # Known path for the GitHub Actions windows 2022 runner, may need updating
+            & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\signtool.exe' `
+              sign `
+              /t http://timestamp.digicert.com `
+              /fd SHA256 `
+              /f "${{steps.fetchKey.outputs.PATH}}" `
+              "${{steps.installer.PATH}}"
       - name: Attach installer to build
         if: ${{matrix.config != 'Debug' }}
         uses: actions/upload-artifact@v2
