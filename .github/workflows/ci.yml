@@ -87,11 +87,13 @@ jobs:
           $version="${{steps.build.outputs.VERSION}}"
           $installer="Hand Tracked Cockpit Clicking v${version}.msi"
           $installerPath=(Get-ChildItem $installer).FullPath
+          echo "File name: ${installer}"
+          echo "File path: ${installerPath}"
           Add-Content $Env:GITHUB_OUTPUT "NAME=${installer}"
           Add-Content $Env:GITHUB_OUTPUT "PATH=${installerPath}"
       - name: Sign MSI
         working-directory: build
-        if: ${{steps.fetchKey.HAVE_KEY}}
+        if: ${{steps.fetchKey.outputs.HAVE_KEY}}
         run: |
             # Sign MSI
             # Known path for the GitHub Actions windows 2022 runner, may need updating
