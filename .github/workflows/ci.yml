@@ -30,7 +30,6 @@ jobs:
             "-DGITHUB_REF_NAME=${{github.ref_name}}"
           )
           if ("${{steps.fetchKey.outputs.HAVE_KEY}}" -eq "true") {
-            $args += '-DINNOSETUP_SIGNTOOL_STATEMENT="SignTool=signtool"'
             $args += "-DSIGNTOOL_KEY_ARGS=/f;${{steps.fetchKey.outputs.PATH}}"
           }
           cmake ${{github.workspace}}/source @args
