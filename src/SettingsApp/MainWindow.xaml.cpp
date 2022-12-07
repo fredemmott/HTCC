@@ -76,8 +76,12 @@ void MainWindow::InitVersion() {
   mVersionString = std::format(
     "HTCC {}\n\n"
     "Copyright © 2022 Frederick Emmott.\n\n"
-    "Build: {}-{}-{}",
+    "Build: v{}.{}.{}.{}-{}-{}-{}",
     Version::ReleaseName,
+    Version::Major,
+    Version::Minor,
+    Version::Patch,
+    Version::Build,
     Version::IsGitHubActionsBuild ? std::format("GHA-{}", Version::Build)
                                   : "local",
     Version::BuildMode,
