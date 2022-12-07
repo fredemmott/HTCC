@@ -1,12 +1,3 @@
-# For NSIS
-
-install(
-  FILES
-  "DCS.reg"
-  "MSFS.reg"
-  DESTINATION "reg/"
-)
-
 # Convert the .reg files to the Windows Installer's source format
 find_program(
   HEAT_EXE
