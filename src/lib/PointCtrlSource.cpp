@@ -43,6 +43,11 @@ static constexpr auto PressedBit = 1 << 7;
 
 namespace HandTrackedCockpitClicking {
 
+static bool IsPointerSource() {
+  return Config::PointerSource == PointerSource::PointCtrl
+    || Environment::IsPointCtrlCalibration;
+}
+
 PointCtrlSource::PointCtrlSource(
   const std::shared_ptr<OpenXRNext>& next,
   XrInstance instance,
@@ -62,7 +67,7 @@ PointCtrlSource::PointCtrlSource(
     Config::PointCtrlRadiansPerUnitY);
   DebugPrint(
     "PointerSource: {}; ActionSource: {}",
-    Config::PointerSource == PointerSource::PointCtrl,
+    IsPointerSource(),
     Config::PointCtrlFCUMapping != PointCtrlFCUMapping::Disabled);
   winrt::check_hresult(DirectInput8Create(
     reinterpret_cast<HINSTANCE>(&__ImageBase),
@@ -181,27 +186,14 @@ std::tuple<InputState, InputState> PointCtrlSource::Update(
   }
   const auto& buttons = joystate.rgbButtons;
 
-  if (
-    Config::PointerSource == PointerSource::PointCtrl
-    || Environment::IsPointCtrlCalibration) {
-    const auto anyLeftButton
-      = HAS_BUTTON(FCUB(L1)) || HAS_BUTTON(FCUB(L2)) || HAS_BUTTON(FCUB(L3));
-    const auto anyRightButton
-      = HAS_BUTTON(FCUB(R1)) || HAS_BUTTON(FCUB(R2)) || HAS_BUTTON(FCUB(R3));
-  }
   auto& mX = mRaw.mX;
   auto& mY = mRaw.mY;
 
   if (mX != joystate.lX || mY != joystate.lY) {
     mLastMovedAt = now;
+    mRaw = {};
     mX = joystate.lX;
     mY = joystate.lY;
-    mRaw.mFCUL1 = HAS_BUTTON(FCUB(L1));
-    mRaw.mFCUL2 = HAS_BUTTON(FCUB(L2));
-    mRaw.mFCUL3 = HAS_BUTTON(FCUB(L3));
-    mRaw.mFCUR1 = HAS_BUTTON(FCUB(R1));
-    mRaw.mFCUR2 = HAS_BUTTON(FCUB(R2));
-    mRaw.mFCUR3 = HAS_BUTTON(FCUB(R3));
   }
 
   for (auto hand: {&mLeftHand, &mRightHand}) {
@@ -210,7 +202,7 @@ std::tuple<InputState, InputState> PointCtrlSource::Update(
     const auto b3 = HAS_BUTTON(HAND_FCUB(hand->mHand, 3));
     const auto haveButton = b1 || b2 || b3;
 
-    if (Config::PointerSource == PointerSource::PointCtrl) {
+    if (IsPointerSource()) {
       UpdateWakeState(haveButton, now, hand);
 
       if (hand->mWakeState == WakeState::Waking) {
@@ -237,6 +229,14 @@ std::tuple<InputState, InputState> PointCtrlSource::Update(
         break;
     }
   }
+
+  // Left until here so we don't set these in wake state
+  mRaw.mFCUL1 = HAS_BUTTON(FCUB(L1));
+  mRaw.mFCUL2 = HAS_BUTTON(FCUB(L2));
+  mRaw.mFCUL3 = HAS_BUTTON(FCUB(L3));
+  mRaw.mFCUR1 = HAS_BUTTON(FCUB(R1));
+  mRaw.mFCUR2 = HAS_BUTTON(FCUB(R2));
+  mRaw.mFCUR3 = HAS_BUTTON(FCUB(R3));
 
   const auto interval = std::chrono::nanoseconds(now - mLastMovedAt);
   if (
@@ -275,7 +275,7 @@ std::tuple<InputState, InputState> PointCtrlSource::Update(
 
 void PointCtrlSource::UpdateWakeState(bool hasButtons, XrTime now, Hand* hand) {
   auto& state = hand->mWakeState;
-  const auto interval = std::chrono::nanoseconds(now = hand->mInteractionAt);
+  const auto interval = std::chrono::nanoseconds(now - hand->mInteractionAt);
   if (state == WakeState::Default && hasButtons) {
     if (
       interval
@@ -298,6 +298,10 @@ void PointCtrlSource::UpdateWakeState(bool hasButtons, XrTime now, Hand* hand) {
 
 PointCtrlSource::RawValues PointCtrlSource::GetRawValuesForCalibration() const {
   return mRaw;
+}
+
+XrTime PointCtrlSource::GetLastMovedAt() const {
+  return mLastMovedAt;
 }
 
 bool PointCtrlSource::IsConnected() const {

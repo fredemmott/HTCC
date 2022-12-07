@@ -34,6 +34,7 @@
 #include <winrt/base.h>
 
 #include <chrono>
+#include <iostream>
 #include <numbers>
 #include <thread>
 
@@ -61,6 +62,7 @@ constexpr float DistanceInMeters = 1.0f;
 constexpr float SizeInMeters = 0.25f;
 
 enum class CalibrationState {
+  NoInput,
   WaitForCenter,
   WaitForOffset,
   Test,
@@ -192,6 +194,15 @@ void DrawLayer(
 
   std::wstring_view message;
   switch (state) {
+    case CalibrationState::NoInput:
+      *layerPose = {
+        .orientation = XR_POSEF_IDENTITY.orientation,
+        .position = {0.0f, 0.0f, -DistanceInMeters},
+      };
+      message
+        = L"The sensor can't see the LED - press FCU3 to wake it if it's "
+          L"turned off";
+      break;
     case CalibrationState::WaitForCenter:
       *layerPose = {
         .orientation = XR_POSEF_IDENTITY.orientation,
@@ -250,25 +261,15 @@ void DrawLayer(
 
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   winrt::init_apartment(winrt::apartment_type::single_threaded);
-  {
-    const auto result = MessageBoxW(
-      NULL,
-      L"Please plug in your PointCTRL and VR headset, activate your headset, "
-      L"then press OK.",
-      L"PointCTRL Calibration",
-      MB_OKCANCEL | MB_DEFBUTTON1);
-    if (result == IDCANCEL) {
-      return 0;
-    }
-  }
-  Config::Load();
   Environment::IsPointCtrlCalibration = true;
 
   XrInstance instance {};
   {
     const std::vector<const char*> enabledExtensions = {
       XR_KHR_D3D11_ENABLE_EXTENSION_NAME,
+      XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME,
     };
+    Environment::Have_XR_KHR_win32_convert_performance_counter_time = true;
     XrInstanceCreateInfo createInfo {
       .type = XR_TYPE_INSTANCE_CREATE_INFO,
       .applicationInfo = {
@@ -383,6 +384,28 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
       return 0;
     }
     pointCtrl.Update(PointerMode::Direction, {});
+  }
+
+  // How to show a non-blocking window without an event loop... :p
+  {
+    AllocConsole();
+    SetConsoleCtrlHandler(nullptr, false);// allow Ctrl+C to terminate
+    const auto stdoutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+    freopen("CONOUT$", "w", stdout);
+    std::cout
+      << "HTCC PointCTRL Calibration\n\n"
+         "Put on an FCU, then put on your headset and follow the on-screen\n"
+         "instructions.\n\n"
+         "===== TO EXIT =====\n\n"
+         "Press FCU 3, Ctrl+C, or close this window"
+         "===== Step 1: Calibration =====\n\n"
+         "Reach out and try to touch the center of the crosshair - don't\n"
+         "Once you're as close as you can, press FCU 1.\n\n"
+         "===== Step 2: Testing =====\n\n"
+         "Move your hand around in front of you; the cursor should follow\n"
+         "your hand. If you're happy with the calibration, press FCU 1 to\n"
+         "save and exit; otherwise, press FCU 2 to re-calibrate."
+      << std::endl;
   }
 
   bool xrRunning = false;
@@ -502,65 +525,82 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
           viewSpace,
           frameState.predictedDisplayTime,
         });
+
       const auto newRaw = pointCtrl.GetRawValuesForCalibration();
-      const auto x = newRaw.mX;
-      const auto y = newRaw.mY;
-
-      const auto click1 = newRaw.FCU1() && !rawValues.FCU1();
-      const auto click2 = newRaw.FCU2() && !rawValues.FCU2();
-      rawValues = newRaw;
-      if (click2) {
-        state = CalibrationState::WaitForCenter;
+      if (newRaw.FCU3()) {
+        return 0;
       }
 
-      if (click1) {
-        switch (state) {
-          case CalibrationState::WaitForCenter:
-            centerPoint = {x, y};
-            DebugPrint("Center at ({}, {})", x, y);
-            // Skip second calibration point as we have angular sensitivity of
-            // the sensor
-            //
-            // state = CalibrationState::WaitForOffset;
-            state = CalibrationState::Test;
-            break;
-          case CalibrationState::WaitForOffset:
-            offsetPoint = {x, y};
-            radiansPerUnit = {
-              OffsetInRadians / (static_cast<float>(x) - centerPoint.x),
-              OffsetInRadians / (centerPoint.y - static_cast<float>(y)),
-            };
-            DebugPrint(
-              "Offset point at ({}, {}); radians per unit: ({}, {}); degrees "
-              "per unit: ({}, {})",
-              x,
-              y,
-              radiansPerUnit.x,
-              radiansPerUnit.y,
-              (radiansPerUnit.x * 180) / std::numbers::pi_v<float>,
-              (radiansPerUnit.y * 180) / std::numbers::pi_v<float>);
-            state = CalibrationState::Test;
-            break;
-          case CalibrationState::Test:
-            saveAndExit = true;
-            break;
+      const auto age = std::chrono::nanoseconds(
+        frameState.predictedDisplayTime - pointCtrl.GetLastMovedAt());
+      if (age > std::chrono::milliseconds(500)) {
+        DrawLayer(
+          CalibrationState::NoInput,
+          context.get(),
+          swapchainImages.at(imageIndex).texture,
+          &layer.pose,
+          {});
+      } else {
+        const auto x = newRaw.mX;
+        const auto y = newRaw.mY;
+
+        const auto click1 = newRaw.FCU1() && !rawValues.FCU1();
+        const auto click2 = newRaw.FCU2() && !rawValues.FCU2();
+        rawValues = newRaw;
+        if (click2) {
+          state = CalibrationState::WaitForCenter;
         }
-      }
-      XrVector2f calibratedRotation {};
 
-      if (state == CalibrationState::Test) {
-        calibratedRotation = {
-          (static_cast<float>(y) - centerPoint.y) * radiansPerUnit.y,
-          (static_cast<float>(x) - centerPoint.x) * radiansPerUnit.x,
-        };
-      }
+        if (click1) {
+          switch (state) {
+            case CalibrationState::WaitForCenter:
+              centerPoint = {x, y};
+              DebugPrint("Center at ({}, {})", x, y);
+              // Skip second calibration point as we have angular sensitivity
+              // of the sensor
+              //
+              // state = CalibrationState::WaitForOffset;
+              state = CalibrationState::Test;
+              break;
+            case CalibrationState::WaitForOffset:
+              offsetPoint = {x, y};
+              radiansPerUnit = {
+                OffsetInRadians / (static_cast<float>(x) - centerPoint.x),
+                OffsetInRadians / (centerPoint.y - static_cast<float>(y)),
+              };
+              DebugPrint(
+                "Offset point at ({}, {}); radians per unit: ({}, {}); "
+                "degrees "
+                "per unit: ({}, {})",
+                x,
+                y,
+                radiansPerUnit.x,
+                radiansPerUnit.y,
+                (radiansPerUnit.x * 180) / std::numbers::pi_v<float>,
+                (radiansPerUnit.y * 180) / std::numbers::pi_v<float>);
+              state = CalibrationState::Test;
+              break;
+            case CalibrationState::Test:
+              saveAndExit = true;
+              break;
+          }
+        }
+        XrVector2f calibratedRotation {};
 
-      DrawLayer(
-        state,
-        context.get(),
-        swapchainImages.at(imageIndex).texture,
-        &layer.pose,
-        calibratedRotation);
+        if (state == CalibrationState::Test) {
+          calibratedRotation = {
+            (static_cast<float>(y) - centerPoint.y) * radiansPerUnit.y,
+            (static_cast<float>(x) - centerPoint.x) * radiansPerUnit.x,
+          };
+        }
+
+        DrawLayer(
+          state,
+          context.get(),
+          swapchainImages.at(imageIndex).texture,
+          &layer.pose,
+          calibratedRotation);
+      }
       check_xr(xrReleaseSwapchainImage(swapchain, nullptr));
 
       XrCompositionLayerQuad* layerPtr = &layer;
@@ -576,6 +616,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     }
   }
 
+  Config::Load();
   Config::PointCtrlCenterX = centerPoint.x;
   Config::PointCtrlCenterY = centerPoint.y;
   Config::PointCtrlRadiansPerUnitX = radiansPerUnit.x;

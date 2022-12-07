@@ -70,6 +70,7 @@ class PointCtrlSource final : public InputSource {
     }
   };
   RawValues GetRawValuesForCalibration() const;
+  XrTime GetLastMovedAt() const;
 
  private:
   void ConnectDevice();
@@ -94,9 +95,9 @@ class PointCtrlSource final : public InputSource {
   using ScrollDirection = InputState::ValueChange;
   struct Hand {
     XrHandEXT mHand {};
-    WakeState mWakeState {WakeState::Default};
+    InputState mState {};
 
-    InputState mState {mHand};
+    WakeState mWakeState {WakeState::Default};
 
     LockState mScrollMode {LockState::Unlocked};
     ScrollDirection mScrollDirection {ScrollDirection::Increase};
@@ -104,8 +105,8 @@ class PointCtrlSource final : public InputSource {
     XrTime mInteractionAt {};
     bool mHaveButton {false};
   };
-  Hand mLeftHand;
-  Hand mRightHand;
+  Hand mLeftHand {XR_HAND_LEFT_EXT, {XR_HAND_LEFT_EXT}};
+  Hand mRightHand {XR_HAND_RIGHT_EXT, {XR_HAND_RIGHT_EXT}};
 
   winrt::com_ptr<IDirectInput8W> mDI;
   winrt::com_ptr<IDirectInputDevice8W> mDevice;
