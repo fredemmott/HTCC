@@ -1,9 +1,20 @@
-namespace HTCCSettings
-{
-    [default_interface]
-    runtimeclass MainWindow : Microsoft.UI.Xaml.Window
-    {
-        MainWindow();
-        Microsoft.UI.Xaml.Controls.Frame Frame { get; };
-    }
+namespace HTCCSettings {
+[default_interface] runtimeclass MainWindow : Microsoft.UI.Xaml.Window {
+  MainWindow();
+
+  // General settings
+  Boolean IsEnabled;
+  Int16 PointerSource;
+  Int16 PointerSink;
+
+  // Quest
+  Boolean PinchToClick;
+  Boolean PinchToScroll;
+
+  // PointCTRL
+  Int16 PointCtrlFCUMapping;
+
+  // DCS
+  Int16 MirrorEye;
 }
+}// namespace HTCCSettings

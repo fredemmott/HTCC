@@ -89,10 +89,6 @@ DWORD, number of milliseconds between emulated scroll wheel ticks when using vir
 
 DWORD, number of milliseconds to wait before speeding up the scroll wheel.
 
-## PointCtrlFCUClicks
-
-DWORD 0 (disabled) or 1 (enabled): use PointCtrl FCU button clicks to click or scroll
-
 ## PointCtrlProjectionDistance
 
 String (SZ) containing a distance in meters to project virtual hands when using a PointCtrl. For example, `0.6` for 60cm.
@@ -108,9 +104,10 @@ These values should be set with the included `PointCtrlCalibration.exe` program.
 
 DWORD:
 
-- 0: Classic
-- 1: Modal (intended for MSFS, but no longer required due to other changes)
-- 2: Modal, but long-pressing buttons 1 & 2 together enters scroll lock mode but with  button 1 held
+- 0: Disabled
+- 1: Classic
+- 2: Modal (intended for MSFS, but no longer required due to other changes)
+- 3: Modal, but long-pressing buttons 1 & 2 together enters scroll lock mode but with  button 1 held
 
 ## VRVerticalOffset
 

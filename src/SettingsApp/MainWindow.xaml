@@ -2,25 +2,166 @@
   x:Class="HTCCSettings.MainWindow"
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  xmlns:local="using:OpenKneeboardApp"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   mc:Ignorable="d"
-  >
-  <NavigationView
-    x:Name="Navigation"
-    IsBackButtonVisible="Collapsed"
-    IsSettingsVisible="false"
-    PaneDisplayMode="Top"
-    ItemInvoked="Navigate">
-    <NavigationView.MenuItems>
-      <NavigationViewItem Content="General" />
-      <NavigationViewItem Content="PointCTRL" />
-      <NavigationViewItem Content="Quest" />
-    </NavigationView.MenuItems>
-    <NavigationView.FooterMenuItems>
-      <NavigationViewItem Icon="Help" />
-    </NavigationView.FooterMenuItems>
-    <Frame x:Name="Frame" />
-  </NavigationView>
+  x:DefaultBindMode="TwoWay">
+  <Grid RowDefinitions="Auto,*">
+    <Border x:Name="AppTitleBar" Grid.Row="0" VerticalAlignment="Top" Background="{StaticResource WindowCaptionBackground}" Height="32">
+      <TextBlock Text="HTCC Settings" VerticalAlignment="Center" Margin="8,0,0,0" Style="{StaticResource CaptionTextBlockStyle}" />
+    </Border>
+    <ScrollViewer
+      Grid.Row="1"
+      Background="{ThemeResource SystemChromeMediumLowColor}">
+      <StackPanel
+        Orientation="Vertical"
+        Margin="12"
+        Spacing="12"
+        Padding="8">
+        <!-- GENERAL SETTINGS -->
+        <StackPanel
+          Orientation="Vertical"
+          Spacing="12"
+          Padding="8"
+          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+          BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+          CornerRadius="4"
+          BorderThickness="1">
+          <ToggleSwitch
+            Header="Enable HTCC:"
+            OnContent="HTCC is enabled"
+            OffContent="HTCC is fully disabled in all games"
+            IsOn="{x:Bind IsEnabled}"
+          />
+          <ComboBox
+            Header="Hand tracking device:"
+            SelectedIndex="{x:Bind PointerSource}">
+            <x:String>OpenXR hand tracking</x:String>
+            <x:String>PointCTRL</x:String>
+          </ComboBox>
+          <ComboBox
+            Header="Prefered game interface:"
+            SelectedIndex="{x:Bind PointerSink}">
+            <x:String>Virtual touch screen (PointCTRL)</x:String>
+            <x:String>Virtual Oculus Touch VR controller</x:String>
+          </ComboBox>
+        </StackPanel>
+        <!-- Quest Settings -->
+        <TextBlock
+          Text="Meta Quest"
+          Style="{StaticResource SubtitleTextBlockStyle}"
+        />
+        <StackPanel
+          Orientation="Vertical"
+          Spacing="12"
+          Padding="8"
+          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+          BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+          CornerRadius="4"
+          BorderThickness="1">
+          <ToggleSwitch
+            Header="Pinch to click:"
+            OnContent="Enabled"
+            OffContent="Disabled"
+            IsOn="{x:Bind PinchToClick}"
+          />
+          <ToggleSwitch
+            Header="Pinch to scroll:"
+            OnContent="Enabled"
+            OffContent="Disabled"
+            IsOn="{x:Bind PinchToScroll}"
+          />
+        </StackPanel>
+        <!-- PointCTRL -->
+        <Grid
+          ColumnDefinitions="*,Auto">
+          <TextBlock
+            Grid.Column="0"
+            Text="PointCTRL"
+            Style="{StaticResource SubtitleTextBlockStyle}"
+            VerticalAlignment="Center"
+          />
+          <Button
+            Grid.Column="1"
+            Content="Calibrate"
+            VerticalAlignment="Center"
+            Click="OnPointCtrlCalibrateClick"
+          />
+        </Grid>
+        <StackPanel
+          Orientation="Vertical"
+          Spacing="12"
+          Padding="8"
+          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+          BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+          CornerRadius="4"
+          BorderThickness="1">
+          <ComboBox
+            Header="FCU button mapping:"
+            SelectedIndex="{x:Bind PointCtrlFCUMapping}">
+            <x:String>Disabled</x:String>
+            <x:String>Classic</x:String>
+            <x:String>Modal</x:String>
+          </ComboBox>
+        </StackPanel>
+        <!-- DCS WORLD -->
+        <TextBlock
+          Text="DCS World"
+          Style="{StaticResource SubtitleTextBlockStyle}"
+        />
+        <StackPanel
+          Orientation="Vertical"
+          Spacing="12"
+          Padding="8"
+          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+          BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+          CornerRadius="4"
+          BorderThickness="1">
+          <RadioButtons
+            Header="Mirror window:"
+            MaxColumns="2"
+            SelectedIndex="{x:Bind MirrorEye}">
+              <RadioButton Grid.Column="0" Content="Left eye" />
+              <RadioButton Grid.Column="1" Content="Right eye" />
+          </RadioButtons>
+        </StackPanel>
+        <!-- VERSION INFO -->
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <FontIcon
+            Grid.Column="0"
+            Glyph="&#xE74C;"
+            FontFamily="{StaticResource SymbolThemeFontFamily}"
+            Margin="0,0,12,0"
+            VerticalAlignment="Center"
+          />
+          <TextBlock
+            Grid.Column="1"
+            Text="Version"
+            Style="{StaticResource SubtitleTextBlockStyle}"
+            VerticalAlignment="Center"
+          />
+          <Button
+            Grid.Column="2"
+            Content="Copy"
+            Click="OnCopyVersionDataClick"
+            VerticalAlignment="Center"
+          />
+        </Grid>
+        <Grid
+          RowDefinitions="Auto,Auto"
+          Padding="8"
+          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+          BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+          CornerRadius="4"
+          BorderThickness="1">
+          <TextBlock
+            Grid.Row="0"
+            x:Name="VersionText"
+            Style="{ThemeResource BodyTextBlockStyle}"
+            IsTextSelectionEnabled="true"
+          />
+        </Grid>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
 </Window>

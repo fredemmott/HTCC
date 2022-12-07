@@ -87,7 +87,8 @@
     "span": "cpp",
     "stack": "cpp",
     "variant": "cpp",
-    "queue": "cpp"
+    "queue": "cpp",
+    "*.idl": "cpp"
   },
   "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }

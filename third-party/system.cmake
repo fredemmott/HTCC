@@ -6,6 +6,7 @@ set(
   DWrite
   Dxguid
   DXGI
+  Shell32
 )
 
 foreach(LIBRARY ${SYSTEM_LIBRARIES})

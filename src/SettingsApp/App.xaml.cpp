@@ -23,6 +23,8 @@
  */
 #include "App.xaml.h"
 
+#include <shellapi.h>
+
 #include "MainWindow.xaml.h"
 
 namespace winrt::HTCCSettings::implementation {
@@ -48,3 +50,50 @@ void App::OnLaunched(
 }
 
 }// namespace winrt::HTCCSettings::implementation
+
+// This currently exists just to self-elevate, as the Windows App SDK is
+// currently incompatible with manifest-based elevation
+int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR commandLine, int cmdShow) {
+  {
+    winrt::handle token;
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, token.put())) {
+      TOKEN_ELEVATION elevation {};
+      DWORD elevationSize = sizeof(TOKEN_ELEVATION);
+      if (GetTokenInformation(
+            token.get(),
+            TokenElevation,
+            &elevation,
+            sizeof(elevation),
+            &elevationSize)) {
+        if (!elevation.TokenIsElevated) {
+          wchar_t myPath[MAX_PATH];
+          GetModuleFileNameW(NULL, myPath, MAX_PATH);
+          ShellExecuteW(NULL, L"runas", myPath, commandLine, nullptr,
+          cmdShow); return 0;
+        };
+      }
+    }
+  }
+
+  {
+    void(WINAPI * pfnXamlCheckProcessRequirements)();
+    auto module = ::LoadLibrary(L"Microsoft.ui.xaml.dll");
+    if (module) {
+      pfnXamlCheckProcessRequirements
+        = reinterpret_cast<decltype(pfnXamlCheckProcessRequirements)>(
+          GetProcAddress(module, "XamlCheckProcessRequirements"));
+      if (pfnXamlCheckProcessRequirements) {
+        (*pfnXamlCheckProcessRequirements)();
+      }
+
+      ::FreeLibrary(module);
+    }
+  }
+
+  winrt::init_apartment(winrt::apartment_type::single_threaded);
+  ::winrt::Microsoft::UI::Xaml::Application::Start([](auto&&) {
+    ::winrt::make<::winrt::HTCCSettings::implementation::App>();
+  });
+
+  return 0;
+}

@@ -26,31 +26,201 @@
 #include "MainWindow.g.cpp"
 #endif
 
+#include <microsoft.ui.xaml.window.h>
+#include <shellapi.h>
+#include <winrt/Microsoft.UI.Interop.h>
+#include <winrt/Microsoft.UI.Windowing.h>
+#include <winrt/Windows.ApplicationModel.DataTransfer.h>
+
+#include <filesystem>
+#include <format>
+
+#include "../lib/Config.h"
+#include "../lib/DebugPrint.h"
+#include "version.h"
+
+namespace HTCC = HandTrackedCockpitClicking;
+namespace Version = HTCCSettings::Version;
+
+static constexpr wchar_t gAPILayerSubkey[]
+  = L"SOFTWARE\\Khronos\\OpenXR\\1\\ApiLayers\\Implicit";
+
 namespace winrt::HTCCSettings::implementation {
 MainWindow::MainWindow() {
+  HTCC::Config::Load();
+
   InitializeComponent();
+  ExtendsContentIntoTitleBar(true);
+  SetTitleBar(AppTitleBar());
+
   Title(L"HTCC Settings");
+  InitVersion();
+
+  // Get an AppWindow so that we can resize...
+  auto windowNative = this->try_as<::IWindowNative>();
+  if (!windowNative) {
+    return;
+  }
+  check_hresult(windowNative->get_WindowHandle(&mHwnd));
+  const auto windowId = Microsoft::UI::GetWindowIdFromWindow(mHwnd);
+  const auto appWindow
+    = Microsoft::UI::Windowing::AppWindow::GetFromWindowId(windowId);
+  const auto size = appWindow.Size();
+  // Default aspect ratio isn't appropriate for the content here
+  if (size.Width > size.Height) {
+    appWindow.Resize({size.Width / 3, size.Height});
+  }
 }
 
-void MainWindow::Navigate(
-  const IInspectable& sender,
-  const Microsoft::UI::Xaml::Controls::NavigationViewItemInvokedEventArgs&
-    args) noexcept {
-  if (args.IsSettingsInvoked()) {
-    // TODO
-    return;
+void MainWindow::InitVersion() {
+  mVersionString = std::format(
+    "HTCC {}\n\n"
+    "Copyright © 2022 Frederick Emmott.\n\n"
+    "Build: {}-{}-{}",
+    Version::ReleaseName,
+    Version::IsGitHubActionsBuild ? std::format("GHA-{}", Version::Build)
+                                  : "local",
+    Version::BuildMode,
+#ifdef _WIN32
+#ifdef _WIN64
+    "Win64"
+#else
+    "Win32"
+#endif
+#endif
+  );
+  VersionText().Text(to_hstring(mVersionString));
+}
+
+void MainWindow::OnCopyVersionDataClick(
+  const IInspectable&,
+  const MUX::RoutedEventArgs&) {
+  Windows::ApplicationModel::DataTransfer::DataPackage package;
+  package.SetText(winrt::to_hstring(mVersionString));
+  Windows::ApplicationModel::DataTransfer::Clipboard::SetContent(package);
+}
+
+static std::wstring GetAPILayerPath() {
+  wchar_t buf[MAX_PATH];
+  const auto bufLen = GetModuleFileNameW(nullptr, buf, MAX_PATH);
+  return std::filesystem::weakly_canonical(
+           std::filesystem::path(std::wstring_view {buf, bufLen})
+             .parent_path()
+             .parent_path()
+           / "APILayer.json")
+    .wstring();
+}
+
+bool MainWindow::IsEnabled() const noexcept {
+  const auto apiLayerPath = GetAPILayerPath();
+  HTCC::DebugPrint(L"Looking for {}", apiLayerPath);
+
+  DWORD disabled {};
+  DWORD dataSize = sizeof(disabled);
+  if (
+    RegGetValueW(
+      HKEY_LOCAL_MACHINE,
+      gAPILayerSubkey,
+      apiLayerPath.c_str(),
+      RRF_RT_DWORD,
+      nullptr,
+      &disabled,
+      &dataSize)
+    != ERROR_SUCCESS) {
+    return false;
   }
+  return disabled == 0;
+}
 
-  auto item = args.InvokedItemContainer()
-                .try_as<Microsoft::UI::Xaml::Controls::NavigationViewItem>();
-
-  if (!item) {
-    // FIXME: show an error?
-    return;
+void MainWindow::IsEnabled(bool enabled) noexcept {
+  DWORD disabled(enabled ? 0 : 1);
+  const auto result = RegSetKeyValueW(
+    HKEY_LOCAL_MACHINE,
+    gAPILayerSubkey,
+    GetAPILayerPath().c_str(),
+    REG_DWORD,
+    &disabled,
+    sizeof(disabled));
+  if (result != ERROR_SUCCESS) {
+    auto message = std::format("Saving to registry failed: error {}", result);
+    throw std::runtime_error(message);
   }
+}
 
-  // TODO: you probably want to use item.Tag() to identify a specific item
-  Frame().Navigate(xaml_typename<DemoPage>(), item.Content());
+int16_t MainWindow::PointerSource() const noexcept {
+  return static_cast<int16_t>(HTCC::Config::PointerSource);
+}
+
+void MainWindow::PointerSource(int16_t value) noexcept {
+  HTCC::Config::PointerSource = static_cast<HTCC::PointerSource>(value);
+  HTCC::Config::Save();
+}
+
+int16_t MainWindow::PointerSink() const noexcept {
+  return static_cast<int16_t>(HTCC::Config::PointerSink);
+}
+
+void MainWindow::PointerSink(int16_t value) noexcept {
+  HTCC::Config::PointerSink = static_cast<HTCC::PointerSink>(value);
+  HTCC::Config::Save();
+}
+
+bool MainWindow::PinchToClick() const noexcept {
+  return HTCC::Config::PinchToClick;
+}
+
+void MainWindow::PinchToClick(bool value) noexcept {
+  HTCC::Config::PinchToClick = value;
+  HTCC::Config::Save();
+}
+
+bool MainWindow::PinchToScroll() const noexcept {
+  return HTCC::Config::PinchToScroll;
+}
+
+void MainWindow::PinchToScroll(bool value) noexcept {
+  HTCC::Config::PinchToScroll = value;
+  HTCC::Config::Save();
+}
+
+int16_t MainWindow::PointCtrlFCUMapping() const noexcept {
+  return static_cast<int16_t>(HTCC::Config::PointCtrlFCUMapping);
+}
+
+void MainWindow::OnPointCtrlCalibrateClick(
+  const IInspectable&,
+  const MUX::RoutedEventArgs&) {
+  wchar_t myPath[MAX_PATH];
+  const auto myPathLen = GetModuleFileNameW(NULL, myPath, MAX_PATH);
+  const auto calibrationExe
+    = std::filesystem::weakly_canonical(
+        std::filesystem::path(std::wstring_view {myPath, myPathLen})
+          .parent_path()
+          .parent_path()
+        / L"PointCtrlCalibration.exe")
+        .wstring();
+  ShellExecuteW(
+    mHwnd,
+    L"open",
+    calibrationExe.c_str(),
+    calibrationExe.c_str(),
+    nullptr,
+    SW_NORMAL);
+}
+
+void MainWindow::PointCtrlFCUMapping(int16_t value) noexcept {
+  HTCC::Config::PointCtrlFCUMapping
+    = static_cast<HTCC::PointCtrlFCUMapping>(value);
+  HTCC::Config::Save();
+}
+
+int16_t MainWindow::MirrorEye() const noexcept {
+  return HTCC::Config::MirrorEye;
+}
+
+void MainWindow::MirrorEye(int16_t value) noexcept {
+  HTCC::Config::MirrorEye = static_cast<uint8_t>(value);
+  HTCC::Config::Save();
 }
 
 }// namespace winrt::HTCCSettings::implementation

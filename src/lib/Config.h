@@ -42,9 +42,10 @@ enum class ActionSink : DWORD {
   VirtualVRController = 2,
 };
 enum class PointCtrlFCUMapping : DWORD {
-  Classic = 0,
-  Modal = 1,
-  ModalWithLeftLock = 2,
+  Disabled = 0,
+  Classic = 1,
+  Modal = 2,
+  ModalWithLeftLock = 3,
 };
 enum class HandTrackingOrientation : DWORD {
   Raw = 0,
@@ -71,7 +72,6 @@ enum class VRControllerPointerSinkWorldLock : DWORD {
   IT(XrHandJointEXT, HandTrackingAimJoint, XR_HAND_JOINT_INDEX_PROXIMAL_EXT) \
   IT(bool, PinchToClick, true) \
   IT(bool, PinchToScroll, true) \
-  IT(bool, PointCtrlFCUClicks, true) \
   IT(uint16_t, ShortPressLongPressMilliseconds, 200) \
   IT(uint16_t, ScrollWheelMilliseconds, 500) \
   IT(uint16_t, ScrollAccelerationMilliseconds, 3000) \
@@ -88,7 +88,7 @@ enum class VRControllerPointerSinkWorldLock : DWORD {
   IT( \
     HandTrackedCockpitClicking::PointerSink, \
     PointerSink, \
-    HandTrackedCockpitClicking::PointerSink::VirtualTouchScreen) \
+    HandTrackedCockpitClicking::PointerSink::VirtualVRController) \
   IT( \
     HandTrackedCockpitClicking::ActionSink, \
     ClickActionSink, \

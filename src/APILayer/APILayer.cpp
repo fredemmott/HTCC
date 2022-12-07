@@ -248,7 +248,7 @@ XrResult APILayer::xrWaitFrame(
       rightHand.mPose = r.mPose;
       rightHand.mDirection = r.mDirection;
     }
-    if (Config::PointCtrlFCUClicks) {
+    if (Config::PointCtrlFCUMapping != PointCtrlFCUMapping::Disabled) {
       leftHand.mPrimaryInteraction
         = leftHand.mPrimaryInteraction || l.mPrimaryInteraction;
       leftHand.mSecondaryInteraction

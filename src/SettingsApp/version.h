@@ -21,22 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#include "DemoPage.xaml.h"
-#if __has_include("DemoPage.g.cpp")
-#include "DemoPage.g.cpp"
-#endif
+#pragma once
 
-#include <winrt/Microsoft.UI.Xaml.Navigation.h>
+#include <cinttypes>
+#include <string_view>
 
-namespace winrt::HTCCSettings::implementation {
+namespace HTCCSettings::Version {
 
-DemoPage::DemoPage() {
-  InitializeComponent();
-}
+extern const std::string_view ReleaseName;
+extern const std::string_view BuildMode;
 
-void DemoPage::OnNavigatedTo(
-  const Microsoft::UI::Xaml::Navigation::NavigationEventArgs& args) noexcept {
-  Title().Text(winrt::unbox_value<winrt::hstring>(args.Parameter()));
-}
+extern const uint16_t Major;
+extern const uint16_t Minor;
+extern const uint16_t Patch;
+extern const uint16_t Build;
 
-}// namespace winrt::HTCCSettings::implementation
+extern const bool IsGitHubActionsBuild;
+
+}// namespace HTCCSettings::Version

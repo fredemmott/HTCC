@@ -29,10 +29,8 @@ if("${RELEASE_NAME}" STREQUAL "")
   endif()
 endif()
 
-if(INPUT_RC_FILE)
-  configure_file(
-    ${INPUT_RC_FILE}
-    ${OUTPUT_RC_FILE}
-    @ONLY
-  )
-endif()
+configure_file(
+  ${INPUT_FILE}
+  ${OUTPUT_FILE}
+  @ONLY
+)

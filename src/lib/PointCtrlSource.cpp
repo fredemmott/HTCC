@@ -63,7 +63,7 @@ PointCtrlSource::PointCtrlSource(
   DebugPrint(
     "PointerSource: {}; ActionSource: {}",
     Config::PointerSource == PointerSource::PointCtrl,
-    Config::PointCtrlFCUClicks);
+    Config::PointCtrlFCUMapping != PointCtrlFCUMapping::Disabled);
   winrt::check_hresult(DirectInput8Create(
     reinterpret_cast<HINSTANCE>(&__ImageBase),
     DIRECTINPUT_VERSION,
@@ -80,8 +80,8 @@ void PointCtrlSource::ConnectDevice() {
 
   // If we're not going to do anything with it, don't fetch the data.
   if (
-    Config::PointerSource != PointerSource::PointCtrl
-    && !Config::PointCtrlFCUClicks) {
+    (!IsPointerSource())
+    && Config::PointCtrlFCUMapping == PointCtrlFCUMapping::Disabled) {
     return;
   }
 

@@ -21,20 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#pragma once
+#include "version.h"
 
-#include "DemoPage.g.h"
-#include "pch.h"
+namespace HTCCSettings::Version {
 
-namespace winrt::HTCCSettings::implementation {
-struct DemoPage : DemoPageT<DemoPage> {
-  DemoPage();
+const std::string_view ReleaseName {"@VERSION_SEMVER@"};
+const std::string_view BuildMode {"@ACTIVE_BUILD_MODE@"};
 
-  void OnNavigatedTo(
-    const Microsoft::UI::Xaml::Navigation::NavigationEventArgs&) noexcept;
-};
-}// namespace winrt::HTCCSettings::implementation
+const uint16_t Major {@VERSION_MAJOR@};
+const uint16_t Minor {@VERSION_MINOR@};
+const uint16_t Patch {@VERSION_PATCH@};
+const uint16_t Build {@VERSION_BUILD@};
+const bool IsGitHubActionsBuild {@IS_GITHUB_ACTIONS_BUILD@};
 
-namespace winrt::HTCCSettings::factory_implementation {
-struct DemoPage : DemoPageT<DemoPage, implementation::DemoPage> {};
-}// namespace winrt::HTCCSettings::factory_implementation
+}// namespace HTCCSettings::Version
