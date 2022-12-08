@@ -40,7 +40,7 @@ HandTrackedCockpitClicking_DWORD_SETTINGS
 #undef IT
 
   static const std::wstring SubKey {
-    L"SOFTWARE\\FredEmmott\\HandTrackedCockpitClicking"};
+    L"SOFTWARE\\Fred Emmott\\HandTrackedCockpitClicking"};
 
 static std::wstring AppOverrideSubKey() {
   static std::wstring sCache {};
