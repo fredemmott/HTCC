@@ -4,4 +4,9 @@
     <ComponentGroupRef Id="DCSRegWXS" />
     <ComponentGroupRef Id="MSFSRegWXS" />
   </CPackWiXFragment>
+  <CPackWiXFragment Id="#PRODUCT">
+    <InstallExecuteSequence>
+      <Custom Action="UltraleapLayerOrder" After="InstallFiles">NOT Installed AND NOT PATCH</Custom>
+    </InstallExecuteSequence>
+  </CPackWiXFragment>
 </CPackWiXPatch>

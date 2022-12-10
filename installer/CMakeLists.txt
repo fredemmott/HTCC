@@ -5,6 +5,12 @@ install(
   RENAME "LICENSE-ThirdParty-WiX.txt"
   COMPONENT Installer
 )
+install(
+  FILES
+  "UltraleapLayerOrder.ps1"
+  DESTINATION installer
+  COMPONENT Installer
+)
 
 # #### CPack (MSI) Config #####
 set(CPACK_GENERATOR "WIX")
@@ -29,6 +35,7 @@ list(
   CPACK_WIX_EXTRA_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/LaunchAfterInstall.wxs"
   "${CMAKE_CURRENT_SOURCE_DIR}/OpenXRAPILayerRegistration.wxs"
+  "${CMAKE_CURRENT_SOURCE_DIR}/UltraleapLayerOrder.wxs"
   "${CMAKE_CURRENT_SOURCE_DIR}/WixUI_Minimal_NoEULA.wxs"
   "${DCSRegWXS_PATH}"
   "${MSFSRegWXS_PATH}"
