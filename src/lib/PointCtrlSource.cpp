@@ -90,14 +90,6 @@ void PointCtrlSource::ConnectDevice() {
     return;
   }
 
-  // Don't check for device every frame
-  static std::chrono::steady_clock::time_point sLastCheck {};
-  const auto now = std::chrono::steady_clock::now();
-  if (now - sLastCheck < std::chrono::seconds(1)) {
-    return;
-  }
-  sLastCheck = now;
-
   winrt::check_hresult(mDI->EnumDevices(
     DI8DEVCLASS_GAMECTRL,
     &PointCtrlSource::EnumDevicesCallbackStatic,
@@ -164,13 +156,41 @@ void PointCtrlSource::UpdatePose(const FrameInfo& frameInfo, InputState* hand) {
   hand->mPose = worldPose;
 }
 
+void PointCtrlSource::ConnectDeviceAsync() {
+  if (mConnectDeviceThread) {
+    return;
+  }
+
+  mConnectDeviceThread = std::jthread {[this](std::stop_token tok) {
+    DebugPrint("Starting PointCTRL hotplug thread");
+    auto lastCheck = std::chrono::steady_clock::now();
+    while (!tok.stop_requested()) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      const auto now = std::chrono::steady_clock::now();
+      if (now - lastCheck < std::chrono::seconds(1)) {
+        continue;
+      }
+      lastCheck = now;
+      ConnectDevice();
+      if (mDevice) {
+        mConnectDeviceThread->detach();
+        mConnectDeviceThread = {};
+        DebugPrint("Terminating PointCTRL hotplug thread");
+        return;
+      }
+    }
+  }};
+}
+
 std::tuple<InputState, InputState> PointCtrlSource::Update(
   PointerMode pointerMode,
   const FrameInfo& frameInfo) {
   const auto now = frameInfo.mNow;
 
-  ConnectDevice();
   if (!mDevice) {
+    if (Config::PointCtrlSupportHotplug) {
+      ConnectDeviceAsync();
+    }
     return {{XR_HAND_LEFT_EXT}, {XR_HAND_RIGHT_EXT}};
   }
 

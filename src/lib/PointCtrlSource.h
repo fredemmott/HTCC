@@ -27,6 +27,7 @@
 #include <openxr/openxr.h>
 
 #include <cinttypes>
+#include <thread>
 
 #include "InputSource.h"
 #include "OpenXRNext.h"
@@ -73,7 +74,10 @@ class PointCtrlSource final : public InputSource {
   XrTime GetLastMovedAt() const;
 
  private:
+  std::optional<std::jthread> mConnectDeviceThread;
+
   void ConnectDevice();
+  void ConnectDeviceAsync();
   bool IsStale() const;
   static BOOL EnumDevicesCallbackStatic(
     LPCDIDEVICEINSTANCE lpddi,
