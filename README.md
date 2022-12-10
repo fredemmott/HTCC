@@ -4,7 +4,23 @@ This project is an OpenXR API layer aimed to make it easy to click on cockpits i
 
 This is **not** intended to be or usable as general-purpose hand tracking support: it is designed to work well with specific games (DCS and MSFS), and does weird things to make that feel better, including doing things like mapping button presses to controller rotation if that's what works best in a particular game.
 
-## Requirements
+## Game Compatibility
+
+| Game | Compatible? | Notes |
+|------|-------------|-------|
+| MSFS | ✅ |  |
+| DCS World | ✅ | Requires [OpenComposite] |
+| All others | ❌ | |
+
+If you have a PointCTRL:
+- you must calibrate using the included calibration app instead of the standard calibration procedure
+- the custom firmware is **required** for MSFS
+- the custom firmware is *optional* in DCS, however if you are using the custom firmware, DCS **must** be using [OpenComposite]
+
+To use PointCTRL in DCS without OpenComposite, you must restore the standard firmware.
+
+
+## Hardware Compatibility
 
 | VR Headset   | Have a PointCTRL? | Good to go? | Notes |
 |--------------|-------------------|-------------|-------|
@@ -22,20 +38,24 @@ If you have a Quest 2 or Quest Pro *and* a PointCTRL, you can use either, or com
 
 If you have neither, I recommend ordering a [PointCTRL].
 
-## Game Compatibility
+### UltraLeap/Leap Motion/Pimax Hand Tracking
 
-| Game | Compatible? | Notes |
-|------|-------------|-------|
-| MSFS | ✅ |  |
-| DCS World | ✅ | Requires [OpenComposite] |
-| All others | ❌ | |
+As long as OpenXR support is enabled in Ultraleap settings, an ultraleap can be used for *pointing*, but not clicking; you will need a separate device.
 
-If you have a PointCTRL:
-- you must calibrate using the included calibration app instead of the standard calibration procedure
-- the custom firmware is **required** for MSFS
-- the custom firmware is *optional* in DCS, however if you are using the custom firmware, DCS **must** be using [OpenComposite]
+The PointCTRL finger-mounted buttons can be used (with the HMS being used as a dongle, not as a tracker).
 
-To use PointCTRL in DCS without OpenComposite, you must restore the standard firmware.
+Other devices can also be used if Windows considers them a joystick/gamepad with a VID+PID: Take a look at [docs/settings.md] - you will need to specify:
+
+- `PointCtrlVID`
+- `PointCtrlPID`
+- `PointCtrlFCUButtonL1` - 'left click' button, left hand
+- `PointCtrlFCUButtonL2` - 'right click' button, left hand
+- `PointCtrlFCUButtonL3` - 'middle click' button, left hand
+- `PointCtrlFCUButtonR1` - 'left click' button, left hand
+- `PointCtrlFCUButtonR2` - 'right click' button, left hand
+- `PointCtrlFCUButtonR3` - 'middle click' button, left hand
+
+The first 'joystick' button is button 0, the second is button 1, etc.
 
 ## Installation and setup
 
