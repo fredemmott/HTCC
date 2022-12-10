@@ -319,7 +319,8 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     ext_xrGetD3D11GraphicsRequirementsKHR(instance, system, &d3dRequirements);
 
     auto adapter = GetDXGIAdapter(d3dRequirements.adapterLuid);
-    D3D_FEATURE_LEVEL featureLevels[] = {d3dRequirements.minFeatureLevel};
+    D3D_FEATURE_LEVEL featureLevels[]
+      = {std::max(d3dRequirements.minFeatureLevel, D3D_FEATURE_LEVEL_11_0)};
 
     UINT flags {D3D11_CREATE_DEVICE_BGRA_SUPPORT};
 #ifndef NDEBUG
