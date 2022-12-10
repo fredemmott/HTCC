@@ -347,12 +347,31 @@ static XrResult xrCreateApiLayerInstance(
 
   //  TODO: check version fields etc in layerInfo
 
+  XrInstance dummyInstance {};
+  {
+    // Workaround UltraLeap bug: it should be possible to enumerate
+    // extensions without an XrInstance, but ultraleap's API layer
+    // breaks this.
+    XrInstanceCreateInfo dummyInfo {
+    .type = XR_TYPE_INSTANCE_CREATE_INFO,
+    .applicationInfo = {
+      .applicationName = "FREDEMMOTT_HTCC ultraleap compat hack",
+      .applicationVersion = 1,
+      .apiVersion = XR_CURRENT_API_VERSION,
+    },
+  };
+    auto dummyLayerInfo = *layerInfo;
+    dummyLayerInfo.nextInfo = dummyLayerInfo.nextInfo->next;
+    layerInfo->nextInfo->nextCreateApiLayerInstance(
+      &dummyInfo, &dummyLayerInfo, &dummyInstance);
+  }
+
+  OpenXRNext next(dummyInstance, layerInfo->nextInfo->nextGetInstanceProcAddr);
+
   XrInstanceCreateInfo info {XR_TYPE_INSTANCE_CREATE_INFO};
   if (originalInfo) {
     info = *originalInfo;
   }
-  // no instance
-  OpenXRNext next(NULL, layerInfo->nextInfo->nextGetInstanceProcAddr);
 
   std::vector<const char*> enabledExtensions;
   if (Config::Enabled) {
@@ -384,6 +403,7 @@ static XrResult xrCreateApiLayerInstance(
       info.enabledExtensionNames = enabledExtensions.data();
     }
   }
+  next.check_xrDestroyInstance(dummyInstance);
 
   XrApiLayerCreateInfo nextLayerInfo = *layerInfo;
   nextLayerInfo.nextInfo = layerInfo->nextInfo->next;
