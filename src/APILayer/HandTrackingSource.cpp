@@ -48,7 +48,7 @@ HandTrackingSource::HandTrackingSource(
   DebugPrint(
     "HandTrackingSource - PointerSource: {}; PinchToClick: {}; PinchToScroll: "
     "{}",
-    Config::PointerSource == PointerSource::OculusHandTracking,
+    Config::PointerSource == PointerSource::OpenXRHandTracking,
     Config::PinchToClick,
     Config::PinchToScroll);
 }

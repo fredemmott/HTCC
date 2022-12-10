@@ -218,11 +218,11 @@ XrResult APILayer::xrWaitFrame(
 
   if (mHandTracking) {
     const auto [l, r] = mHandTracking->Update(
-      (Config::PointerSource == PointerSource::OculusHandTracking)
+      (Config::PointerSource == PointerSource::OpenXRHandTracking)
         ? pointerMode
         : PointerMode::None,
       frameInfo);
-    if (Config::PointerSource == PointerSource::OculusHandTracking) {
+    if (Config::PointerSource == PointerSource::OpenXRHandTracking) {
       leftHand.mPose = l.mPose;
       leftHand.mDirection = l.mDirection;
       rightHand.mPose = r.mPose;

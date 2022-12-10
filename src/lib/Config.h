@@ -29,7 +29,7 @@
 
 namespace HandTrackedCockpitClicking {
 enum class PointerSource : DWORD {
-  OculusHandTracking = 0,
+  OpenXRHandTracking = 0,
   PointCtrl = 1,
 };
 enum class PointerSink : DWORD {
@@ -85,7 +85,7 @@ enum class VRControllerPointerSinkWorldLock : DWORD {
   IT( \
     HandTrackedCockpitClicking::PointerSource, \
     PointerSource, \
-    HandTrackedCockpitClicking::PointerSource::OculusHandTracking) \
+    HandTrackedCockpitClicking::PointerSource::OpenXRHandTracking) \
   IT( \
     HandTrackedCockpitClicking::PointerSink, \
     PointerSink, \
