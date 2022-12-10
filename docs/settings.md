@@ -1,6 +1,6 @@
 # Registry Settings
 
-All settings are in the registry, in `HKEY_LOCAL_MACHINE\SOFTWARE\FredEmmott\HandTrackedCockpitClicking`; per-app overrides are in `HKEY_LOCAL_MACHINE\SOFTWARE\FredEmmott\HandTrackedCockpitClicking\AppOverrides\EXECUTABLE_NAME.exe\`, e.g. `AppOverrides\DCS.exe\`
+All settings are in the registry, in `HKEY_LOCAL_MACHINE\SOFTWARE\Fred Emmott\HandTrackedCockpitClicking`; per-app overrides are in `HKEY_LOCAL_MACHINE\SOFTWARE\Fred Emmott\HandTrackedCockpitClicking\AppOverrides\EXECUTABLE_NAME.exe\`, e.g. `AppOverrides\DCS.exe\`
 
 ## Enabled
 
