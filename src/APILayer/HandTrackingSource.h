@@ -45,6 +45,8 @@ class HandTrackingSource final : public InputSource {
   std::tuple<InputState, InputState> Update(PointerMode, const FrameInfo&)
     override;
 
+  void KeepAlive(XrHandEXT, XrTime);
+
  private:
   std::shared_ptr<OpenXRNext> mOpenXR;
   XrInstance mInstance {};
@@ -56,6 +58,9 @@ class HandTrackingSource final : public InputSource {
     XrHandEXT mHand;
     InputState mState {mHand};
     XrHandTrackerEXT mTracker {};
+    bool mSleeping {true};
+    XrTime mLastKeepAliveAt {};
+    XrTime mLastSleepSpeedAt {};
   };
 
   Hand mLeftHand {XR_HAND_LEFT_EXT};

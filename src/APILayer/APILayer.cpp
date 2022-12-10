@@ -266,6 +266,15 @@ XrResult APILayer::xrWaitFrame(
     }
   }
 
+  if (mHandTracking) {
+    if (leftHand.AnyInteraction()) {
+      mHandTracking->KeepAlive(XR_HAND_LEFT_EXT, state->predictedDisplayTime);
+    }
+    if (rightHand.AnyInteraction()) {
+      mHandTracking->KeepAlive(XR_HAND_RIGHT_EXT, state->predictedDisplayTime);
+    }
+  }
+
   if (mVirtualTouchScreen) {
     mVirtualTouchScreen->Update(leftHand, rightHand);
   }

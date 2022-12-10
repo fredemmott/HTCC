@@ -153,6 +153,11 @@ std::tuple<InputState, InputState> HandTrackingSource::Update(
   return {{XR_HAND_LEFT_EXT}, rightState};
 }
 
+void HandTrackingSource::KeepAlive(XrHandEXT handID, XrTime displayTime) {
+  auto& hand = (handID == XR_HAND_LEFT_EXT) ? mLeftHand : mRightHand;
+  hand.mLastKeepAliveAt = std::max(displayTime, hand.mLastKeepAliveAt);
+}
+
 void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
   const auto displayTime = frameInfo.mPredictedDisplayTime;
   InitHandTracker(hand);
@@ -164,17 +169,26 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
     .time = displayTime,
   };
 
-  XrHandTrackingAimStateFB aimFB {XR_TYPE_HAND_TRACKING_AIM_STATE_FB};
-  std::array<XrHandJointLocationEXT, XR_HAND_JOINT_COUNT_EXT> jointData;
-  jointData.fill({});
+  std::array<XrHandJointLocationEXT, XR_HAND_JOINT_COUNT_EXT> jointLocations;
+  std::array<XrHandJointVelocityEXT, XR_HAND_JOINT_COUNT_EXT> jointVelocities;
+  jointLocations.fill({});
+  jointVelocities.fill({});
+  XrHandJointVelocitiesEXT velocities {
+    .type = XR_TYPE_HAND_JOINT_VELOCITIES_EXT,
+    .jointCount = jointVelocities.size(),
+    .jointVelocities = jointVelocities.data(),
+  };
 
   XrHandJointLocationsEXT joints {
     .type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT,
-    .jointCount = jointData.size(),
-    .jointLocations = jointData.data(),
+    .next = &velocities,
+    .jointCount = jointLocations.size(),
+    .jointLocations = jointLocations.data(),
   };
+
+  XrHandTrackingAimStateFB aimFB {XR_TYPE_HAND_TRACKING_AIM_STATE_FB};
   if (Environment::Have_XR_FB_HandTracking_Aim) {
-    joints.next = &aimFB;
+    velocities.next = &aimFB;
   }
 
   if (!mOpenXR->check_xrLocateHandJointsEXT(
@@ -192,7 +206,7 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
       };
     }
   } else if (joints.isActive) {
-    const auto joint = jointData[Config::HandTrackingAimJoint];
+    const auto joint = jointLocations[Config::HandTrackingAimJoint];
     if (
       HasFlags(joint.locationFlags, XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)
       && HasFlags(joint.locationFlags, XR_SPACE_LOCATION_POSITION_VALID_BIT)) {
@@ -202,6 +216,47 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
         .mPose = {joint.pose},
       };
     }
+  }
+
+  const auto velocity3 = jointVelocities[Config::HandTrackingAimJoint];
+  if (HasFlags(velocity3.velocityFlags, XR_SPACE_VELOCITY_LINEAR_VALID_BIT)) {
+    const auto linearVelocity = std::sqrt(
+      (velocity3.linearVelocity.x * velocity3.linearVelocity.x)
+      + (velocity3.linearVelocity.y * velocity3.linearVelocity.y)
+      + (velocity3.linearVelocity.z * velocity3.linearVelocity.z));
+    if (linearVelocity >= Config::HandTrackingSleepSpeed) {
+      hand->mLastKeepAliveAt = displayTime;
+      if (
+        hand->mSleeping && linearVelocity >= Config::HandTrackingWakeSpeed
+        && std::chrono::nanoseconds(displayTime - hand->mLastSleepSpeedAt)
+          > std::chrono::milliseconds(Config::HandTrackingWakeMilliseconds)) {
+        DebugPrint(
+          "{} > {}, waking hand {}",
+          linearVelocity,
+          Config::HandTrackingWakeSpeed,
+          static_cast<int>(hand->mHand));
+        hand->mSleeping = false;
+      }
+    } else {
+      hand->mLastSleepSpeedAt = displayTime;
+      if (
+        (!hand->mSleeping)
+        && std::chrono::nanoseconds(displayTime - hand->mLastKeepAliveAt)
+          > std::chrono::milliseconds(Config::HandTrackingSleepMilliseconds)) {
+        DebugPrint(
+          "{} < {} for at least {}ms, sleeping hand {}",
+          linearVelocity,
+          Config::HandTrackingSleepSpeed,
+          Config::HandTrackingSleepMilliseconds,
+          static_cast<int>(hand->mHand));
+        hand->mSleeping = true;
+      }
+    }
+  }
+
+  if (hand->mSleeping) {
+    state = {hand->mHand};
+    return;
   }
 
   const auto age = std::chrono::nanoseconds(frameInfo.mNow - state.mUpdatedAt);

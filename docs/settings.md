@@ -125,7 +125,7 @@ Rough distance from your head to the majority of things you want to interact wit
 
 ![upwards tilt = atan(offset / (far distance - hand to headset distance)](tilt-angle.png)
 
-# VRControllerActionSinkMapping 
+## VRControllerActionSinkMapping 
 
 DWORD:
 
@@ -134,7 +134,7 @@ DWORD:
 
 Which game's mappings are used for VR controllers.
 
-# VRControllerPointerSinkWorldLock 
+## VRControllerPointerSinkWorldLock 
 
 DWORD
 
@@ -142,51 +142,75 @@ DWORD
 - 1 - orientation: any click/wheel action locks the angle of the pointer, but not the position
 - 2 - hard-lock orientation, soft-lock position: as above, however the position will also be unlocked until your hand moves a certain distance
 
-# VRControllerPointerSinkSoftWorldLockDistance
+## VRControllerPointerSinkSoftWorldLockDistance
 
 STRING
 
 Distance in meters (e.g. "0.05" for 5cm). While 'clicking', the virtual controllers will stay locked in position until your hand moves this far from the original position.
 
-# VRControllerActionSinkSecondsPerRotation
+## VRControllerActionSinkSecondsPerRotation
 
 STRING
 
 Number of seconds for a mouse wheel event to trigger a full rotation of the controller when using MSFS bindings. For example, "4.0"
 
-## PointCtrlVID, PointCtrlPID (firmware developers and custom button boxes only)
+## HandTrackingWakeMilliseconds
+
+DWORD
+
+Number of milliseconds that the hand must be moving for hand tracking to activate.
+
+## HandTrackingWakeSpeed
+
+STRING
+
+Speed, in meters per second, that the hand must be moving for hand tracking to activate.
+
+## HandTrackingSleepMilliseconds
+
+DWORD
+
+Number of milliseconds that the hand must be still for hand tracking to deactivate.
+
+## HandTrackingSleepSpeed
+
+STRING
+
+Maximum speed, in meters per second, that the hand must be moving to be considered still.
+
+### PointCtrlVID, PointCtrlPID (firmware developers and custom button boxes only)
 
 DWORDs containing 16-bit USB vendor and product IDs.
 
 Change the USB vendor ID and product ID that this project looks for when trying to find a PointCTRL device.
 
-## PointCtrlFCUButtonL1-L3, PointCtrlFCUButtonR1-R3 (firmware developers and custom button boxes only)
+### PointCtrlFCUButtonL1-L3, PointCtrlFCUButtonR1-R3 (firmware developers and custom button boxes only)
 
 DWORD button indices starting at 0.
 
 FCU L1 is the button farthest from your wrist on your left hand, L3 is closest. R1-R3 are the buttons on your right hand.
 
-# UseHandTrackingAimPointFB (developers only)
+## UseHandTrackingAimPointFB (developers only)
 
 DWORD 0 (disabled) or 1 (enabled): Use the FB-provided 'aim' point instead of a skeletal joint.
 
-# HandTrackingAimJoint (developers only)
+## HandTrackingAimJoint (developers only)
 
 DWORD: joint index for aim joint. See the OpenXR specification.
 
-# HandTrackingOrientation (developers only)
+## HandTrackingOrientation (developers only)
 
 DWORD:
 
 - 0 (raw): The hand joint orientation/rotation reported by OpenXR is used unmodified
 - 1 (ray cast): Discard the orientation/rotation of your hand, and instead rotate it to fit a laser pointer from the center of your headset. This will improve accuracy and stability, but if controller models are enabled in-game, it may feel weird. Leaving this on is recommended.
 
-# EnableFBOpenXRExtensions (developers only)
+## EnableFBOpenXRExtensions (developers only)
 
 DWORD 0 (disabled) or 1 (enabled): Enable the use of Facebook/Meta/Oculus-specific OpenXR extensions for hand tracking. This is required for the pinch gestures.
 
 To disable pinch gestures, use the `PinchToClick` and `PinchToScroll` settings instead. This is primarily intended for checking that this project can function without them.
 
-# VirtualControllerInteractionProfilePath (developers only)
+## VirtualControllerInteractionProfilePath (developers only)
 
 STRING: OpenXR path to the interaction profile of the emulated controllers.
