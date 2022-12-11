@@ -24,7 +24,11 @@
 #include "App.xaml.h"
 
 #include <shellapi.h>
+#include <winrt/Microsoft.Windows.AppLifecycle.h>
 
+#include <thread>
+
+#include "DebugPrint.h"
 #include "MainWindow.xaml.h"
 
 namespace winrt::HTCCSettings::implementation {
@@ -51,6 +55,26 @@ void App::OnLaunched(
 
 }// namespace winrt::HTCCSettings::implementation
 
+namespace {
+
+struct EnumWindowsData {
+  DWORD mProcessID {};
+  HWND mHwnd {};
+};
+
+BOOL EnumWindowsCallback(HWND hwnd, LPARAM lParam) {
+  DWORD processID {};
+  GetWindowThreadProcessId(hwnd, &processID);
+  auto data = reinterpret_cast<EnumWindowsData*>(lParam);
+
+  if (processID == data->mProcessID) {
+    data->mHwnd = hwnd;
+    return FALSE;
+  }
+  return TRUE;
+};
+}// namespace
+
 // This currently exists just to self-elevate, as the Windows App SDK is
 // currently incompatible with manifest-based elevation
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR commandLine, int cmdShow) {
@@ -68,8 +92,8 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR commandLine, int cmdShow) {
         if (!elevation.TokenIsElevated) {
           wchar_t myPath[MAX_PATH];
           GetModuleFileNameW(NULL, myPath, MAX_PATH);
-          ShellExecuteW(NULL, L"runas", myPath, commandLine, nullptr,
-          cmdShow); return 0;
+          ShellExecuteW(NULL, L"runas", myPath, commandLine, nullptr, cmdShow);
+          return 0;
         };
       }
     }
@@ -91,6 +115,24 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR commandLine, int cmdShow) {
   }
 
   winrt::init_apartment(winrt::apartment_type::single_threaded);
+
+  using AppInstance = winrt::Microsoft::Windows::AppLifecycle::AppInstance;
+  auto mainInstance = AppInstance::FindOrRegisterForKey(L"main");
+  if (!mainInstance.IsCurrent()) {
+    HandTrackedCockpitClicking::DebugPrint(
+      "Found existing instance, forwarding");
+    auto args = AppInstance::GetCurrent().GetActivatedEventArgs();
+    std::jthread([=]() {
+      mainInstance.RedirectActivationToAsync(args).get();
+      EnumWindowsData windowData {static_cast<DWORD>(mainInstance.ProcessId())};
+      EnumWindows(&EnumWindowsCallback, reinterpret_cast<LPARAM>(&windowData));
+      if (windowData.mHwnd) {
+        SetForegroundWindow(windowData.mHwnd);
+      }
+    }).join();
+    return 0;
+  }
+
   ::winrt::Microsoft::UI::Xaml::Application::Start([](auto&&) {
     ::winrt::make<::winrt::HTCCSettings::implementation::App>();
   });

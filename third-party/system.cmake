@@ -7,6 +7,7 @@ set(
   Dxguid
   DXGI
   Shell32
+  User32
 )
 
 foreach(LIBRARY ${SYSTEM_LIBRARIES})

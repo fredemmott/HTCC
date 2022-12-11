@@ -42,7 +42,13 @@ target_include_directories(
   PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}"
 )
-target_link_libraries(HTCCSettings PRIVATE HTCCLibCommon System::Shell32)
+target_link_libraries(
+  HTCCSettings
+  PRIVATE
+  HTCCLibCommon
+  System::Shell32
+  System::User32
+)
 target_precompile_headers(
   HTCCSettings
   PRIVATE
