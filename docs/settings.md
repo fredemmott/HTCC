@@ -40,13 +40,7 @@ Number of milliseconds that the hand must be still for hand tracking to deactiva
 
 STRING
 
-Maximum speed - in meters per second - that the hand can be moving to be considered still.
-
-### HandTrackingActionSpeed
-
-STRING
-
-Maximum speed - in meters per second - that the hand can be moving to recognize the start of a gesture.
+Maximum speed, in meters per second, that the hand must be moving to be considered still.
 
 ## Scroll behavior
 

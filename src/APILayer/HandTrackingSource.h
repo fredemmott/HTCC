@@ -61,7 +61,6 @@ class HandTrackingSource final : public InputSource {
     bool mSleeping {true};
     XrTime mLastKeepAliveAt {};
     XrTime mLastSleepSpeedAt {};
-    XrTime mLastAboveActionSpeedAt {};
   };
 
   Hand mLeftHand {XR_HAND_LEFT_EXT};
