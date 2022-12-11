@@ -54,7 +54,10 @@ else()
   set(VERSION_BUILD 0)
 endif()
 
-project(XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking VERSION 0.0.1.${VERSION_BUILD} LANGUAGES CXX C)
+project(
+  XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking
+  VERSION 0.1.0.${VERSION_BUILD}
+  LANGUAGES CXX C)
 message(STATUS "${CMAKE_PROJECT_NAME} v${CMAKE_PROJECT_VERSION}")
 
 # Handy for CI
