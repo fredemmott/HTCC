@@ -164,6 +164,9 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
   auto& state = hand->mState;
   state.mHand = hand->mHand;
 
+  bool haveLinearVelocity = false;
+  float linearVelocity {};
+
   XrHandJointsLocateInfoEXT locateInfo {
     .type = XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT,
     .baseSpace = mLocalSpace,
@@ -224,7 +227,8 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
 
   const auto velocity3 = jointVelocities[Config::HandTrackingAimJoint];
   if (HasFlags(velocity3.velocityFlags, XR_SPACE_VELOCITY_LINEAR_VALID_BIT)) {
-    const auto linearVelocity = std::sqrtf(
+    haveLinearVelocity = true;
+    linearVelocity = std::sqrtf(
       (velocity3.linearVelocity.x * velocity3.linearVelocity.x)
       + (velocity3.linearVelocity.y * velocity3.linearVelocity.y)
       + (velocity3.linearVelocity.z * velocity3.linearVelocity.z));
@@ -280,16 +284,40 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
     const auto inActionFOV
       = std::abs(rotation.x) <= (Config::HandTrackingActionVFOV / 2)
       && std::abs(rotation.y) <= (Config::HandTrackingActionHFOV / 2);
-#define FILTER_ACTION(x) state.x = rawActions.x && (state.x || inActionFOV)
+
+    const auto belowSpeedLimit = haveLinearVelocity
+      ? (linearVelocity <= Config::HandTrackingActionSpeed)
+      : true;
+    if (!belowSpeedLimit) {
+      hand->mLastAboveActionSpeedAt = frameInfo.mNow;
+    }
+    const auto stablePosition = belowSpeedLimit
+      && std::chrono::nanoseconds(
+           frameInfo.mNow - hand->mLastAboveActionSpeedAt)
+        >= std::chrono::milliseconds(Config::HandTrackingActionMilliseconds);
+    const auto canStartAction = inActionFOV && stablePosition;
+
+#define FILTER_ACTION(x) state.x = rawActions.x && (state.x || canStartAction)
     FILTER_ACTION(mPrimaryInteraction);
     FILTER_ACTION(mSecondaryInteraction);
 #undef FILTER_ACTION
     using ValueChange = InputState::ValueChange;
-    if (inActionFOV || (rawActions.mValueChange == state.mValueChange)) {
+    if (canStartAction || (rawActions.mValueChange == state.mValueChange)) {
       state.mValueChange = rawActions.mValueChange;
     } else {
       state.mValueChange = ValueChange::None;
     }
+    if (
+      (true || Config::VerboseDebug >= 1) && rawActions.AnyInteraction()
+      && !state.AnyInteraction()) {
+      DebugPrint(
+        "Dropping action: {} {}",
+        belowSpeedLimit,
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::nanoseconds(
+            frameInfo.mNow - hand->mLastAboveActionSpeedAt)));
+    }
+    DebugPrint("{} {}", state.AnyInteraction(), rawActions.AnyInteraction());
   }
 
   if (state.AnyInteraction()) {
