@@ -64,7 +64,7 @@ class VirtualTouchScreenSink final {
   bool mLeftClick {false};
   bool mRightClick {false};
   std::chrono::steady_clock::time_point mScrollStartTime {};
-  InputState::ValueChange mScrollDirection = InputState::ValueChange::None;
+  ActionState::ValueChange mScrollDirection = ActionState::ValueChange::None;
 
   std::chrono::steady_clock::time_point mLastWindowCheck {};
   std::chrono::steady_clock::time_point mLastWheelUp {};

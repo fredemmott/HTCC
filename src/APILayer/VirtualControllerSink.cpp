@@ -153,7 +153,7 @@ void VirtualControllerSink::UpdateHand(
   controller->present = true;
 
   auto inputPose = OffsetPointerPose(frameInfo, *hand.mPose);
-  const auto haveAction = hand.AnyInteraction();
+  const auto haveAction = hand.mActions.Any();
   if (haveAction) {
     if (WorldLockOrientation()) {
       inputPose.orientation = controller->savedAimPose.orientation;
@@ -180,12 +180,13 @@ void VirtualControllerSink::UpdateHand(
   }
   controller->aimPose = {inputPose};
 
-  SetControllerActions(frameInfo.mPredictedDisplayTime, hand, controller);
+  SetControllerActions(
+    frameInfo.mPredictedDisplayTime, hand.mActions, controller);
 }
 
 void VirtualControllerSink::SetControllerActions(
   XrTime predictedDisplayTime,
-  const InputState& hand,
+  const ActionState& hand,
   ControllerState* controller) {
   if (!IsActionSink()) {
     return;
@@ -208,13 +209,13 @@ void VirtualControllerSink::SetControllerActions(
 
 void VirtualControllerSink::SetDCSControllerActions(
   XrTime predictedDisplayTime,
-  const InputState& hand,
+  const ActionState& hand,
   ControllerState* controller) {
   if (IsClickActionSink()) {
     controller->thumbstickY.changedSinceLastSync = true;
-    if (hand.mPrimaryInteraction) {
+    if (hand.mPrimary) {
       controller->thumbstickY.currentState = -1.0f;
-    } else if (hand.mSecondaryInteraction) {
+    } else if (hand.mSecondary) {
       controller->thumbstickY.currentState = 1.0f;
     } else {
       controller->thumbstickY.currentState = 0.0f;
@@ -225,7 +226,7 @@ void VirtualControllerSink::SetDCSControllerActions(
     return;
   }
 
-  using ValueChange = InputState::ValueChange;
+  using ValueChange = ActionState::ValueChange;
   controller->thumbstickX.changedSinceLastSync = true;
   if (hand.mValueChange != controller->mValueChange) {
     controller->mValueChange = hand.mValueChange;
@@ -263,11 +264,11 @@ void VirtualControllerSink::SetDCSControllerActions(
 
 void VirtualControllerSink::SetMSFSControllerActions(
   XrTime predictedDisplayTime,
-  const InputState& hand,
+  const ActionState& hand,
   ControllerState* controller) {
-  using ValueChange = InputState::ValueChange;
-  const auto rawPrimary = IsClickActionSink() && hand.mPrimaryInteraction;
-  const auto rawSecondary = IsClickActionSink() && hand.mSecondaryInteraction;
+  using ValueChange = ActionState::ValueChange;
+  const auto rawPrimary = IsClickActionSink() && hand.mPrimary;
+  const auto rawSecondary = IsClickActionSink() && hand.mSecondary;
   const auto rawValueChange
     = IsScrollActionSink() ? hand.mValueChange : ValueChange::None;
 

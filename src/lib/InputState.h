@@ -29,6 +29,24 @@
 
 namespace HandTrackedCockpitClicking {
 
+struct ActionState {
+  bool mPrimary {false};// 'left click'
+  bool mSecondary {false};// 'right click'
+
+  enum class ValueChange {
+    None,
+    Decrease,// scroll wheel up
+    Increase,// scroll wheel down
+  };
+  ValueChange mValueChange {ValueChange::None};
+
+  constexpr bool Any() const {
+    return mPrimary || mSecondary || (mValueChange != ValueChange::None);
+  }
+
+  constexpr auto operator<=>(const ActionState&) const noexcept = default;
+};
+
 struct InputState {
   XrHandEXT mHand;
   XrTime mUpdatedAt {};
@@ -42,20 +60,7 @@ struct InputState {
    */
   std::optional<XrVector2f> mDirection;
 
-  bool mPrimaryInteraction {false};// 'left click'
-  bool mSecondaryInteraction {false};// 'right click'
-
-  enum class ValueChange {
-    None,
-    Decrease,// scroll wheel up
-    Increase,// scroll wheel down
-  };
-  ValueChange mValueChange {ValueChange::None};
-
-  constexpr bool AnyInteraction() const {
-    return mPrimaryInteraction || mSecondaryInteraction
-      || (mValueChange != ValueChange::None);
-  }
+  ActionState mActions {};
 };
 
 }// namespace HandTrackedCockpitClicking

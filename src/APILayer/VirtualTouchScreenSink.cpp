@@ -198,11 +198,11 @@ bool VirtualTouchScreenSink::RotationToCartesian(
 void VirtualTouchScreenSink::Update(
   const InputState& left,
   const InputState& right) {
-  if (right.AnyInteraction()) {
+  if (right.mActions.Any()) {
     Update(right);
     return;
   }
-  if (left.AnyInteraction()) {
+  if (left.mActions.Any()) {
     Update(left);
     return;
   }
@@ -252,7 +252,7 @@ void VirtualTouchScreenSink::Update(const InputState& hand) {
   }
 
   if (IsClickActionSink()) {
-    const auto leftClick = hand.mPrimaryInteraction;
+    const auto leftClick = hand.mActions.mPrimary;
     if (leftClick != mLeftClick) {
       mLeftClick = leftClick;
       events.push_back(
@@ -263,7 +263,7 @@ void VirtualTouchScreenSink::Update(const InputState& hand) {
          }});
     }
 
-    const auto rightClick = hand.mSecondaryInteraction;
+    const auto rightClick = hand.mActions.mSecondary;
     if (rightClick != mRightClick) {
       mRightClick = rightClick;
       events.push_back(
@@ -276,10 +276,10 @@ void VirtualTouchScreenSink::Update(const InputState& hand) {
   }
 
   if (IsScrollActionSink()) {
-    using ValueChange = InputState::ValueChange;
-    if (hand.mValueChange != mScrollDirection) {
-      mScrollDirection = hand.mValueChange;
-      if (hand.mValueChange == ValueChange::None) {
+    using ValueChange = ActionState::ValueChange;
+    if (hand.mActions.mValueChange != mScrollDirection) {
+      mScrollDirection = hand.mActions.mValueChange;
+      if (hand.mActions.mValueChange == ValueChange::None) {
         mScrollStartTime = {};
       } else {
         mScrollStartTime = now;
@@ -287,7 +287,7 @@ void VirtualTouchScreenSink::Update(const InputState& hand) {
     }
     const auto multiplier = GetScrollMultiplier(now);
     if (
-      hand.mValueChange == ValueChange::Decrease
+      hand.mActions.mValueChange == ValueChange::Decrease
       && (now - mLastWheelUp > std::chrono::milliseconds(Config::ScrollWheelMilliseconds))) {
       mLastWheelUp = now;
       events.push_back({
@@ -300,7 +300,7 @@ void VirtualTouchScreenSink::Update(const InputState& hand) {
     }
 
     if (
-      hand.mValueChange == ValueChange::Increase
+      hand.mActions.mValueChange == ValueChange::Increase
       && (now - mLastWheelDown > std::chrono::milliseconds(Config::ScrollWheelMilliseconds))) {
       mLastWheelDown = now;
       events.push_back({
@@ -320,7 +320,7 @@ void VirtualTouchScreenSink::Update(const InputState& hand) {
 
 uint8_t VirtualTouchScreenSink::GetScrollMultiplier(
   const std::chrono::steady_clock::time_point& now) const {
-  using ValueChange = InputState::ValueChange;
+  using ValueChange = ActionState::ValueChange;
   if (mScrollDirection == ValueChange::None) {
     return 0;
   }

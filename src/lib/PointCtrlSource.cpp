@@ -334,21 +334,21 @@ void PointCtrlSource::MapActionsClassic(
   Hand* hand,
   XrTime now,
   const decltype(DIJOYSTATE2::rgbButtons)& buttons) {
-  auto& state = hand->mState;
+  auto& state = hand->mState.mActions;
   const auto b1 = HAS_BUTTON(HAND_FCUB(hand->mHand, 1));
   const auto b2 = HAS_BUTTON(HAND_FCUB(hand->mHand, 2));
   const auto b3 = HAS_BUTTON(HAND_FCUB(hand->mHand, 3));
 
   if (b3) {
-    state.mPrimaryInteraction = false;
-    state.mSecondaryInteraction = false;
+    state.mPrimary = false;
+    state.mSecondary = false;
     state.mValueChange = hand->mScrollDirection;
     return;
   }
 
-  state.mPrimaryInteraction = b1;
-  state.mSecondaryInteraction = b2;
-  state.mValueChange = InputState::ValueChange::None;
+  state.mPrimary = b1;
+  state.mSecondary = b2;
+  state.mValueChange = ActionState::ValueChange::None;
 
   if (b1 && !b2) {
     hand->mScrollDirection = ScrollDirection::Increase;
@@ -361,7 +361,7 @@ void PointCtrlSource::MapActionsModal(
   Hand* hand,
   XrTime now,
   const decltype(DIJOYSTATE2::rgbButtons)& buttons) {
-  auto& state = hand->mState;
+  auto& state = hand->mState.mActions;
   const auto b1 = HAS_BUTTON(HAND_FCUB(hand->mHand, 1));
   const auto b2 = HAS_BUTTON(HAND_FCUB(hand->mHand, 2));
   const auto b3 = HAS_BUTTON(HAND_FCUB(hand->mHand, 3));
@@ -393,7 +393,7 @@ void PointCtrlSource::MapActionsModal(
         } else {
           hand->mScrollMode = LockState::Unlocked;
           // will be unset on next frame
-          state.mSecondaryInteraction = true;
+          state.mSecondary = true;
         }
       } else if (!b1) {
         hand->mScrollMode = LockState::LockingWithLeftHoldAfterRelease;
@@ -424,32 +424,32 @@ void PointCtrlSource::MapActionsModal(
       break;
   }
 
-  state.mPrimaryInteraction = false;
-  state.mSecondaryInteraction = false;
-  state.mValueChange = InputState::ValueChange::None;
+  state.mPrimary = false;
+  state.mSecondary = false;
+  state.mValueChange = ActionState::ValueChange::None;
   // Set actions according to state
   switch (hand->mScrollMode) {
     case LockState::Unlocked:
-      state.mPrimaryInteraction = b1;
-      state.mSecondaryInteraction = b2;
+      state.mPrimary = b1;
+      state.mSecondary = b2;
       break;
     case LockState::MaybeLockingWithLeftHold:
-      state.mPrimaryInteraction = b1;
+      state.mPrimary = b1;
       // right click handled by state switches above
       break;
     case LockState::LockingWithLeftHoldAfterRelease:
-      state.mPrimaryInteraction = true;
+      state.mPrimary = true;
       break;
     case LockState::SwitchingMode:
       break;
     case LockState::LockedWithLeftHold:
-      state.mPrimaryInteraction = true;
+      state.mPrimary = true;
       [[fallthrough]];
     case LockState::LockedWithoutLeftHold:
       if (b1 && !b2) {
-        state.mValueChange = InputState::ValueChange::Decrease;
+        state.mValueChange = ActionState::ValueChange::Decrease;
       } else if (b2 && !b1) {
-        state.mValueChange = InputState::ValueChange::Increase;
+        state.mValueChange = ActionState::ValueChange::Increase;
       }
       break;
   }

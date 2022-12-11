@@ -91,21 +91,21 @@ std::tuple<XrPosef, XrVector2f> HandTrackingSource::RaycastPose(
 
 static void PopulateInteractions(
   XrHandTrackingAimFlagsFB status,
-  InputState* hand) {
-  hand->mPrimaryInteraction = Config::PinchToClick
+  ActionState* hand) {
+  hand->mPrimary = Config::PinchToClick
     && HasFlags(status, XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB);
-  hand->mSecondaryInteraction = Config::PinchToClick
+  hand->mSecondary = Config::PinchToClick
     && HasFlags(status, XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB);
   if (!Config::PinchToScroll) {
     return;
   }
 
   if (HasFlags(status, XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB)) {
-    hand->mValueChange = InputState::ValueChange::Decrease;
+    hand->mValueChange = ActionState::ValueChange::Decrease;
     return;
   }
   if (HasFlags(status, XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB)) {
-    hand->mValueChange = InputState::ValueChange::Increase;
+    hand->mValueChange = ActionState::ValueChange::Increase;
     return;
   }
 }
@@ -131,8 +131,8 @@ std::tuple<InputState, InputState> HandTrackingSource::Update(
     return {leftState, rightState};
   }
 
-  const auto leftActive = leftState.AnyInteraction();
-  const auto rightActive = rightState.AnyInteraction();
+  const auto leftActive = leftState.mActions.Any();
+  const auto rightActive = rightState.mActions.Any();
   if (leftActive && !rightActive) {
     return {leftState, {XR_HAND_RIGHT_EXT}};
   }
@@ -274,25 +274,27 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
   }
 
   {
-    InputState rawActions {};
+    ActionState rawActions {};
     PopulateInteractions(aimFB.status, &rawActions);
     // Inverted because l-r movement is rotation in x axis
     const auto inActionFOV
       = std::abs(rotation.x) <= (Config::HandTrackingActionVFOV / 2)
       && std::abs(rotation.y) <= (Config::HandTrackingActionHFOV / 2);
-#define FILTER_ACTION(x) state.x = rawActions.x && (state.x || inActionFOV)
-    FILTER_ACTION(mPrimaryInteraction);
-    FILTER_ACTION(mSecondaryInteraction);
+#define FILTER_ACTION(x) \
+  state.mActions.x = rawActions.x && (state.mActions.x || inActionFOV)
+    FILTER_ACTION(mPrimary);
+    FILTER_ACTION(mSecondary);
 #undef FILTER_ACTION
-    using ValueChange = InputState::ValueChange;
-    if (inActionFOV || (rawActions.mValueChange == state.mValueChange)) {
-      state.mValueChange = rawActions.mValueChange;
+    using ValueChange = ActionState::ValueChange;
+    if (
+      inActionFOV || (rawActions.mValueChange == state.mActions.mValueChange)) {
+      state.mActions.mValueChange = rawActions.mValueChange;
     } else {
-      state.mValueChange = ValueChange::None;
+      state.mActions.mValueChange = ValueChange::None;
     }
   }
 
-  if (state.AnyInteraction()) {
+  if (state.mActions.Any()) {
     hand->mLastKeepAliveAt = frameInfo.mPredictedDisplayTime;
   }
 

@@ -229,14 +229,14 @@ XrResult APILayer::xrWaitFrame(
       rightHand.mDirection = r.mDirection;
     }
     if (Config::PinchToClick) {
-      leftHand.mPrimaryInteraction = l.mPrimaryInteraction;
-      leftHand.mSecondaryInteraction = l.mSecondaryInteraction;
-      rightHand.mPrimaryInteraction = r.mPrimaryInteraction;
-      rightHand.mSecondaryInteraction = r.mSecondaryInteraction;
+      leftHand.mActions.mPrimary = l.mActions.mPrimary;
+      leftHand.mActions.mSecondary = l.mActions.mSecondary;
+      rightHand.mActions.mPrimary = r.mActions.mPrimary;
+      rightHand.mActions.mSecondary = r.mActions.mSecondary;
     }
     if (Config::PinchToScroll) {
-      leftHand.mValueChange = l.mValueChange;
-      rightHand.mValueChange = r.mValueChange;
+      leftHand.mActions.mValueChange = l.mActions.mValueChange;
+      rightHand.mActions.mValueChange = r.mActions.mValueChange;
     }
   }
 
@@ -249,28 +249,29 @@ XrResult APILayer::xrWaitFrame(
       rightHand.mDirection = r.mDirection;
     }
     if (Config::PointCtrlFCUMapping != PointCtrlFCUMapping::Disabled) {
-      leftHand.mPrimaryInteraction
-        = leftHand.mPrimaryInteraction || l.mPrimaryInteraction;
-      leftHand.mSecondaryInteraction
-        = leftHand.mSecondaryInteraction || l.mSecondaryInteraction;
-      if (l.mValueChange != InputState::ValueChange::None) {
-        leftHand.mValueChange = l.mValueChange;
+      leftHand.mActions.mPrimary
+        = leftHand.mActions.mPrimary || l.mActions.mPrimary;
+      leftHand.mActions.mSecondary
+        = leftHand.mActions.mSecondary || l.mActions.mSecondary;
+      if (l.mActions.mValueChange != ActionState::ValueChange::None) {
+        leftHand.mActions.mValueChange = l.mActions.mValueChange;
       }
-      rightHand.mPrimaryInteraction
-        = rightHand.mPrimaryInteraction || r.mPrimaryInteraction;
-      rightHand.mSecondaryInteraction
-        = rightHand.mSecondaryInteraction || r.mSecondaryInteraction;
-      if (r.mValueChange != InputState::ValueChange::None) {
-        rightHand.mValueChange = r.mValueChange;
+
+      rightHand.mActions.mPrimary
+        = rightHand.mActions.mPrimary || r.mActions.mPrimary;
+      rightHand.mActions.mSecondary
+        = rightHand.mActions.mSecondary || r.mActions.mSecondary;
+      if (r.mActions.mValueChange != ActionState::ValueChange::None) {
+        rightHand.mActions.mValueChange = r.mActions.mValueChange;
       }
     }
   }
 
   if (mHandTracking) {
-    if (leftHand.AnyInteraction()) {
+    if (leftHand.mActions.Any()) {
       mHandTracking->KeepAlive(XR_HAND_LEFT_EXT, state->predictedDisplayTime);
     }
-    if (rightHand.AnyInteraction()) {
+    if (rightHand.mActions.Any()) {
       mHandTracking->KeepAlive(XR_HAND_RIGHT_EXT, state->predictedDisplayTime);
     }
   }

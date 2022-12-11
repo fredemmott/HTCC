@@ -134,7 +134,7 @@ class VirtualControllerSink final {
     XrActionStateFloat thumbstickY {XR_TYPE_ACTION_STATE_FLOAT};
     std::unordered_set<XrAction> thumbstickYActions {};
 
-    InputState::ValueChange mValueChange {InputState::ValueChange::None};
+    ActionState::ValueChange mValueChange {ActionState::ValueChange::None};
     XrTime mValueChangeStartAt {};
 
     // MSFS
@@ -165,15 +165,15 @@ class VirtualControllerSink final {
 
   void SetControllerActions(
     XrTime predictedDisplayTime,
-    const InputState& hand,
+    const ActionState& hand,
     ControllerState* controller);
   void SetDCSControllerActions(
     XrTime predictedDisplayTime,
-    const InputState& hand,
+    const ActionState& hand,
     ControllerState* controller);
   void SetMSFSControllerActions(
     XrTime predictedDisplayTime,
-    const InputState& hand,
+    const ActionState& hand,
     ControllerState* controller);
 
   void UpdateHand(
