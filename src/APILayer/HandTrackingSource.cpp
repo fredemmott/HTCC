@@ -131,6 +131,10 @@ std::tuple<InputState, InputState> HandTrackingSource::Update(
     return {leftState, rightState};
   }
 
+  if (!(leftState.mDirection && rightState.mDirection)) {
+    return {leftState, rightState};
+  }
+
   const auto leftActive = leftState.mActions.Any();
   const auto rightActive = rightState.mActions.Any();
   if (leftActive && !rightActive) {
@@ -299,8 +303,16 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
   }
 
   state.mDirection = {rotation};
-  if (Config::HandTrackingOrientation == HandTrackingOrientation::RayCast) {
-    state.mPose = raycastPose;
+  switch (Config::HandTrackingOrientation) {
+    case HandTrackingOrientation::Raw:
+      break;
+    case HandTrackingOrientation::RayCast:
+      state.mPose = raycastPose;
+      break;
+    case HandTrackingOrientation::RayCastWithReprojection:
+      // reproject from direction
+      state.mPose = {};
+      break;
   }
 }
 

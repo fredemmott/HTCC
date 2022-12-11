@@ -24,6 +24,7 @@
 
 #include "APILayer.h"
 
+#include <directxtk/SimpleMath.h>
 #include <loader_interfaces.h>
 
 #include <memory>
@@ -38,6 +39,8 @@
 #include "VirtualControllerSink.h"
 #include "VirtualTouchScreenSink.h"
 #include "openxr.h"
+
+using namespace DirectX::SimpleMath;
 
 namespace HandTrackedCockpitClicking {
 
@@ -281,10 +284,43 @@ XrResult APILayer::xrWaitFrame(
   }
 
   if (mVirtualController) {
+    if (!leftHand.mPose) {
+      leftHand.mPose = ProjectDirection(frameInfo, leftHand);
+    }
+    if (!rightHand.mPose) {
+      rightHand.mPose = ProjectDirection(frameInfo, rightHand);
+    }
     mVirtualController->Update(frameInfo, leftHand, rightHand);
   }
 
   return XR_SUCCESS;
+}
+
+std::optional<XrPosef> APILayer::ProjectDirection(
+  const FrameInfo& frameInfo,
+  const InputState& hand) {
+  if (!hand.mDirection) {
+    return {};
+  }
+
+  const auto rx = hand.mDirection->x;
+  const auto ry = hand.mDirection->y;
+
+  const auto pointDirection
+    = Quaternion::CreateFromAxisAngle(Vector3::UnitX, rx)
+    * Quaternion::CreateFromAxisAngle(Vector3::UnitY, -ry);
+
+  const auto p = Vector3::Transform(
+    {0.0f, 0.0f, -Config::ProjectionDistance}, pointDirection);
+  const auto o = pointDirection;
+
+  const XrPosef viewPose {
+    .orientation = {o.x, o.y, o.z, o.w},
+    .position = {p.x, p.y, p.z},
+  };
+
+  const auto worldPose = viewPose * frameInfo.mViewInLocal;
+  return worldPose;
 }
 
 }// namespace HandTrackedCockpitClicking

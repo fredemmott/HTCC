@@ -51,6 +51,7 @@ enum class PointCtrlFCUMapping : DWORD {
 enum class HandTrackingOrientation : DWORD {
   Raw = 0,
   RayCast = 1,
+  RayCastWithReprojection = 2,
 };
 enum class VRControllerActionSinkMapping : DWORD {
   DCS = 0,
@@ -92,7 +93,7 @@ enum class VRControllerPointerSinkWorldLock : DWORD {
   IT( \
     HandTrackedCockpitClicking::PointerSink, \
     PointerSink, \
-    HandTrackedCockpitClicking::PointerSink::VirtualTouchScreen) \
+    HandTrackedCockpitClicking::PointerSink::VirtualVRController) \
   IT( \
     HandTrackedCockpitClicking::ActionSink, \
     ClickActionSink, \
@@ -127,7 +128,7 @@ enum class VRControllerPointerSinkWorldLock : DWORD {
 #define HandTrackedCockpitClicking_FLOAT_SETTINGS \
   IT(PointCtrlRadiansPerUnitX, 3.009e-5f) \
   IT(PointCtrlRadiansPerUnitY, 3.009e-5f) \
-  IT(PointCtrlProjectionDistance, 0.3f) \
+  IT(ProjectionDistance, 0.3f) \
   IT(VRVerticalOffset, -0.04f) \
   IT(VRFarDistance, 0.8f) \
   IT(VRControllerActionSinkSecondsPerRotation, 4.0f) \
@@ -164,9 +165,10 @@ HandTrackedCockpitClicking_DWORD_SETTINGS
 
   inline bool
   IsRaycastOrientation() {
-  return (
-    (Config::PointerSource == PointerSource::PointCtrl)
-    || Config::HandTrackingOrientation == HandTrackingOrientation::RayCast);
+  return Config::PointerSource == PointerSource::PointCtrl
+    || Config::HandTrackingOrientation == HandTrackingOrientation::RayCast
+    || Config::HandTrackingOrientation
+    == HandTrackingOrientation::RayCastWithReprojection;
 }
 
 void Load();

@@ -45,6 +45,6 @@ The PointCTRL HMS only detects left/right and up/down position - not distance. Y
 - `HKEY_LOCAL_MACHINE\SOFTWARE\Fred Emmott\HandTrackedCockpitClicking`: default for games
 - `HKEY_LOCAL_MACHINE\SOFTWARE\Fred Emmott\HandTrackedCockpitClicking\AppOverrides\MYGAME.exe`
 
-Within these registry keys (folders), create a string value called `PointCtrlProjectionDistance`, containing a distance in meters. For example, to make the emulated controller in MSFS feel 30cm away:
+Within these registry keys (folders), create a string value called `ProjectionDistance`, containing a distance in meters. For example, to make the emulated controller in MSFS feel 30cm away:
 
 ![set to "0.3"](projection-distance.png)

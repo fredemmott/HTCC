@@ -131,31 +131,6 @@ BOOL PointCtrlSource::EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi) {
   return DIENUM_STOP;
 }
 
-void PointCtrlSource::UpdatePose(const FrameInfo& frameInfo, InputState* hand) {
-  hand->mPose = {};
-  if (!hand->mDirection) {
-    return;
-  }
-  const auto rx = hand->mDirection->x;
-  const auto ry = hand->mDirection->y;
-
-  const auto pointDirection
-    = Quaternion::CreateFromAxisAngle(Vector3::UnitX, rx)
-    * Quaternion::CreateFromAxisAngle(Vector3::UnitY, -ry);
-
-  const auto p = Vector3::Transform(
-    {0.0f, 0.0f, -Config::PointCtrlProjectionDistance}, pointDirection);
-  const auto o = pointDirection;
-
-  const XrPosef viewPose {
-    .orientation = {o.x, o.y, o.z, o.w},
-    .position = {p.x, p.y, p.z},
-  };
-
-  const auto worldPose = viewPose * frameInfo.mViewInLocal;
-  hand->mPose = worldPose;
-}
-
 void PointCtrlSource::ConnectDeviceAsync() {
   if (mConnectDeviceThread) {
     return;
@@ -279,17 +254,10 @@ std::tuple<InputState, InputState> PointCtrlSource::Update(
   mRightHand.mState.mUpdatedAt = now;
   if (mLeftHand.mInteractionAt > mRightHand.mInteractionAt) {
     mLeftHand.mState.mDirection = direction;
-    if (pointerMode == PointerMode::Pose) {
-      UpdatePose(frameInfo, &mLeftHand.mState);
-    }
-
     return {mLeftHand.mState, {XR_HAND_RIGHT_EXT}};
   }
 
   mRightHand.mState.mDirection = direction;
-  if (pointerMode == PointerMode::Pose) {
-    UpdatePose(frameInfo, &mRightHand.mState);
-  }
   return {{XR_HAND_LEFT_EXT}, mRightHand.mState};
 }
 

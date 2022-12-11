@@ -34,6 +34,8 @@ class OpenXRNext;
 class PointCtrlSource;
 class VirtualControllerSink;
 class VirtualTouchScreenSink;
+struct FrameInfo;
+struct InputState;
 
 class APILayer final {
  public:
@@ -86,6 +88,10 @@ class APILayer final {
   XrResult xrPollEvent(XrInstance instance, XrEventDataBuffer* eventData);
 
  private:
+  std::optional<XrPosef> ProjectDirection(
+    const FrameInfo& frameInfo,
+    const InputState& hand);
+
   std::shared_ptr<OpenXRNext> mOpenXR;
   XrInstance mInstance {};
   XrSpace mViewSpace {};

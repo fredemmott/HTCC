@@ -67,7 +67,7 @@ DWORD:
 
 DWORD, number of milliseconds for the boundary between a short press and a long press; this affects the PointCTRL 'modal' bindings.
 
-### PointCtrlProjectionDistance
+### ProjectionDistance
 
 String (SZ) containing a distance in meters to project virtual hands when using a PointCtrl. For example, `0.6` for 60cm.
 
@@ -245,6 +245,7 @@ DWORD:
 
 - 0 (raw): The hand joint orientation/rotation reported by OpenXR is used unmodified
 - 1 (ray cast): Discard the orientation/rotation of your hand, and instead rotate it to fit a laser pointer from the center of your headset. This will improve accuracy and stability, but if controller models are enabled in-game, it may feel weird. Leaving this on is recommended.
+- 2 (ray cast with reprojection): ray cast, then re-project to `ProjectionDistance`. Workaround for DCS 'touch to interact' being forced-on.
 
 ### EnableFBOpenXRExtensions
 
