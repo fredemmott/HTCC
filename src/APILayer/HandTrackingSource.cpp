@@ -155,13 +155,14 @@ std::tuple<InputState, InputState> HandTrackingSource::Update(
 
 void HandTrackingSource::KeepAlive(XrHandEXT handID, XrTime displayTime) {
   auto& hand = (handID == XR_HAND_LEFT_EXT) ? mLeftHand : mRightHand;
-  hand.mLastKeepAliveAt = std::max(displayTime, hand.mLastKeepAliveAt);
+  hand.mLastKeepAliveAt = displayTime;
 }
 
 void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
   const auto displayTime = frameInfo.mPredictedDisplayTime;
   InitHandTracker(hand);
   auto& state = hand->mState;
+  state.mHand = hand->mHand;
 
   XrHandJointsLocateInfoEXT locateInfo {
     .type = XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT,
@@ -199,22 +200,16 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
 
   if (UseHandTrackingAimPointFB()) {
     if (HasFlags(aimFB.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
-      state = {
-        .mHand = hand->mHand,
-        .mUpdatedAt = displayTime,
-        .mPose = {aimFB.aimPose},
-      };
+      state.mUpdatedAt = displayTime;
+      state.mPose = {aimFB.aimPose};
     }
   } else if (joints.isActive) {
     const auto joint = jointLocations[Config::HandTrackingAimJoint];
     if (
       HasFlags(joint.locationFlags, XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)
       && HasFlags(joint.locationFlags, XR_SPACE_LOCATION_POSITION_VALID_BIT)) {
-      state = {
-        .mHand = hand->mHand,
-        .mUpdatedAt = displayTime,
-        .mPose = {joint.pose},
-      };
+      state.mUpdatedAt = displayTime;
+      state.mPose = {joint.pose};
     }
   }
 
@@ -295,6 +290,10 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
     } else {
       state.mValueChange = ValueChange::None;
     }
+  }
+
+  if (state.AnyInteraction()) {
+    hand->mLastKeepAliveAt = frameInfo.mPredictedDisplayTime;
   }
 
   state.mDirection = {rotation};
