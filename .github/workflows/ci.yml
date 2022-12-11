@@ -4,6 +4,9 @@ jobs:
   build:
     name: Build (${{matrix.config}})
     runs-on: windows-2022
+    strategy:
+      matrix:
+        config: [RelWithDebInfo, Debug]
     steps:
       - name: Fetch code-signing key
         id: fetch-key
