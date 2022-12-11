@@ -157,9 +157,9 @@ std::tuple<InputState, InputState> HandTrackingSource::Update(
   return {{XR_HAND_LEFT_EXT}, rightState};
 }
 
-void HandTrackingSource::KeepAlive(XrHandEXT handID, XrTime displayTime) {
+void HandTrackingSource::KeepAlive(XrHandEXT handID, const FrameInfo& info) {
   auto& hand = (handID == XR_HAND_LEFT_EXT) ? mLeftHand : mRightHand;
-  hand.mLastKeepAliveAt = displayTime;
+  hand.mLastKeepAliveAt = info.mNow;
 }
 
 void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
@@ -204,7 +204,7 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
 
   if (UseHandTrackingAimPointFB()) {
     if (HasFlags(aimFB.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
-      state.mUpdatedAt = displayTime;
+      state.mUpdatedAt = frameInfo.mNow;
       state.mPose = {aimFB.aimPose};
     }
   } else if (joints.isActive) {
@@ -212,7 +212,7 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
     if (
       HasFlags(joint.locationFlags, XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)
       && HasFlags(joint.locationFlags, XR_SPACE_LOCATION_POSITION_VALID_BIT)) {
-      state.mUpdatedAt = displayTime;
+      state.mUpdatedAt = frameInfo.mNow;
       state.mPose = {joint.pose};
     }
   }
@@ -233,12 +233,12 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
       + (velocity3.linearVelocity.y * velocity3.linearVelocity.y)
       + (velocity3.linearVelocity.z * velocity3.linearVelocity.z));
     if (linearVelocity >= Config::HandTrackingSleepSpeed) {
-      hand->mLastKeepAliveAt = displayTime;
+      hand->mLastKeepAliveAt = frameInfo.mNow;
       if (
         hand->mSleeping && linearVelocity >= Config::HandTrackingWakeSpeed
         && std::abs(rotation.x) <= (Config::HandTrackingWakeVFOV / 2)
         && std::abs(rotation.y) <= (Config::HandTrackingWakeHFOV / 2)
-        && std::chrono::nanoseconds(displayTime - hand->mLastSleepSpeedAt)
+        && std::chrono::nanoseconds(frameInfo.mNow - hand->mLastSleepSpeedAt)
           >= std::chrono::milliseconds(Config::HandTrackingWakeMilliseconds)) {
         DebugPrint(
           "{} > {}, waking hand {}",
@@ -248,10 +248,10 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
         hand->mSleeping = false;
       }
     } else {
-      hand->mLastSleepSpeedAt = displayTime;
+      hand->mLastSleepSpeedAt = frameInfo.mNow;
       if (
         (!hand->mSleeping)
-        && std::chrono::nanoseconds(displayTime - hand->mLastKeepAliveAt)
+        && std::chrono::nanoseconds(frameInfo.mNow - hand->mLastKeepAliveAt)
           > std::chrono::milliseconds(Config::HandTrackingSleepMilliseconds)) {
         DebugPrint(
           "{} < {} for at least {}ms, sleeping hand {}",
@@ -299,7 +299,7 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
   }
 
   if (state.mActions.Any()) {
-    hand->mLastKeepAliveAt = frameInfo.mPredictedDisplayTime;
+    hand->mLastKeepAliveAt = frameInfo.mNow;
   }
 
   state.mDirection = {rotation};

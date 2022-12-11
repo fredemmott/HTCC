@@ -272,10 +272,10 @@ XrResult APILayer::xrWaitFrame(
 
   if (mHandTracking) {
     if (leftHand.mActions.Any()) {
-      mHandTracking->KeepAlive(XR_HAND_LEFT_EXT, state->predictedDisplayTime);
+      mHandTracking->KeepAlive(XR_HAND_LEFT_EXT, frameInfo);
     }
     if (rightHand.mActions.Any()) {
-      mHandTracking->KeepAlive(XR_HAND_RIGHT_EXT, state->predictedDisplayTime);
+      mHandTracking->KeepAlive(XR_HAND_RIGHT_EXT, frameInfo);
     }
   }
 
