@@ -9,6 +9,8 @@
 
 ![Skatezilla's SteamVR option](skatezilla-steamvr.png).
 
+There doesn't appear to be a way to disable 'touch to interact'; be careful not to accidentally touch the controls. This is especially problematic for the fire suppression pull handles in the A10C.
+
 ## Controls
 
 - 'left click'/index finger pinch to thumb: left click/VR thumbstick down
