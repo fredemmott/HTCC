@@ -9,6 +9,12 @@
 
 ![Skatezilla's SteamVR option](skatezilla-steamvr.png).
 
+## Virtual TouchScreen vs Virtual VR Controller
+
+Due to the limitations of DCS's mouse implementation, the virtual touch screen does not work well in menus, or near the bottom of your field of view.
+
+While the virtual VR controller fixes these issues, unfortunately, as there's no way to disable 'touch to interact', it's hard to avoid accidentally interacting with controls (especially the A10C fire pull handles, for example).
+
 ## Controls
 
 - 'left click'/index finger pinch to thumb: left click/VR thumbstick down
