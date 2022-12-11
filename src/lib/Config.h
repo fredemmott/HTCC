@@ -78,7 +78,7 @@ enum class VRControllerPointerSinkWorldLock : DWORD {
   IT(uint16_t, ScrollWheelMilliseconds, 500) \
   IT(uint16_t, ScrollAccelerationMilliseconds, 3000) \
   IT(uint32_t, HandTrackingWakeMilliseconds, 100) \
-  IT(uint32_t, HandTrackingSleepMilliseconds, 2000) \
+  IT(uint32_t, HandTrackingSleepMilliseconds, 3000) \
   IT(bool, PointCtrlSupportHotplug, true) \
   IT(uint16_t, PointCtrlCenterX, 32767) \
   IT(uint16_t, PointCtrlCenterY, 32767) \
@@ -134,10 +134,10 @@ enum class VRControllerPointerSinkWorldLock : DWORD {
   IT(VRControllerActionSinkSecondsPerRotation, 4.0f) \
   IT(VRControllerPointerSinkSoftWorldLockDistance, 0.05f) \
   IT(HandTrackingSleepSpeed, 0.1f) \
-  IT(HandTrackingWakeSpeed, 0.5f) \
+  IT(HandTrackingWakeSpeed, 0.3f) \
   IT(HandTrackingWakeVFOV, std::numbers::pi_v<float> / 6) \
   IT(HandTrackingWakeHFOV, std::numbers::pi_v<float> / 3) \
-  IT(HandTrackingActionVFOV, std::numbers::pi_v<float> / 6) \
+  IT(HandTrackingActionVFOV, std::numbers::pi_v<float> / 4) \
   IT(HandTrackingActionHFOV, std::numbers::pi_v<float> / 3)
 
 #define HandTrackedCockpitClicking_STRING_SETTINGS \
