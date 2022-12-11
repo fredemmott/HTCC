@@ -11,6 +11,18 @@ This is only tested with a Quest 2 and a Quest Pro. It probably doesn't work wit
 
 ![Developer Runtime Features option](developer-runtime-features.png)
 
+## Sleep/wake
+
+Hand tracking and gesture recognition is not perfectly reliable; it will hopefully improve with future Oculus firmware updates.
+
+HTCC reduces the changes of accidental clicks by:
+- adding sleep/wake mode
+- ignoring gestures unless you're looking close to your hand
+
+'Wake' hand tracking by waving your hand close to the center of your view. Tracking will 'sleep' for that hand after a few seconds of little movement.
+
+The limits can be tweaked [in the registry](../settings.md) if needed.
+
 ## FAQ
 
 ### Why do pinch gestures require Oculus headsets?

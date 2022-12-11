@@ -1,8 +1,8 @@
-# EXPERIMENT: Hand-tracked cockpit clicking for VR flight simulators
+# Hand-tracked cockpit clicking for VR flight simulators
 
 This project is an OpenXR API layer aimed to make it easy to click on cockpits in VR flight simulators.
 
-This is **not** intended to be or usable as general-purpose hand tracking support: it is designed to work well with specific games (DCS and MSFS), and does weird things to make that feel better, including doing things like mapping button presses to controller rotation if that's what works best in a particular game.
+This is **not** intended to be or usable as general-purpose hand tracking support: it is designed to work well with specific games (DCS and MSFS).
 
 ## Game Compatibility
 
@@ -18,7 +18,6 @@ If you have a PointCTRL:
 - the custom firmware is *optional* in DCS, however if you are using the custom firmware, DCS **must** be using [OpenComposite]
 
 To use PointCTRL in DCS without OpenComposite, you must restore the standard firmware.
-
 
 ## Hardware Compatibility
 
@@ -44,22 +43,9 @@ As long as OpenXR support is enabled in Ultraleap settings, an ultraleap can be 
 
 The PointCTRL finger-mounted buttons can be used (with the HMS being used as a dongle, not as a tracker).
 
-Other devices can also be used if Windows considers them a joystick/gamepad with a VID+PID: Take a look at [docs/settings.md] - you will need to specify:
-
-- `PointCtrlVID`
-- `PointCtrlPID`
-- `PointCtrlFCUButtonL1` - 'left click' button, left hand
-- `PointCtrlFCUButtonL2` - 'right click' button, left hand
-- `PointCtrlFCUButtonL3` - 'middle click' button, left hand
-- `PointCtrlFCUButtonR1` - 'left click' button, left hand
-- `PointCtrlFCUButtonR2` - 'right click' button, left hand
-- `PointCtrlFCUButtonR3` - 'middle click' button, left hand
-
-The first 'joystick' button is button 0, the second is button 1, etc.
+Other devices can also be used if Windows considers them a joystick/gamepad with a VID+PID - take a look at [docs/settings.md].
 
 ## Installation and setup
-
-**DONT**. This is an experiment and not ready for general use.
 
 - [Downloads](https://github.com/fredemmott/hand-tracked-cockpit-clicking/releases/latest)
 - [Getting started](docs/getting%20started.md)
@@ -74,7 +60,7 @@ The first 'joystick' button is button 0, the second is button 1, etc.
 
 I make this for my own use, and I share this in the hope others find it useful; I'm not able to commit to support, bug fixes, or feature development.
 
-First, check the documentation links above; if you still need help, support may be available from the community via the #hand-tracking channel in [my Discord]. I am not able to respond to 1:1 requests for help via any means, including GitHub, Discord, Twitter, Reddit, or email.
+First, check the documentation links above; if you still need help, support may be available from the community via the #help channel in [my Discord]. I am not able to respond to 1:1 requests for help via any means, including GitHub, Discord, Twitter, Reddit, or email.
 
 ## License
 
