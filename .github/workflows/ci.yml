@@ -110,10 +110,11 @@ jobs:
           name: ${{steps.installer.outputs.NAME}}
           path: ${{steps.installer.outputs.PATH}}
       - name: Generate release notes
+        if: ${{matrix.config != 'Debug' }}
         id: release-notes
         run: |
           $out = "${{runner.temp}}/release_notes.md"
-          (Get-Content -Path .github/workflows/release_notes.md -raw) `
+          (Get-Content -Path source/.github/workflows/release_notes.md -raw) `
             -replace '@TAG@','${{github.ref_name}}' | `
             Set-Content -Path $out -Encoding UTF8
           Add-Content $Env:GITHUB_OUTPUT "PATH=$out"
