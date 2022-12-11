@@ -26,6 +26,7 @@
 #include <openxr/openxr.h>
 
 #include <cinttypes>
+#include <numbers>
 
 namespace HandTrackedCockpitClicking {
 enum class PointerSource : DWORD {
@@ -132,7 +133,11 @@ enum class VRControllerPointerSinkWorldLock : DWORD {
   IT(VRControllerActionSinkSecondsPerRotation, 4.0f) \
   IT(VRControllerPointerSinkSoftWorldLockDistance, 0.05f) \
   IT(HandTrackingSleepSpeed, 0.1f) \
-  IT(HandTrackingWakeSpeed, 0.5f)
+  IT(HandTrackingWakeSpeed, 0.5f) \
+  IT(HandTrackingWakeVFOV, std::numbers::pi_v<float> / 6) \
+  IT(HandTrackingWakeHFOV, std::numbers::pi_v<float> / 3) \
+  IT(HandTrackingActionVFOV, std::numbers::pi_v<float> / 6) \
+  IT(HandTrackingActionHFOV, std::numbers::pi_v<float> / 3)
 
 #define HandTrackedCockpitClicking_STRING_SETTINGS \
   IT( \

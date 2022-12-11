@@ -164,7 +164,19 @@ Number of milliseconds that the hand must be moving for hand tracking to activat
 
 STRING
 
-Speed, in meters per second, that the hand must be moving for hand tracking to activate.
+Speed - in meters per second - that the hand must be moving for hand tracking to activate.
+
+## HandTrackingWakeHFOV, HandTrackingWakeVFOV
+
+STRING
+
+Field of view - in radians - that the hand must be in for hand tracking to activate.
+
+## HandTrackingActionHFOV, HandTrackingActionVFOV
+
+STRING
+
+Field of view - in radians - that the hand must be in for the start of a gesture to be recognized.
 
 ## HandTrackingSleepMilliseconds
 

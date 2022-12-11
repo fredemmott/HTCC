@@ -218,9 +218,18 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
     }
   }
 
+  if (!state.mPose) {
+    state = {hand->mHand};
+    return;
+  }
+
+  const auto [raycastPose, rotation] = RaycastPose(frameInfo, *state.mPose);
+  const auto rdiff
+    = std::sqrtf((rotation.x * rotation.x) + (rotation.y * rotation.y));
+
   const auto velocity3 = jointVelocities[Config::HandTrackingAimJoint];
   if (HasFlags(velocity3.velocityFlags, XR_SPACE_VELOCITY_LINEAR_VALID_BIT)) {
-    const auto linearVelocity = std::sqrt(
+    const auto linearVelocity = std::sqrtf(
       (velocity3.linearVelocity.x * velocity3.linearVelocity.x)
       + (velocity3.linearVelocity.y * velocity3.linearVelocity.y)
       + (velocity3.linearVelocity.z * velocity3.linearVelocity.z));
@@ -228,8 +237,10 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
       hand->mLastKeepAliveAt = displayTime;
       if (
         hand->mSleeping && linearVelocity >= Config::HandTrackingWakeSpeed
+        && std::abs(rotation.x) <= (Config::HandTrackingWakeVFOV / 2)
+        && std::abs(rotation.y) <= (Config::HandTrackingWakeHFOV / 2)
         && std::chrono::nanoseconds(displayTime - hand->mLastSleepSpeedAt)
-          > std::chrono::milliseconds(Config::HandTrackingWakeMilliseconds)) {
+          >= std::chrono::milliseconds(Config::HandTrackingWakeMilliseconds)) {
         DebugPrint(
           "{} > {}, waking hand {}",
           linearVelocity,
@@ -267,9 +278,26 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
     return;
   }
 
-  PopulateInteractions(aimFB.status, &state);
-  const auto [raycastPose, direction] = RaycastPose(frameInfo, *state.mPose);
-  state.mDirection = {direction};
+  {
+    InputState rawActions {};
+    PopulateInteractions(aimFB.status, &rawActions);
+    // Inverted because l-r movement is rotation in x axis
+    const auto inActionFOV
+      = std::abs(rotation.x) <= (Config::HandTrackingActionVFOV / 2)
+      && std::abs(rotation.y) <= (Config::HandTrackingActionHFOV / 2);
+#define FILTER_ACTION(x) state.x = rawActions.x && (state.x || inActionFOV)
+    FILTER_ACTION(mPrimaryInteraction);
+    FILTER_ACTION(mSecondaryInteraction);
+#undef FILTER_ACTION
+    using ValueChange = InputState::ValueChange;
+    if (inActionFOV || (rawActions.mValueChange == state.mValueChange)) {
+      state.mValueChange = rawActions.mValueChange;
+    } else {
+      state.mValueChange = ValueChange::None;
+    }
+  }
+
+  state.mDirection = {rotation};
   if (Config::HandTrackingOrientation == HandTrackingOrientation::RayCast) {
     state.mPose = raycastPose;
   }
