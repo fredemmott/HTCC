@@ -11,6 +11,8 @@
 
 There doesn't appear to be a way to disable 'touch to interact'; be careful not to accidentally touch the controls. This is especially problematic for the fire suppression pull handles in the A10C.
 
+If accidental control interactions are a problem, switch to 'Virtual Touch Screen' mode - though you will then need to use a mouse for menus.
+
 ## Controls
 
 - 'left click'/index finger pinch to thumb: left click/VR thumbstick down
