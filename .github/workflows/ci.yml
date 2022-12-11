@@ -109,7 +109,7 @@ jobs:
       - name: Generate release notes
         id: release-notes
         run: |
-          $out = "${{runner.temp}/release_notes.md"
+          $out = "${{runner.temp}}/release_notes.md"
           (Get-Content -Path '.github/workflows/release_notes.md -raw') `
             -replace '@TAG@','${{github.ref_name}}' | `
             Set-Content -Path $out -Encoding UTF8
