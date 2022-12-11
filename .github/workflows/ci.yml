@@ -60,7 +60,7 @@ jobs:
           echo "::group::Make zip"
           $zip = "${{runner.temp}}/DebugSymbols.zip"
           cd $prefix
-          Compress-Archive
+          Compress-Archive `
             -Path *.pdb `
             -DestinationPath $zip
           Add-Content $Env:GITHUB_OUTPUT "ZIP_PATH=$zip"
