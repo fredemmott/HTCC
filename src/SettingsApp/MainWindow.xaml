@@ -6,7 +6,7 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   mc:Ignorable="d"
   x:DefaultBindMode="TwoWay">
-  <Grid RowDefinitions="Auto,*">
+  <Grid RowDefinitions="Auto,*" x:Name="RootGrid">
     <Border x:Name="AppTitleBar" Grid.Row="0" VerticalAlignment="Top" Background="{StaticResource WindowCaptionBackground}" Height="32">
       <TextBlock Text="HTCC Settings" VerticalAlignment="Center" Margin="8,0,0,0" Style="{StaticResource CaptionTextBlockStyle}" />
     </Border>

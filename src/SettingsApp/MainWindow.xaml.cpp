@@ -70,6 +70,10 @@ MainWindow::MainWindow() {
   if (size.Width > size.Height) {
     appWindow.Resize({size.Width / 3, size.Height});
   }
+
+  // WinUI3 leaves the 'Busy' cursor up even once everything's loaded
+  RootGrid().Loaded(
+    [](auto, auto) { SetCursor(LoadCursorW(nullptr, IDC_ARROW)); });
 }
 
 void MainWindow::InitVersion() {
