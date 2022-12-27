@@ -99,7 +99,6 @@ class VirtualControllerSink final {
   struct ControllerState {
     XrHandEXT hand {};
     XrPath path {};
-    bool haveAction = false;
 
     bool present {false};
     bool presentLastSync {false};

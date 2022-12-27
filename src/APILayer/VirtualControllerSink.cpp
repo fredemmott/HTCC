@@ -153,8 +153,7 @@ void VirtualControllerSink::UpdateHand(
   controller->present = true;
 
   auto inputPose = OffsetPointerPose(frameInfo, *hand.mPose);
-  const auto haveAction = hand.mActions.Any();
-  if (haveAction) {
+  if (hand.mActions.Any()) {
     if (WorldLockOrientation()) {
       inputPose.orientation = controller->savedAimPose.orientation;
     }
@@ -171,12 +170,9 @@ void VirtualControllerSink::UpdateHand(
         controller->mUnlockedPosition = true;
       }
     }
-  } else if (!haveAction) {
-    controller->haveAction = false;
+  } else {
     controller->savedAimPose = inputPose;
     controller->mUnlockedPosition = false;
-  } else if (!controller->haveAction) {
-    controller->haveAction = true;
   }
   controller->aimPose = {inputPose};
 
