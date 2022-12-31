@@ -58,7 +58,7 @@ class HandTrackingSource final : public InputSource {
     XrHandEXT mHand;
     InputState mState {mHand};
     XrHandTrackerEXT mTracker {};
-    bool mSleeping {true};
+    bool mSleeping {false};
     XrTime mLastKeepAliveAt {};
     XrTime mLastSleepSpeedAt {};
   };
