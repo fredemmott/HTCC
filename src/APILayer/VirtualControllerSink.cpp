@@ -510,17 +510,15 @@ XrResult VirtualControllerSink::xrGetCurrentInteractionProfile(
 XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
   XrInstance instance,
   const XrInteractionProfileSuggestedBinding* suggestedBindings) {
+  const auto interactionProfile
+    = ResolvePath(suggestedBindings->interactionProfile);
   {
-    const auto interactionProfile
-      = ResolvePath(suggestedBindings->interactionProfile);
-
     if (interactionProfile != Config::VirtualControllerInteractionProfilePath) {
       DebugPrint(
         "Profile '{}' does not match desired profile '{}'",
         interactionProfile,
         Config::VirtualControllerInteractionProfilePath);
-      return mOpenXR->xrSuggestInteractionProfileBindings(
-        instance, suggestedBindings);
+      return XR_SUCCESS;
     }
     DebugPrint(
       "Found desired profile '{}'",
@@ -600,8 +598,7 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
   }
   mHaveSuggestedBindings = true;
 
-  return mOpenXR->xrSuggestInteractionProfileBindings(
-    instance, suggestedBindings);
+  return XR_SUCCESS;
 }
 
 XrResult VirtualControllerSink::xrCreateActionSpace(
