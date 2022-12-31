@@ -204,7 +204,7 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
 
   if (UseHandTrackingAimPointFB()) {
     if (HasFlags(aimFB.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
-      state.mUpdatedAt = frameInfo.mNow;
+      state.mPositionUpdatedAt = frameInfo.mNow;
       state.mPose = {aimFB.aimPose};
     }
   } else if (joints.isActive) {
@@ -212,7 +212,7 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
     if (
       HasFlags(joint.locationFlags, XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)
       && HasFlags(joint.locationFlags, XR_SPACE_LOCATION_POSITION_VALID_BIT)) {
-      state.mUpdatedAt = frameInfo.mNow;
+      state.mPositionUpdatedAt = frameInfo.mNow;
       state.mPose = {joint.pose};
     }
   }
@@ -269,7 +269,7 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
     return;
   }
 
-  const auto age = std::chrono::nanoseconds(frameInfo.mNow - state.mUpdatedAt);
+  const auto age = std::chrono::nanoseconds(frameInfo.mNow - state.mPositionUpdatedAt);
   const auto stale = age > std::chrono::milliseconds(200);
 
   if (stale) {

@@ -210,9 +210,8 @@ std::tuple<InputState, InputState> PointCtrlSource::Update(
       hand->mInteractionAt = now;
     }
 
-    hand->mState.mPose = {};
     hand->mState.mDirection = {};
-    hand->mState.mUpdatedAt = std::max(mLastMovedAt, hand->mInteractionAt);
+    hand->mState.mPositionUpdatedAt = mLastMovedAt;
 
     switch (Config::PointCtrlFCUMapping) {
       case PointCtrlFCUMapping::Classic:
@@ -234,30 +233,21 @@ std::tuple<InputState, InputState> PointCtrlSource::Update(
   mRaw.mFCUR3 = HAS_BUTTON(FCUB(R3));
 
   const auto interval = std::chrono::nanoseconds(now - mLastMovedAt);
-  if (
-    pointerMode == PointerMode::None
-    || interval > std::chrono::milliseconds(200)) {
-    if (mLeftHand.mInteractionAt > mRightHand.mInteractionAt) {
-      return {mLeftHand.mState, {XR_HAND_RIGHT_EXT}};
-    }
-    return {{XR_HAND_LEFT_EXT}, mRightHand.mState};
+
+  if (interval < std::chrono::milliseconds(100)) {
+    const XrVector2f direction {
+      (static_cast<float>(mY) - Config::PointCtrlCenterY)
+        * -Config::PointCtrlRadiansPerUnitY,
+      (static_cast<float>(mX) - Config::PointCtrlCenterX)
+        * Config::PointCtrlRadiansPerUnitX,
+    };
+    mLeftHand.mState.mDirection = direction;
+    mRightHand.mState.mDirection = direction;
   }
 
-  const XrVector2f direction {
-    (static_cast<float>(mY) - Config::PointCtrlCenterY)
-      * -Config::PointCtrlRadiansPerUnitY,
-    (static_cast<float>(mX) - Config::PointCtrlCenterX)
-      * Config::PointCtrlRadiansPerUnitX,
-  };
-
-  mLeftHand.mState.mUpdatedAt = now;
-  mRightHand.mState.mUpdatedAt = now;
   if (mLeftHand.mInteractionAt > mRightHand.mInteractionAt) {
-    mLeftHand.mState.mDirection = direction;
     return {mLeftHand.mState, {XR_HAND_RIGHT_EXT}};
   }
-
-  mRightHand.mState.mDirection = direction;
   return {{XR_HAND_LEFT_EXT}, mRightHand.mState};
 }
 

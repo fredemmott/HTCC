@@ -49,7 +49,7 @@ struct ActionState {
 
 struct InputState {
   XrHandEXT mHand;
-  XrTime mUpdatedAt {};
+  XrTime mPositionUpdatedAt {};
 
   PointerMode mPointerMode {PointerMode::None};
   // in LOCAL space
