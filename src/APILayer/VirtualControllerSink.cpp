@@ -142,39 +142,86 @@ static bool WorldLockOrientation() {
   }
 }
 
+std::optional<XrPosef> VirtualControllerSink::GetInputPose(
+  const FrameInfo& frameInfo,
+  const InputState& hand,
+  ControllerState* controller) {
+  if (hand.mActions.Any() && !hand.mPose) {
+    return controller->savedAimPose;
+  }
+
+  if (!hand.mPose) {
+    controller->savedAimPose = {};
+    return {};
+  }
+
+  const auto lastDirection = controller->mPreviousFrameDirection;
+  controller->mPreviousFrameDirection = hand.mDirection;
+
+  if (hand.mDirection && lastDirection) {
+    // Assuming that identical input values are an 'out of range' signal,
+    // so maintain the world lock even if moved.
+    //
+    // Fuzzing to 1.0e-7 because floats.
+    if (lastDirection->x != 0.0f) {
+      const auto diff = std::abs(hand.mDirection->x / lastDirection->x);
+      if (diff < 1.0e-7) {
+        return controller->savedAimPose;
+      }
+    }
+    if (lastDirection->y != 0.0f) {
+      const auto diff = std::abs(hand.mDirection->y / lastDirection->y);
+      if (diff < 1.0e-7) {
+        return controller->savedAimPose;
+      }
+    }
+  }
+
+  auto inputPose = OffsetPointerPose(frameInfo, *hand.mPose);
+  if (!(hand.mActions.Any() && controller->savedAimPose)) {
+    controller->savedAimPose = inputPose;
+    controller->mUnlockedPosition = false;
+    return inputPose;
+  }
+
+  if (WorldLockOrientation()) {
+    inputPose.orientation = controller->savedAimPose->orientation;
+  }
+
+  if (
+    Config::VRControllerPointerSinkWorldLock
+    != VRControllerPointerSinkWorldLock::OrientationAndSoftPosition) {
+    return inputPose;
+  }
+
+  if (controller->mUnlockedPosition) {
+    return inputPose;
+  }
+
+  const auto a = XrVecToSM(inputPose.position);
+  const auto b = XrVecToSM(controller->savedAimPose->position);
+  const auto distance = std::abs(Vector3::Distance(a, b));
+  if (distance < Config::VRControllerPointerSinkSoftWorldLockDistance) {
+    inputPose.position = controller->savedAimPose->position;
+  } else {
+    controller->mUnlockedPosition = true;
+  }
+
+  return inputPose;
+}
+
 void VirtualControllerSink::UpdateHand(
   const FrameInfo& frameInfo,
   const InputState& hand,
   ControllerState* controller) {
-  if (!hand.mPose) {
+  auto aimPose = GetInputPose(frameInfo, hand, controller);
+  if (!aimPose) {
     controller->present = false;
     return;
   }
-  controller->present = true;
 
-  auto inputPose = OffsetPointerPose(frameInfo, *hand.mPose);
-  if (hand.mActions.Any()) {
-    if (WorldLockOrientation()) {
-      inputPose.orientation = controller->savedAimPose.orientation;
-    }
-    if (
-      Config::VRControllerPointerSinkWorldLock
-        == VRControllerPointerSinkWorldLock::OrientationAndSoftPosition
-      && !controller->mUnlockedPosition) {
-      const auto a = XrVecToSM(inputPose.position);
-      const auto b = XrVecToSM(controller->savedAimPose.position);
-      const auto distance = std::abs(Vector3::Distance(a, b));
-      if (distance < Config::VRControllerPointerSinkSoftWorldLockDistance) {
-        inputPose.position = controller->savedAimPose.position;
-      } else {
-        controller->mUnlockedPosition = true;
-      }
-    }
-  } else {
-    controller->savedAimPose = inputPose;
-    controller->mUnlockedPosition = false;
-  }
-  controller->aimPose = {inputPose};
+  controller->aimPose = *aimPose;
+  controller->present = true;
 
   SetControllerActions(
     frameInfo.mPredictedDisplayTime, hand.mActions, controller);

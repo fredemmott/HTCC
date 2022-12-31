@@ -104,7 +104,9 @@ class VirtualControllerSink final {
     bool presentLastSync {false};
     bool presentLastPollEvent {false};
 
-    XrPosef savedAimPose {};
+    std::optional<XrVector2f> mPreviousFrameDirection;
+
+    std::optional<XrPosef> savedAimPose {};
     bool mUnlockedPosition {false};
     XrPosef aimPose {};
     XrSpace aimSpace {};
@@ -147,6 +149,11 @@ class VirtualControllerSink final {
 
     XrTime mBlockSecondaryActionsUntil {};
   };
+
+  std::optional<XrPosef> GetInputPose(
+    const FrameInfo&,
+    const InputState& hand,
+    ControllerState* controller);
 
   bool mHaveSuggestedBindings {false};
   std::shared_ptr<OpenXRNext> mOpenXR;
