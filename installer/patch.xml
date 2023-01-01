@@ -6,7 +6,11 @@
   </CPackWiXFragment>
   <CPackWiXFragment Id="#PRODUCT">
     <InstallExecuteSequence>
-      <Custom Action="UltraleapLayerOrder" After="InstallFiles">NOT Installed AND NOT PATCH</Custom>
+      <Custom Action="UltraleapLayerOrder" After="InstallFiles">
+      (NOT PATCH) AND (
+        (NOT Installed)
+        OR REINSTALL
+      )</Custom>
     </InstallExecuteSequence>
   </CPackWiXFragment>
 </CPackWiXPatch>
