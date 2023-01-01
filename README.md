@@ -43,7 +43,7 @@ As long as OpenXR support is enabled in Ultraleap settings, an ultraleap can be 
 
 The PointCTRL finger-mounted buttons can be used (with the HMS being used as a dongle, not as a tracker).
 
-Other devices can also be used if Windows considers them a joystick/gamepad with a VID+PID - take a look at [docs/settings.md].
+Other devices can also be used if Windows considers them a joystick/gamepad with a VID+PID - take a look at [docs/settings.md](docs/settings.md).
 
 ## Installation and setup
 
