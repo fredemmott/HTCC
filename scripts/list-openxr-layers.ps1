@@ -1,38 +1,33 @@
 # Copyright (c) 2023 Fred Emmott <fred@fredemmott.com>
 #
 # SPDX-License-Identifier: MIT
-$enabledCount=0
-foreach ($root in @("HKCU", "HKLM"))
-{
-	$key="${root}:\SOFTWARE\Khronos\OpenXR\1\ApiLayers\Implicit"
+$enabledCount = 0
+foreach ($root in @("HKCU", "HKLM")) {
+	$key = "${root}:\SOFTWARE\Khronos\OpenXR\1\ApiLayers\Implicit"
 	echo "${root}"
 	if (-not (Test-Path $key)) {
 		Write-Host -Foreground DarkGray "`tNo layers."
 		continue;
 	}
 
-	$layers=(Get-Item $key).Property
+	$layers = (Get-Item $key).Property
 	if ($layers.count -eq 0) {
 		Write-Host -Foreground DarkGray "`tNo layers."
 		continue;
 	}
 
-	foreach ($layer in $layers)
-	{
-		if (-not (Test-Path "${layer}"))
-		{
+	foreach ($layer in $layers) {
+		if (-not (Test-Path "${layer}")) {
 			Write-Host -ForegroundColor Red "`t${layer} does not exist (${root})"
 			continue;
 		}
 
-		$name=(Get-Content "${layer}" | ConvertFrom-Json).api_layer.name
+		$name = (Get-Content "${layer}" | ConvertFrom-Json).api_layer.name
 		$disabled = Get-ItemPropertyValue $key -name $layer
-		if ($disabled)
-		{
+		if ($disabled) {
 			Write-Host -ForegroundColor DarkRed "`t${name}"
 		}
-		else
-		{
+		else {
 			$enabledCount++
 			Write-Host -NoNewline "`t (#${enabledCount})"
 			Write-Host -NoNewline -ForegroundColor DarkGray " - "
