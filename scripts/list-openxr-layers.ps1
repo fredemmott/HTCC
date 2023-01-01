@@ -1,3 +1,6 @@
+# Copyright (c) 2022 Fred Emmott <fred@fredemmott.com>
+#
+# SPDX-License-Identifier: MIT
 $enabledCount=0
 foreach ($root in @("HKCU", "HKLM"))
 {
