@@ -100,6 +100,7 @@ include(sign_target.cmake)
 add_subdirectory("third-party")
 add_subdirectory("src")
 add_subdirectory("reg")
+add_subdirectory("scripts")
 
 install(
   FILES
