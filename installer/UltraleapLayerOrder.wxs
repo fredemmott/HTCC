@@ -30,7 +30,7 @@
             DllEntry="WixQuietExec64"
             Execute="deferred" 
             Return="check" 
-            Impersonate="yes"
+            Impersonate="no"
         />
         <SetProperty
             Id="UltraleapLayerOrder"
