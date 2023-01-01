@@ -63,12 +63,12 @@ VirtualTouchScreenSink::VirtualTouchScreenSink(
   mFov = views[Config::MirrorEye].fov;
 
   mCombinedFov = {
-    std::abs(mFov.angleLeft) + std::abs(mFov.angleRight),
+    2 * std::max(std::abs(mFov.angleRight), std::abs(mFov.angleLeft)),
     std::abs(mFov.angleUp) + std::abs(mFov.angleDown),
   };
 
   mFovOrigin0To1 = {
-    std::abs(mFov.angleLeft) / mCombinedFov.x,
+    0.5,
     std::abs(mFov.angleUp) / mCombinedFov.y,
   };
 
