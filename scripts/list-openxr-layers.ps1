@@ -1,31 +1,40 @@
-$key="HKLM:\SOFTWARE\Khronos\OpenXR\1\ApiLayers\Implicit"
-if (-not (Test-Path $key)) {
-	echo "No layers."
-	return;
-}
-
-$layers=(Get-Item $key).Property
 $enabledCount=0
-
-foreach ($layer in $layers)
+foreach ($root in @("HKCU", "HKLM"))
 {
-	if (-not (Test-Path "${layer}"))
-	{
-		Write-Host -ForegroundColor Red "${layer} does not exist"
+	$key="${root}:\SOFTWARE\Khronos\OpenXR\1\ApiLayers\Implicit"
+	echo "${root}"
+	if (-not (Test-Path $key)) {
+		Write-Host -Foreground DarkGray "`tNo layers."
 		continue;
 	}
 
-	$name=(Get-Content "${layer}" | ConvertFrom-Json).api_layer.name
-	$disabled = Get-ItemPropertyValue $key -name $layer
-	if ($disabled)
-	{
-		Write-Host -ForegroundColor DarkRed "${name}"
+	$layers=(Get-Item $key).Property
+	if ($layers.count -eq 0) {
+		Write-Host -Foreground DarkGray "`tNo layers."
+		continue;
 	}
-	else
+
+	foreach ($layer in $layers)
 	{
-		$enabledCount++
-		Write-Host -NoNewline -ForegroundColor Green "${name}"
-		Write-Host " (#${enabledCount})"
+		if (-not (Test-Path "${layer}"))
+		{
+			Write-Host -ForegroundColor Red "`t${layer} does not exist (${root})"
+			continue;
+		}
+
+		$name=(Get-Content "${layer}" | ConvertFrom-Json).api_layer.name
+		$disabled = Get-ItemPropertyValue $key -name $layer
+		if ($disabled)
+		{
+			Write-Host -ForegroundColor DarkRed "`t${name}"
+		}
+		else
+		{
+			$enabledCount++
+			Write-Host -NoNewline "`t (#${enabledCount})"
+			Write-Host -NoNewline -ForegroundColor DarkGray " - "
+			Write-Host -ForegroundColor Green "${name}"
+		}
+		Write-Host -ForegroundColor DarkGray "`t`t${layer}"
 	}
-	Write-Host -ForegroundColor DarkGray "`t${layer}"
 }
