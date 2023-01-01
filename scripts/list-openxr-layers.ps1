@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Fred Emmott <fred@fredemmott.com>
+# Copyright (c) 2023 Fred Emmott <fred@fredemmott.com>
 #
 # SPDX-License-Identifier: MIT
 $enabledCount=0
