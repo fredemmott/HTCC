@@ -4,7 +4,7 @@
 $enabledCount = 0
 foreach ($root in @("HKCU", "HKLM")) {
 	$key = "${root}:\SOFTWARE\Khronos\OpenXR\1\ApiLayers\Implicit"
-	echo "${root}"
+	Write-Host "${root}"
 	if (-not (Test-Path $key)) {
 		Write-Host -Foreground DarkGray "`tNo layers."
 		continue;
