@@ -101,10 +101,19 @@ void VirtualTouchScreenSink::UpdateMainWindow() {
 
 BOOL CALLBACK
 VirtualTouchScreenSink::EnumWindowCallback(HWND hwnd, LPARAM lparam) {
-  auto this_ = reinterpret_cast<VirtualTouchScreenSink*>(lparam);
+  auto self = reinterpret_cast<VirtualTouchScreenSink*>(lparam);
+
+  if (hwnd == self->mConsoleWindow) {
+    return TRUE;
+  }
+
+  if (hwnd == self->mWindow) {
+    return FALSE;
+  }
+
   DWORD processID {};
   GetWindowThreadProcessId(hwnd, &processID);
-  if (processID != this_->mThisProcess) {
+  if (processID != self->mThisProcess) {
     return TRUE;
   }
 
@@ -113,23 +122,15 @@ VirtualTouchScreenSink::EnumWindowCallback(HWND hwnd, LPARAM lparam) {
     return TRUE;
   }
 
-  if (hwnd == this_->mConsoleWindow) {
-    return TRUE;
-  }
+  self->mWindow = hwnd;
 
   RECT rect {};
   GetWindowRect(hwnd, &rect);
-  this_->mWindowRect = rect;
-  this_->mWindowSize = {
+  self->mWindowRect = rect;
+  self->mWindowSize = {
     static_cast<float>(rect.right - rect.left),
     static_cast<float>(rect.bottom - rect.top),
   };
-
-  if (hwnd == this_->mWindow) {
-    return FALSE;
-  }
-
-  this_->mWindow = hwnd;
   DebugPrint(
     "Found game window; mapping hand-tracking within headset FOV to "
     "on-screen "
@@ -144,7 +145,7 @@ VirtualTouchScreenSink::EnumWindowCallback(HWND hwnd, LPARAM lparam) {
   GetMonitorInfo(monitor, &monitorInfo);
 
   rect = monitorInfo.rcMonitor;
-  this_->mScreenSize = {
+  self->mScreenSize = {
     static_cast<float>(rect.right - rect.left),
     static_cast<float>(rect.bottom - rect.top),
   };
