@@ -62,14 +62,17 @@ VirtualTouchScreenSink::VirtualTouchScreenSink(
 
   mFov = views[Config::MirrorEye].fov;
 
+  // ideally this should be the sum of left+right and up+down FOVs - which
+  // aren't symmetric - but this seems to match what DCS does
+
   mCombinedFov = {
     2 * std::max(std::abs(mFov.angleRight), std::abs(mFov.angleLeft)),
-    std::abs(mFov.angleUp) + std::abs(mFov.angleDown),
+    2 * std::abs(mFov.angleUp),
   };
 
   mFovOrigin0To1 = {
     0.5,
-    std::abs(mFov.angleUp) / mCombinedFov.y,
+    0.5,
   };
 
   DebugPrint(
