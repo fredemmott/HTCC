@@ -126,7 +126,7 @@
           </RadioButtons>
         </StackPanel>
         <!-- VERSION INFO -->
-        <Grid ColumnDefinitions="Auto,*,Auto">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
           <FontIcon
             Grid.Column="0"
             Glyph="&#xE74C;"
@@ -136,16 +136,33 @@
           />
           <TextBlock
             Grid.Column="1"
-            Text="Version"
+            Text="About HTCC"
             Style="{StaticResource SubtitleTextBlockStyle}"
             VerticalAlignment="Center"
           />
+					<Button
+						Grid.Column="2"
+						Content="Copy"
+						Click="OnCopyVersionDataClick"
+						VerticalAlignment="Center"
+            Margin="0,0,8,0"
+					/>
           <Button
-            Grid.Column="2"
-            Content="Copy"
-            Click="OnCopyVersionDataClick"
-            VerticalAlignment="Center"
-          />
+            Grid.Column="3"
+            Click="OnSponsorClick">
+            <Grid ColumnDefinitions="Auto,Auto">
+              <FontIcon
+                Grid.Column="0"
+                Glyph="&#xEB51;"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                Foreground="#db61a2"
+              />
+              <TextBlock Grid.Column="1" Margin="8,0,0,0">
+                Support HTCC
+              </TextBlock>
+            </Grid>
+          </Button>
         </Grid>
         <Grid
           RowDefinitions="Auto,Auto"

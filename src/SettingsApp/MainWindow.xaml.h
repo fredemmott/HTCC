@@ -10,6 +10,10 @@ namespace winrt::HTCCSettings::implementation {
 struct MainWindow : MainWindowT<MainWindow> {
   MainWindow();
 
+  winrt::fire_and_forget OnSponsorClick(
+    const IInspectable&,
+    const MUX::RoutedEventArgs&);
+
   ///// General Settings /////
   bool IsEnabled() const noexcept;
   void IsEnabled(bool) noexcept;

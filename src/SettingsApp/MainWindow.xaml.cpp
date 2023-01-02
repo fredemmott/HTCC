@@ -31,6 +31,7 @@
 #include <winrt/Microsoft.UI.Interop.h>
 #include <winrt/Microsoft.UI.Windowing.h>
 #include <winrt/Windows.ApplicationModel.DataTransfer.h>
+#include <winrt/Windows.System.h>
 
 #include <filesystem>
 #include <format>
@@ -106,6 +107,14 @@ void MainWindow::OnCopyVersionDataClick(
   Windows::ApplicationModel::DataTransfer::DataPackage package;
   package.SetText(winrt::to_hstring(mVersionString));
   Windows::ApplicationModel::DataTransfer::Clipboard::SetContent(package);
+}
+
+winrt::fire_and_forget MainWindow::OnSponsorClick(
+  const IInspectable&,
+  const MUX::RoutedEventArgs&) {
+  co_await winrt::Windows::System::Launcher::LaunchUriAsync(
+    winrt::Windows::Foundation::Uri {
+      to_hstring(L"https://github.com/sponsors/fredemmott")});
 }
 
 static std::wstring GetAPILayerPath() {
