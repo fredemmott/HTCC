@@ -13,8 +13,6 @@ namespace HTCCSettings {
 
   // PointCTRL
   Int16 PointCtrlFCUMapping;
-
-  // DCS
-  Int16 MirrorEye;
 }
+
 }// namespace HTCCSettings

@@ -39,10 +39,6 @@ struct MainWindow : MainWindowT<MainWindow> {
   int16_t PointCtrlFCUMapping() const noexcept;
   void PointCtrlFCUMapping(int16_t) noexcept;
 
-  ///// DCS /////
-  int16_t MirrorEye() const noexcept;
-  void MirrorEye(int16_t) noexcept;
-
   ///// Help/about /////
 
   void OnCopyVersionDataClick(const IInspectable&, const MUX::RoutedEventArgs&);

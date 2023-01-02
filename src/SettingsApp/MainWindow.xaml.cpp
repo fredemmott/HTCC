@@ -231,13 +231,4 @@ void MainWindow::PointCtrlFCUMapping(int16_t value) noexcept {
   HTCC::Config::Save();
 }
 
-int16_t MainWindow::MirrorEye() const noexcept {
-  return HTCC::Config::MirrorEye;
-}
-
-void MainWindow::MirrorEye(int16_t value) noexcept {
-  HTCC::Config::MirrorEye = static_cast<uint8_t>(value);
-  HTCC::Config::Save();
-}
-
 }// namespace winrt::HTCCSettings::implementation

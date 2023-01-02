@@ -104,27 +104,6 @@
             <x:String>Modal</x:String>
           </ComboBox>
         </StackPanel>
-        <!-- DCS WORLD -->
-        <TextBlock
-          Text="DCS World"
-          Style="{StaticResource SubtitleTextBlockStyle}"
-        />
-        <StackPanel
-          Orientation="Vertical"
-          Spacing="12"
-          Padding="8"
-          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-          BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-          CornerRadius="4"
-          BorderThickness="1">
-          <RadioButtons
-            Header="Mirror window:"
-            MaxColumns="2"
-            SelectedIndex="{x:Bind MirrorEye}">
-              <RadioButton Grid.Column="0" Content="Left eye" />
-              <RadioButton Grid.Column="1" Content="Right eye" />
-          </RadioButtons>
-        </StackPanel>
         <!-- VERSION INFO -->
         <Grid ColumnDefinitions="Auto,*,Auto,Auto">
           <FontIcon

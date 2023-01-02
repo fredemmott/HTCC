@@ -130,15 +130,6 @@ DWORD: 0..n
 
 Debug output is visible in a debugger or DebugView
 
-### MirrorEye
-
-DWORD 0 or 1:
-
-- 0: left eye
-- 1: right eye
-
-This affects cursor emulation, and should match the DCS mirror settings
-
 ### PinchToClick
 
 DWORD 0 (disabled) or 1 (enabled): use Oculus hand tracking pinch gestures to click

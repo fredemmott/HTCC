@@ -67,7 +67,6 @@ enum class VRControllerPointerSinkWorldLock : DWORD {
 #define HandTrackedCockpitClicking_DWORD_SETTINGS \
   IT(bool, Enabled, false) \
   IT(uint8_t, VerboseDebug, 0) \
-  IT(uint8_t, MirrorEye, 1) \
   IT(bool, EnableFBOpenXRExtensions, true) \
   IT(bool, OneHandOnly, false) \
   IT(bool, UseHandTrackingAimPointFB, true) \
