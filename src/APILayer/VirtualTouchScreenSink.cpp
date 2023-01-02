@@ -65,7 +65,7 @@ VirtualTouchScreenSink::VirtualTouchScreenSink(
   // ideally this should be the sum of left+right and up+down FOVs - which
   // aren't symmetric - but this seems to match what DCS does
 
-  mCombinedFov = {
+  mWindowInputFov = {
     2 * std::max(std::abs(eyeFov.angleRight), std::abs(eyeFov.angleLeft)),
     2 * std::abs(eyeFov.angleUp),
   };
@@ -83,8 +83,8 @@ VirtualTouchScreenSink::VirtualTouchScreenSink(
     eyeFov.angleRight,
     eyeFov.angleUp,
     eyeFov.angleDown,
-    mCombinedFov.x,
-    mCombinedFov.y,
+    mWindowInputFov.x,
+    mWindowInputFov.y,
     mFovOrigin0To1.x,
     mFovOrigin0To1.y);
 
@@ -187,9 +187,9 @@ bool VirtualTouchScreenSink::RotationToCartesian(
   // Flipped because screen X is left-to-right, which is a rotation around the Y
   // axis
 
-  const auto screenX = mFovOrigin0To1.x + (rotation.y / mCombinedFov.x);
+  const auto screenX = mFovOrigin0To1.x + (rotation.y / mWindowInputFov.x);
   // OpenXR has Y origin in bottom left, screeen has it in top left
-  const auto screenY = mFovOrigin0To1.y - (rotation.x / mCombinedFov.y);
+  const auto screenY = mFovOrigin0To1.y - (rotation.x / mWindowInputFov.y);
 
   if (screenX < 0 || screenX > 1 || screenY < 0 || screenY > 1) {
     return false;

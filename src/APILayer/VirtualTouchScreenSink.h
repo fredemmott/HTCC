@@ -57,7 +57,7 @@ class VirtualTouchScreenSink final {
   RECT mWindowRect {};
   XrVector2f mScreenSize;
 
-  XrVector2f mCombinedFov {};
+  XrVector2f mWindowInputFov {};
   XrVector2f mFovOrigin0To1 {};
 
   bool mLeftClick {false};
