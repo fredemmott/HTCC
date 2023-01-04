@@ -169,8 +169,7 @@ int16_t MainWindow::PointerSource() const noexcept {
 }
 
 void MainWindow::PointerSource(int16_t value) noexcept {
-  HTCC::Config::PointerSource = static_cast<HTCC::PointerSource>(value);
-  HTCC::Config::Save();
+  HTCC::Config::SavePointerSource(static_cast<HTCC::PointerSource>(value));
 }
 
 int16_t MainWindow::PointerSink() const noexcept {
@@ -178,8 +177,7 @@ int16_t MainWindow::PointerSink() const noexcept {
 }
 
 void MainWindow::PointerSink(int16_t value) noexcept {
-  HTCC::Config::PointerSink = static_cast<HTCC::PointerSink>(value);
-  HTCC::Config::Save();
+  HTCC::Config::SavePointerSink(static_cast<HTCC::PointerSink>(value));
 }
 
 bool MainWindow::PinchToClick() const noexcept {
@@ -187,8 +185,7 @@ bool MainWindow::PinchToClick() const noexcept {
 }
 
 void MainWindow::PinchToClick(bool value) noexcept {
-  HTCC::Config::PinchToClick = value;
-  HTCC::Config::Save();
+  HTCC::Config::SavePinchToClick(value);
 }
 
 bool MainWindow::PinchToScroll() const noexcept {
@@ -196,8 +193,7 @@ bool MainWindow::PinchToScroll() const noexcept {
 }
 
 void MainWindow::PinchToScroll(bool value) noexcept {
-  HTCC::Config::PinchToScroll = value;
-  HTCC::Config::Save();
+  HTCC::Config::SavePinchToScroll(value);
 }
 
 int16_t MainWindow::PointCtrlFCUMapping() const noexcept {
@@ -226,9 +222,8 @@ void MainWindow::OnPointCtrlCalibrateClick(
 }
 
 void MainWindow::PointCtrlFCUMapping(int16_t value) noexcept {
-  HTCC::Config::PointCtrlFCUMapping
-    = static_cast<HTCC::PointCtrlFCUMapping>(value);
-  HTCC::Config::Save();
+  HTCC::Config::SavePointCtrlFCUMapping(
+    static_cast<HTCC::PointCtrlFCUMapping>(value));
 }
 
 }// namespace winrt::HTCCSettings::implementation

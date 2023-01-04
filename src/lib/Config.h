@@ -148,18 +148,21 @@ namespace HandTrackedCockpitClicking::Config {
 
 #define IT(native_type, name, default) \
   extern native_type name; \
-  constexpr native_type name##Default {default};
+  constexpr native_type name##Default {default}; \
+  void Save##name(native_type);
 HandTrackedCockpitClicking_DWORD_SETTINGS
 #undef IT
 #define IT(name, default) \
   extern float name; \
-  constexpr float name##Default {default};
+  constexpr float name##Default {default}; \
+  void Save##name(float);
   HandTrackedCockpitClicking_FLOAT_SETTINGS
 #undef IT
 #define IT(name, default) \
   extern std::string name; \
-  constexpr std::string_view name##Default {default};
-    HandTrackedCockpitClicking_STRING_SETTINGS
+  constexpr std::string_view name##Default {default}; \
+  void Save##name(std::string_view);
+  HandTrackedCockpitClicking_STRING_SETTINGS
 #undef IT
 
   inline bool
@@ -171,6 +174,5 @@ HandTrackedCockpitClicking_DWORD_SETTINGS
 }
 
 void Load();
-void Save();
 
 }// namespace HandTrackedCockpitClicking::Config

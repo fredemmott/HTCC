@@ -171,16 +171,26 @@ static void SaveFloat(const wchar_t* valueName, float value) {
   SaveString(valueName, data);
 }
 
-void Save() {
-#define IT(native_type, name, default) SaveDWord(L#name, Config::name);
-  HandTrackedCockpitClicking_DWORD_SETTINGS
+#define IT(native_type, name, default) \
+  void Save##name(native_type value) { \
+    Config::name = value; \
+    SaveDWord(L#name, Config::name); \
+  }
+HandTrackedCockpitClicking_DWORD_SETTINGS
 #undef IT
-#define IT(name, default) SaveFloat(L#name, Config::name);
-    HandTrackedCockpitClicking_FLOAT_SETTINGS
+#define IT(name, default) \
+  void Save##name(float value) { \
+    Config::name = value; \
+    SaveFloat(L#name, Config::name); \
+  }
+  HandTrackedCockpitClicking_FLOAT_SETTINGS
 #undef IT
-#define IT(name, default) SaveString(L#name, Config::name);
-      HandTrackedCockpitClicking_STRING_SETTINGS
+#define IT(name, default) \
+  void Save##name(float value) { \
+    Config::name = value; \
+    SaveString(L#name, Config::name); \
+  }
+    HandTrackedCockpitClicking_STRING_SETTINGS
 #undef IT
-}
 
 }// namespace HandTrackedCockpitClicking::Config

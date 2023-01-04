@@ -618,10 +618,9 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   }
 
   Config::Load();
-  Config::PointCtrlCenterX = centerPoint.x;
-  Config::PointCtrlCenterY = centerPoint.y;
-  Config::PointCtrlRadiansPerUnitX = radiansPerUnit.x;
-  Config::PointCtrlRadiansPerUnitY = radiansPerUnit.y;
-  Config::Save();
+  Config::SavePointCtrlCenterX(centerPoint.x);
+  Config::SavePointCtrlCenterY(centerPoint.y);
+  Config::SavePointCtrlRadiansPerUnitX(radiansPerUnit.x);
+  Config::SavePointCtrlRadiansPerUnitY(radiansPerUnit.y);
   return 0;
 }
