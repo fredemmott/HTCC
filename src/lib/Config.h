@@ -69,6 +69,7 @@ enum class VRControllerPointerSinkWorldLock : DWORD {
   IT(uint8_t, VerboseDebug, 0) \
   IT(bool, EnableFBOpenXRExtensions, true) \
   IT(bool, OneHandOnly, false) \
+  IT(bool, HaveSavedFOV, false) \
   IT(bool, UseHandTrackingAimPointFB, true) \
   IT(XrHandJointEXT, HandTrackingAimJoint, XR_HAND_JOINT_INDEX_PROXIMAL_EXT) \
   IT(bool, PinchToClick, true) \
@@ -137,7 +138,15 @@ enum class VRControllerPointerSinkWorldLock : DWORD {
   IT(HandTrackingWakeVFOV, std::numbers::pi_v<float> / 6) \
   IT(HandTrackingWakeHFOV, std::numbers::pi_v<float> / 3) \
   IT(HandTrackingActionVFOV, std::numbers::pi_v<float> / 4) \
-  IT(HandTrackingActionHFOV, std::numbers::pi_v<float> / 3)
+  IT(HandTrackingActionHFOV, std::numbers::pi_v<float> / 3) \
+  IT(LeftEyeFOVLeft, 0.0f) \
+  IT(LeftEyeFOVRight, 0.0f) \
+  IT(LeftEyeFOVUp, 0.0f) \
+  IT(LeftEyeFOVDown, 0.0f) \
+  IT(RightEyeFOVLeft, 0.0f) \
+  IT(RightEyeFOVRight, 0.0f) \
+  IT(RightEyeFOVUp, 0.0f) \
+  IT(RightEyeFOVDown, 0.0f)
 
 #define HandTrackedCockpitClicking_STRING_SETTINGS \
   IT( \
@@ -162,7 +171,7 @@ HandTrackedCockpitClicking_DWORD_SETTINGS
   extern std::string name; \
   constexpr std::string_view name##Default {default}; \
   void Save##name(std::string_view);
-  HandTrackedCockpitClicking_STRING_SETTINGS
+    HandTrackedCockpitClicking_STRING_SETTINGS
 #undef IT
 
   inline bool

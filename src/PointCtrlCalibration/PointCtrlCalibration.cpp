@@ -422,6 +422,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   };
 
   bool saveAndExit = false;
+  XrTime nextDisplayTime {};
 
   while (!saveAndExit) {
     {
@@ -495,6 +496,8 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     XrFrameState frameState {XR_TYPE_FRAME_STATE};
     check_xr(xrWaitFrame(session, nullptr, &frameState));
     check_xr(xrBeginFrame(session, nullptr));
+
+    nextDisplayTime = frameState.predictedDisplayTime;
 
     XrCompositionLayerQuad layer {
       .type = XR_TYPE_COMPOSITION_LAYER_QUAD,
@@ -617,10 +620,52 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     }
   }
 
-  Config::Load();
   Config::SavePointCtrlCenterX(centerPoint.x);
   Config::SavePointCtrlCenterY(centerPoint.y);
   Config::SavePointCtrlRadiansPerUnitX(radiansPerUnit.x);
   Config::SavePointCtrlRadiansPerUnitY(radiansPerUnit.y);
+
+  // Also save the FOV while we're here; this isn't needed when running as
+  // an OpenXR API layer, but opens the possibility of supporting
+  // tablet/touchscreen mode without OpenXR
+
+  XrViewLocateInfo viewLocateInfo {
+    .type = XR_TYPE_VIEW_LOCATE_INFO,
+    .viewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO,
+    .displayTime = nextDisplayTime,
+    .space = viewSpace,
+  };
+  XrViewState viewState {XR_TYPE_VIEW_STATE};
+  std::array<XrView, 2> views;
+  views.fill({XR_TYPE_VIEW});
+  uint32_t viewCount {views.size()};
+  {
+    const auto result = xrLocateViews(
+      session,
+      &viewLocateInfo,
+      &viewState,
+      viewCount,
+      &viewCount,
+      views.data());
+    if (result != XR_SUCCESS) {
+      DebugPrint("Failed to find FOV: {}", static_cast<int>(result));
+      return 0;
+    }
+  }
+
+  const auto leftFov = views[0].fov;
+  Config::SaveLeftEyeFOVLeft(leftFov.angleLeft);
+  Config::SaveLeftEyeFOVRight(leftFov.angleRight);
+  Config::SaveLeftEyeFOVUp(leftFov.angleUp);
+  Config::SaveLeftEyeFOVDown(leftFov.angleDown);
+
+  const auto rightFov = views[1].fov;
+  Config::SaveRightEyeFOVLeft(rightFov.angleLeft);
+  Config::SaveRightEyeFOVRight(rightFov.angleRight);
+  Config::SaveRightEyeFOVUp(rightFov.angleUp);
+  Config::SaveRightEyeFOVDown(rightFov.angleDown);
+
+  Config::SaveHaveSavedFOV(true);
+
   return 0;
 }
