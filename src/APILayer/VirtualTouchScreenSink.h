@@ -33,6 +33,12 @@ namespace HandTrackedCockpitClicking {
 
 class VirtualTouchScreenSink final {
  public:
+  struct Calibration {
+    XrVector2f mWindowInputFov {};
+    XrVector2f mWindowInputFovOrigin0To1 {};
+  };
+
+  VirtualTouchScreenSink(Calibration, DWORD targetProcessID);
   VirtualTouchScreenSink(
     const std::shared_ptr<OpenXRNext>& oxr,
     XrSession session,
@@ -44,21 +50,31 @@ class VirtualTouchScreenSink final {
   static bool IsActionSink();
   static bool IsPointerSink();
 
+  VirtualTouchScreenSink() = delete;
+
+  static std::optional<Calibration> CalibrationFromOpenXR(
+    const std::shared_ptr<OpenXRNext>& oxr,
+    XrSession session,
+    XrTime nextDisplayTime,
+    XrSpace viewSpace);
+
+  static Calibration CalibrationFromOpenXRFOV(const XrFovf& eyeFov);
+  static std::optional<Calibration> CalibrationFromConfig();
+
  private:
   void Update(const InputState& hand);
   bool RotationToCartesian(const XrVector2f& rotation, XrVector2f* cartesian);
   void UpdateMainWindow();
   static BOOL CALLBACK EnumWindowCallback(HWND hwnd, LPARAM lparam);
 
-  DWORD mThisProcess;
+  DWORD mTargetProcessID;
   HWND mWindow {};
   HWND mConsoleWindow {};
   XrVector2f mWindowSize {};
   RECT mWindowRect {};
   XrVector2f mScreenSize;
 
-  XrVector2f mWindowInputFov {};
-  XrVector2f mFovOrigin0To1 {};
+  Calibration mCalibration {};
 
   bool mLeftClick {false};
   bool mRightClick {false};

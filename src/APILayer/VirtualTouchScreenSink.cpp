@@ -31,14 +31,33 @@
 namespace HandTrackedCockpitClicking {
 
 VirtualTouchScreenSink::VirtualTouchScreenSink(
-  const std::shared_ptr<OpenXRNext>& oxr,
-  XrSession session,
-  XrTime nextDisplayTime,
-  XrSpace viewSpace) {
+  Calibration calibration,
+  DWORD targetProcessID)
+  : mCalibration(calibration), mTargetProcessID(targetProcessID) {
   DebugPrint(
     "Initialized virtual touch screen - PointerSink: {}; ActionSink: {}",
     IsPointerSink(),
     IsActionSink());
+
+  UpdateMainWindow();
+}
+
+VirtualTouchScreenSink::VirtualTouchScreenSink(
+  const std::shared_ptr<OpenXRNext>& oxr,
+  XrSession session,
+  XrTime nextDisplayTime,
+  XrSpace viewSpace)
+  : VirtualTouchScreenSink(
+    CalibrationFromOpenXR(oxr, session, nextDisplayTime, viewSpace).value(),
+    GetCurrentProcessId()) {
+}
+
+std::optional<VirtualTouchScreenSink::Calibration>
+VirtualTouchScreenSink::CalibrationFromOpenXR(
+  const std::shared_ptr<OpenXRNext>& oxr,
+  XrSession session,
+  XrTime nextDisplayTime,
+  XrSpace viewSpace) {
   XrViewLocateInfo viewLocateInfo {
     .type = XR_TYPE_VIEW_LOCATE_INFO,
     .viewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO,
@@ -57,23 +76,12 @@ VirtualTouchScreenSink::VirtualTouchScreenSink(
         &viewCount,
         views.data())) {
     DebugPrint("Failed to find FOV");
-    return;
+    return {};
   }
 
   const auto eyeFov = views[0].fov;
 
-  // ideally this should be the sum of left+right and up+down FOVs - which
-  // aren't symmetric - but this seems to match what DCS does
-
-  mWindowInputFov = {
-    2 * std::max(std::abs(eyeFov.angleRight), std::abs(eyeFov.angleLeft)),
-    2 * std::abs(eyeFov.angleUp),
-  };
-
-  mFovOrigin0To1 = {
-    0.5,
-    0.5,
-  };
+  auto calibration = CalibrationFromOpenXRFOV(eyeFov);
 
   DebugPrint(
     "Reported eye FOV: L {} R {} U {} D {} (input FOV {}x{}) - tracking origin "
@@ -83,16 +91,47 @@ VirtualTouchScreenSink::VirtualTouchScreenSink(
     eyeFov.angleRight,
     eyeFov.angleUp,
     eyeFov.angleDown,
-    mWindowInputFov.x,
-    mWindowInputFov.y,
-    mFovOrigin0To1.x,
-    mFovOrigin0To1.y);
+    calibration.mWindowInputFov.x,
+    calibration.mWindowInputFov.y,
+    calibration.mWindowInputFovOrigin0To1.x,
+    calibration.mWindowInputFovOrigin0To1.y);
+  return calibration;
+}
 
-  UpdateMainWindow();
+VirtualTouchScreenSink::Calibration
+VirtualTouchScreenSink::CalibrationFromOpenXRFOV(const XrFovf& eyeFov) {
+  // ideally this should be the sum of left+right and up+down FOVs - which
+  // aren't symmetric - but this seems to match what DCS does
+
+  XrVector2f windowInputFov {
+    2 * std::max(std::abs(eyeFov.angleRight), std::abs(eyeFov.angleLeft)),
+    2 * std::abs(eyeFov.angleUp),
+  };
+
+  XrVector2f fovOrigin0To1 {
+    0.5,
+    0.5,
+  };
+
+  return {windowInputFov, fovOrigin0To1};
+}
+
+std::optional<VirtualTouchScreenSink::Calibration>
+VirtualTouchScreenSink::CalibrationFromConfig() {
+  if (!Config::HaveSavedFOV) {
+    return {};
+  }
+
+  const XrFovf eyeFov {
+    .angleLeft = Config::LeftEyeFOVLeft,
+    .angleRight = Config::LeftEyeFOVRight,
+    .angleUp = Config::LeftEyeFOVUp,
+    .angleDown = Config::LeftEyeFOVDown,
+  };
+  return CalibrationFromOpenXRFOV(eyeFov);
 }
 
 void VirtualTouchScreenSink::UpdateMainWindow() {
-  mThisProcess = GetCurrentProcessId();
   mConsoleWindow = GetConsoleWindow();
   EnumWindows(
     &VirtualTouchScreenSink::EnumWindowCallback,
@@ -114,7 +153,7 @@ VirtualTouchScreenSink::EnumWindowCallback(HWND hwnd, LPARAM lparam) {
 
   DWORD processID {};
   GetWindowThreadProcessId(hwnd, &processID);
-  if (processID != self->mThisProcess) {
+  if (processID != self->mTargetProcessID) {
     return TRUE;
   }
 
@@ -187,9 +226,11 @@ bool VirtualTouchScreenSink::RotationToCartesian(
   // Flipped because screen X is left-to-right, which is a rotation around the Y
   // axis
 
-  const auto screenX = mFovOrigin0To1.x + (rotation.y / mWindowInputFov.x);
+  const auto screenX = mCalibration.mWindowInputFovOrigin0To1.x
+    + (rotation.y / mCalibration.mWindowInputFov.x);
   // OpenXR has Y origin in bottom left, screeen has it in top left
-  const auto screenY = mFovOrigin0To1.y - (rotation.x / mWindowInputFov.y);
+  const auto screenY = mCalibration.mWindowInputFovOrigin0To1.y
+    - (rotation.x / mCalibration.mWindowInputFov.y);
 
   if (screenX < 0 || screenX > 1 || screenY < 0 || screenY > 1) {
     return false;
