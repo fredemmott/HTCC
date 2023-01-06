@@ -78,15 +78,11 @@ class VirtualTouchScreenSink final {
 
   bool mLeftClick {false};
   bool mRightClick {false};
-  std::chrono::steady_clock::time_point mScrollStartTime {};
   ActionState::ValueChange mScrollDirection = ActionState::ValueChange::None;
 
   std::chrono::steady_clock::time_point mLastWindowCheck {};
-  std::chrono::steady_clock::time_point mLastWheelUp {};
-  std::chrono::steady_clock::time_point mLastWheelDown {};
 
-  uint8_t GetScrollMultiplier(
-    const std::chrono::steady_clock::time_point& now) const;
+  std::chrono::steady_clock::time_point mNextScrollEvent {};
 };
 
 }// namespace HandTrackedCockpitClicking

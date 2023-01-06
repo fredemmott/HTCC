@@ -44,6 +44,14 @@ Maximum speed, in meters per second, that the hand must be moving to be consider
 
 ## Scroll behavior
 
+### ScrollWheelDelayMilliseconds
+
+DWORD, number of milliseconds between first and second wheel tick.
+
+### ScrollWheelIntervalMilliseconds
+
+DWORD, number of milliseconds between subsequent wheel ticks.
+
 ### ScrollWheelMilliseconds
 
 DWORD, number of milliseconds between emulated scroll wheel ticks when using virtual mouse/touch screen as action sink.

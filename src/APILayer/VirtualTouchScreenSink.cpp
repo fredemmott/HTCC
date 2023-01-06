@@ -323,19 +323,20 @@ void VirtualTouchScreenSink::Update(const InputState& hand) {
 
   if (IsScrollActionSink()) {
     using ValueChange = ActionState::ValueChange;
+    bool isFirstScrollEvent = false;
+    bool hadScrollEvent = false;
     if (hand.mActions.mValueChange != mScrollDirection) {
       mScrollDirection = hand.mActions.mValueChange;
-      if (hand.mActions.mValueChange == ValueChange::None) {
-        mScrollStartTime = {};
-      } else {
-        mScrollStartTime = now;
+      if (hand.mActions.mValueChange != ValueChange::None) {
+        isFirstScrollEvent = true;
+        mNextScrollEvent = now;
       }
     }
-    const auto multiplier = GetScrollMultiplier(now);
+
     if (
       hand.mActions.mValueChange == ValueChange::Decrease
-      && (now - mLastWheelUp > std::chrono::milliseconds(Config::ScrollWheelMilliseconds))) {
-      mLastWheelUp = now;
+      && now >= mNextScrollEvent) {
+      hadScrollEvent = true;
       events.push_back({
       .type = INPUT_MOUSE,
       .mi = {
@@ -347,8 +348,8 @@ void VirtualTouchScreenSink::Update(const InputState& hand) {
 
     if (
       hand.mActions.mValueChange == ValueChange::Increase
-      && (now - mLastWheelDown > std::chrono::milliseconds(Config::ScrollWheelMilliseconds))) {
-      mLastWheelDown = now;
+      && now >= mNextScrollEvent) {
+      hadScrollEvent = true;
       events.push_back({
       .type = INPUT_MOUSE,
       .mi = {
@@ -357,25 +358,21 @@ void VirtualTouchScreenSink::Update(const InputState& hand) {
       },
     });
     }
+
+    if (hadScrollEvent) {
+      if (isFirstScrollEvent) {
+        mNextScrollEvent = now
+          + std::chrono::milliseconds(Config::ScrollWheelDelayMilliseconds);
+      } else {
+        mNextScrollEvent
+          += std::chrono::milliseconds(Config::ScrollWheelIntervalMilliseconds);
+      }
+    }
   }
 
   if (!events.empty()) {
     SendInput(events.size(), events.data(), sizeof(INPUT));
   }
-}
-
-uint8_t VirtualTouchScreenSink::GetScrollMultiplier(
-  const std::chrono::steady_clock::time_point& now) const {
-  using ValueChange = ActionState::ValueChange;
-  if (mScrollDirection == ValueChange::None) {
-    return 0;
-  }
-
-  const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    now - mScrollStartTime)
-                    .count();
-  return std::clamp<uint8_t>(
-    1 + (ms / Config::ScrollAccelerationMilliseconds), 1, 4);
 }
 
 }// namespace HandTrackedCockpitClicking
