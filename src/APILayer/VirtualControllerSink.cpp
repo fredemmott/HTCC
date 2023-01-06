@@ -288,7 +288,8 @@ void VirtualControllerSink::SetDCSControllerActions(
                       predictedDisplayTime - controller->mValueChangeStartAt))
                     .count();
   const auto rate = std::clamp<float>(
-    minimumRate * (1 + (ms / Config::ScrollAccelerationMilliseconds)),
+    minimumRate
+      * (1 + (ms / Config::VRControllerScrollAccelerationDelayMilliseconds)),
     0.0f,
     1.0f);
 

@@ -52,9 +52,9 @@ DWORD, number of milliseconds between first and second wheel tick.
 
 DWORD, number of milliseconds between subsequent wheel ticks.
 
-### ScrollWheelAccelerationMilliseconds
+### VRControllerScrollAccelerationDelayMilliseconds 
 
-DWORD, number of milliseconds to wait before speeding up the scroll wheel.
+DWORD, number of milliseconds to wait before speeding up the scroll acceleration when using VR controllers.
 
 ## PointCTRL settings
 
