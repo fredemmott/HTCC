@@ -52,10 +52,6 @@ DWORD, number of milliseconds between first and second wheel tick.
 
 DWORD, number of milliseconds between subsequent wheel ticks.
 
-### ScrollWheelMilliseconds
-
-DWORD, number of milliseconds between emulated scroll wheel ticks when using virtual mouse/touch screen as action sink.
-
 ### ScrollWheelAccelerationMilliseconds
 
 DWORD, number of milliseconds to wait before speeding up the scroll wheel.
