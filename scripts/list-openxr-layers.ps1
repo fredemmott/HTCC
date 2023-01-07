@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 $enabledCount = 0
-foreach ($root in @("HKCU", "HKLM")) {
+foreach ($root in @("HKLM", "HKCU")) {
 	$key = "${root}:\SOFTWARE\Khronos\OpenXR\1\ApiLayers\Implicit"
 	Write-Host "${root}"
 	if (-not (Test-Path $key)) {
