@@ -417,8 +417,8 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   D2D1_POINT_2U centerPoint {};
   D2D1_POINT_2U offsetPoint {};
   XrVector2f radiansPerUnit {
-    Config::PointCtrlRadiansPerUnitXDefault,
-    Config::PointCtrlRadiansPerUnitYDefault,
+    Config::Defaults::PointCtrlRadiansPerUnitX,
+    Config::Defaults::PointCtrlRadiansPerUnitY,
   };
 
   bool saveAndExit = false;

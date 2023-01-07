@@ -29,13 +29,13 @@
 
 namespace HandTrackedCockpitClicking::Config {
 
-#define IT(native_type, name, default) native_type name {default};
+#define IT(native_type, name, defaultValue) native_type name {defaultValue};
 HandTrackedCockpitClicking_DWORD_SETTINGS
 #undef IT
-#define IT(name, default) float name {default};
+#define IT(name, defaultValue) float name {defaultValue};
   HandTrackedCockpitClicking_FLOAT_SETTINGS
 #undef IT
-#define IT(name, default) std::string name {default};
+#define IT(name, defaultValue) std::string name {defaultValue};
     HandTrackedCockpitClicking_STRING_SETTINGS
 #undef IT
 
@@ -121,13 +121,14 @@ LoadFloat(const std::wstring& subKey, float& value, const wchar_t* valueName) {
 }
 
 static void Load(const std::wstring& subKey) {
-#define IT(native_type, name, default) LoadDWord(subKey, Config::name, L#name);
+#define IT(native_type, name, defaultValue) \
+  LoadDWord(subKey, Config::name, L#name);
   HandTrackedCockpitClicking_DWORD_SETTINGS
 #undef IT
-#define IT(name, default) LoadFloat(subKey, Config::name, L#name);
+#define IT(name, defaultValue) LoadFloat(subKey, Config::name, L#name);
     HandTrackedCockpitClicking_FLOAT_SETTINGS
 #undef IT
-#define IT(name, default) LoadString(subKey, Config::name, L#name);
+#define IT(name, defaultValue) LoadString(subKey, Config::name, L#name);
       HandTrackedCockpitClicking_STRING_SETTINGS
 #undef IT
 }
@@ -180,21 +181,21 @@ static void SaveFloat(const wchar_t* valueName, float value) {
   SaveString(valueName, data);
 }
 
-#define IT(native_type, name, default) \
+#define IT(native_type, name, defaultValue) \
   void Save##name(native_type value) { \
     Config::name = value; \
     SaveDWord(L#name, Config::name); \
   }
 HandTrackedCockpitClicking_DWORD_SETTINGS
 #undef IT
-#define IT(name, default) \
+#define IT(name, defaultValue) \
   void Save##name(float value) { \
     Config::name = value; \
     SaveFloat(L#name, Config::name); \
   }
   HandTrackedCockpitClicking_FLOAT_SETTINGS
 #undef IT
-#define IT(name, default) \
+#define IT(name, defaultValue) \
   void Save##name(float value) { \
     Config::name = value; \
     SaveString(L#name, Config::name); \
