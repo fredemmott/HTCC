@@ -66,6 +66,11 @@ enum class VRControllerGripSqueeze : DWORD {
   Never = 0,
   WhenTracking = 1,
 };
+enum class HandTrackingHands : DWORD {
+  Both = 0,
+  Left = 1,
+  Right = 2,
+};
 
 }// namespace HandTrackedCockpitClicking
 
@@ -125,6 +130,10 @@ enum class VRControllerGripSqueeze : DWORD {
     HandTrackedCockpitClicking::VRControllerGripSqueeze, \
     VRControllerGripSqueeze, \
     HandTrackedCockpitClicking::VRControllerGripSqueeze::Never) \
+  IT( \
+    HandTrackedCockpitClicking::HandTrackingHands, \
+    HandTrackingHands, \
+    HandTrackedCockpitClicking::HandTrackingHands::Both) \
   IT(uint16_t, PointCtrlVID, 0x04d8) \
   IT(uint16_t, PointCtrlPID, 0xeeec) \
   IT(uint8_t, PointCtrlFCUButtonL1, 0) \

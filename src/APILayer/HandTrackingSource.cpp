@@ -163,8 +163,14 @@ void HandTrackingSource::KeepAlive(XrHandEXT handID, const FrameInfo& info) {
 }
 
 void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
-  const auto displayTime = frameInfo.mPredictedDisplayTime;
   InitHandTracker(hand);
+
+  if (!hand->mTracker) {
+    return;
+  }
+
+  const auto displayTime = frameInfo.mPredictedDisplayTime;
+
   auto& state = hand->mState;
   state.mHand = hand->mHand;
 
@@ -269,7 +275,8 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
     return;
   }
 
-  const auto age = std::chrono::nanoseconds(frameInfo.mNow - state.mPositionUpdatedAt);
+  const auto age
+    = std::chrono::nanoseconds(frameInfo.mNow - state.mPositionUpdatedAt);
   const auto stale = age > std::chrono::milliseconds(200);
 
   if (stale) {
@@ -317,7 +324,19 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
 }
 
 void HandTrackingSource::InitHandTracker(Hand* hand) {
-  if (hand->mTracker) [[likely]] {
+  if (hand->mTracker) {
+    return;
+  }
+
+  if (
+    Config::HandTrackingHands == HandTrackingHands::Left
+    && hand->mHand == XR_HAND_RIGHT_EXT) {
+    return;
+  }
+
+  if (
+    Config::HandTrackingHands == HandTrackingHands::Right
+    && hand->mHand == XR_HAND_LEFT_EXT) {
     return;
   }
 

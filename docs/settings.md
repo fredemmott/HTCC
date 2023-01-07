@@ -42,6 +42,16 @@ STRING
 
 Maximum speed, in meters per second, that the hand must be moving to be considered still.
 
+## Other OpenXR Hand Tracking Settings
+
+### HandTrackingHands
+
+DWORD
+
+- 0: both hands are tracked
+- 1: only the left hand is tracked
+- 2: only the right hand is tracked
+
 ## Scroll behavior
 
 ### ScrollWheelDelayMilliseconds
