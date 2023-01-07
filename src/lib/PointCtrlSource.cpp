@@ -48,17 +48,7 @@ static bool IsPointerSource() {
     || Environment::IsPointCtrlCalibration;
 }
 
-PointCtrlSource::PointCtrlSource(
-  const std::shared_ptr<OpenXRNext>& next,
-  XrInstance instance,
-  XrSession session,
-  XrSpace viewSpace,
-  XrSpace localSpace)
-  : mInstance(instance),
-    mSession(session),
-    mViewSpace(viewSpace),
-    mLocalSpace(localSpace),
-    mOpenXR(next) {
+PointCtrlSource::PointCtrlSource() {
   DebugPrint(
     "Initializing PointCtrlSource with calibration ({}, {}) delta ({}, {})",
     Config::PointCtrlCenterX,

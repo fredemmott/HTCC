@@ -38,12 +38,7 @@ namespace HandTrackedCockpitClicking {
 // firmware.
 class PointCtrlSource final : public InputSource {
  public:
-  PointCtrlSource(
-    const std::shared_ptr<OpenXRNext>& next,
-    XrInstance instance,
-    XrSession session,
-    XrSpace viewSpace,
-    XrSpace localSpace);
+  PointCtrlSource();
 
   bool IsConnected() const;
 
@@ -117,12 +112,6 @@ class PointCtrlSource final : public InputSource {
 
   RawValues mRaw {};
   XrTime mLastMovedAt {};
-
-  XrInstance mInstance {};
-  XrSession mSession {};
-  XrSpace mViewSpace {};
-  XrSpace mLocalSpace {};
-  std::shared_ptr<OpenXRNext> mOpenXR;
 
   void UpdatePose(const FrameInfo&, InputState* hand);
   void UpdateWakeState(bool hasButtons, XrTime now, Hand* hand);

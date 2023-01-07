@@ -75,8 +75,7 @@ APILayer::APILayer(
     mHandTracking = std::make_unique<HandTrackingSource>(
       next, instance, session, mViewSpace, mLocalSpace);
   }
-  mPointCtrl = std::make_unique<PointCtrlSource>(
-    next, instance, session, mViewSpace, mLocalSpace);
+  mPointCtrl = std::make_unique<PointCtrlSource>();
 
   if (
     VirtualControllerSink::IsActionSink()

@@ -374,7 +374,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   }
   const auto openXR
     = std::make_shared<OpenXRNext>(instance, &xrGetInstanceProcAddr);
-  PointCtrlSource pointCtrl(openXR, instance, session, viewSpace, localSpace);
+  PointCtrlSource pointCtrl;
   while (!pointCtrl.IsConnected()) {
     const auto result = MessageBoxW(
       NULL,
