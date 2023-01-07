@@ -413,7 +413,14 @@ XrResult VirtualControllerSink::xrSyncActions(
     sFirstRun = false;
     hand->presentLastSync = hand->present;
 
-    hand->squeezeValue.currentState = (hand->present ? 1.0f : 0.0f);
+    switch (Config::VRControllerGripSqueeze) {
+      case VRControllerGripSqueeze::Never:
+        hand->squeezeValue.currentState = 0.0f;
+        break;
+      case VRControllerGripSqueeze::WhenTracking:
+        hand->squeezeValue.currentState = (hand->present ? 1.0f : 0.0f);
+        break;
+    }
     hand->squeezeValue.isActive = hand->present;
     hand->squeezeValue.changedSinceLastSync = presenceChanged;
 

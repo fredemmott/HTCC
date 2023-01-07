@@ -181,6 +181,15 @@ Rough distance from your head to the majority of things you want to interact wit
 
 ## Controller emulation tweaks
 
+### VRControllerGripSquueze
+
+DWORD
+
+- 0: Never
+- 1: When tracking
+
+Some games (such as DCS) require the grip to be squeezed to consider the controller active. Others consider it an active input.
+
 ### VRControllerPointerSinkWorldLock 
 
 DWORD

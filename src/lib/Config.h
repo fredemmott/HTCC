@@ -62,6 +62,11 @@ enum class VRControllerPointerSinkWorldLock : DWORD {
   Orientation = 1,
   OrientationAndSoftPosition = 2,
 };
+enum class VRControllerGripSqueeze : DWORD {
+  Never = 0,
+  WhenTracking = 1,
+};
+
 }// namespace HandTrackedCockpitClicking
 
 #define HandTrackedCockpitClicking_DWORD_SETTINGS \
@@ -116,6 +121,10 @@ enum class VRControllerPointerSinkWorldLock : DWORD {
     VRControllerPointerSinkWorldLock, \
     HandTrackedCockpitClicking::VRControllerPointerSinkWorldLock:: \
       OrientationAndSoftPosition) \
+  IT( \
+    HandTrackedCockpitClicking::VRControllerGripSqueeze, \
+    VRControllerGripSqueeze, \
+    HandTrackedCockpitClicking::VRControllerGripSqueeze::Never) \
   IT(uint16_t, PointCtrlVID, 0x04d8) \
   IT(uint16_t, PointCtrlPID, 0xeeec) \
   IT(uint8_t, PointCtrlFCUButtonL1, 0) \
