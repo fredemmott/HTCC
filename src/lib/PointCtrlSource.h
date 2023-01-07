@@ -38,10 +38,10 @@ namespace HandTrackedCockpitClicking {
 // firmware.
 class PointCtrlSource final : public InputSource {
  public:
+  explicit PointCtrlSource(HANDLE eventNotification);
   PointCtrlSource();
 
   bool IsConnected() const;
-
   std::tuple<InputState, InputState> Update(PointerMode, const FrameInfo&)
     override;
 
@@ -70,10 +70,9 @@ class PointCtrlSource final : public InputSource {
 
  private:
   std::optional<std::jthread> mConnectDeviceThread;
-
   void ConnectDevice();
   void ConnectDeviceAsync();
-  bool IsStale() const;
+
   static BOOL EnumDevicesCallbackStatic(
     LPCDIDEVICEINSTANCE lpddi,
     LPVOID pvRef);
@@ -109,6 +108,7 @@ class PointCtrlSource final : public InputSource {
 
   winrt::com_ptr<IDirectInput8W> mDI;
   winrt::com_ptr<IDirectInputDevice8W> mDevice;
+  HANDLE mEventHandle {};
 
   RawValues mRaw {};
   XrTime mLastMovedAt {};

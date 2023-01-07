@@ -42,22 +42,22 @@ HandTrackedCockpitClicking_DWORD_SETTINGS
   static const std::wstring BaseSubKey {
     L"SOFTWARE\\Fred Emmott\\HandTrackedCockpitClicking"};
 
-static std::wstring AppOverrideSubKey() {
+static std::wstring GetCurrentExecutableFileName() {
   static std::wstring sCache {};
   if (!sCache.empty()) {
     return sCache;
   }
-
   wchar_t buf[MAX_PATH];
   const auto bufLen = GetModuleFileNameW(NULL, buf, MAX_PATH);
 
-  sCache = std::format(
-    L"{}\\AppOverrides\\{}",
-    BaseSubKey,
-    std::filesystem::path(std::wstring_view {buf, bufLen})
-      .filename()
-      .wstring());
+  sCache = std::filesystem::path(std::wstring_view {buf, bufLen})
+             .filename()
+             .wstring();
   return sCache;
+}
+
+static std::wstring AppOverrideSubKey(std::wstring_view executableFileName) {
+  return std::format(L"{}\\AppOverrides\\{}", BaseSubKey, executableFileName);
 }
 
 template <class T>
@@ -139,8 +139,13 @@ void LoadBaseConfig() {
 }
 
 void LoadForCurrentProcess() {
+  LoadForExecutableFileName(GetCurrentExecutableFileName());
+}
+
+void LoadForExecutableFileName(std::wstring_view executableFileName) {
   LoadBaseConfig();
-  const auto subKey = AppOverrideSubKey();
+
+  const auto subKey = AppOverrideSubKey(executableFileName);
   DebugPrint(L"Loading app overrides from HKLM\\{}", subKey);
   Load(subKey);
 }

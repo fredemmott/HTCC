@@ -48,7 +48,11 @@ static bool IsPointerSource() {
     || Environment::IsPointCtrlCalibration;
 }
 
-PointCtrlSource::PointCtrlSource() {
+PointCtrlSource::PointCtrlSource() : PointCtrlSource(NULL) {
+}
+
+PointCtrlSource::PointCtrlSource(HANDLE eventNotification)
+  : mEventHandle(eventNotification) {
   DebugPrint(
     "Initializing PointCtrlSource with calibration ({}, {}) delta ({}, {})",
     Config::PointCtrlCenterX,
@@ -66,6 +70,9 @@ PointCtrlSource::PointCtrlSource() {
     mDI.put_void(),
     nullptr));
   ConnectDevice();
+  if (!IsConnected()) {
+    ConnectDeviceAsync();
+  }
 }
 
 void PointCtrlSource::ConnectDevice() {
@@ -115,9 +122,13 @@ BOOL PointCtrlSource::EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi) {
 
   DebugPrint(L"Found PointCtrlDevice '{}'", lpddi->tszInstanceName);
 
+  if (mEventHandle) {
+    winrt::check_hresult(dev->SetEventNotification(mEventHandle));
+  }
+
   winrt::check_hresult(dev->SetDataFormat(&c_dfDIJoystick2));
   winrt::check_hresult(dev->Acquire());
-  mDevice = dev;
+  mDevice = std::move(dev);
   return DIENUM_STOP;
 }
 

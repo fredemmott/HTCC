@@ -207,6 +207,7 @@ HandTrackedCockpitClicking_DWORD_SETTINGS
     == HandTrackingOrientation::RayCastWithReprojection;
 }
 
+void LoadForExecutableFileName(std::wstring_view file);
 void LoadBaseConfig();
 void LoadForCurrentProcess();
 

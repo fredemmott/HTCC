@@ -5,7 +5,6 @@ add_library(
   APILayer.cpp
   HandTrackingSource.cpp
   VirtualControllerSink.cpp
-  VirtualTouchScreenSink.cpp
 )
 sign_target(HTCCAPILayer)
 set_target_properties(

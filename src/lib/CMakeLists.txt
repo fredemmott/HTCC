@@ -6,6 +6,7 @@ add_library(
   Environment.cpp
   FrameInfo.cpp
   OpenXRNext.cpp
+  VirtualTouchScreenSink.cpp
 )
 target_precompile_headers(
   HTCCLibCommon
