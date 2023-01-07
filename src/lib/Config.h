@@ -183,6 +183,7 @@ HandTrackedCockpitClicking_DWORD_SETTINGS
     == HandTrackingOrientation::RayCastWithReprojection;
 }
 
-void Load();
+void LoadBaseConfig();
+void LoadForCurrentProcess();
 
 }// namespace HandTrackedCockpitClicking::Config

@@ -48,7 +48,7 @@ static constexpr wchar_t gAPILayerSubkey[]
 
 namespace winrt::HTCCSettings::implementation {
 MainWindow::MainWindow() {
-  HTCC::Config::Load();
+  HTCC::Config::LoadBaseConfig();
 
   InitializeComponent();
   ExtendsContentIntoTitleBar(true);

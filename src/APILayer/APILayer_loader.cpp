@@ -439,7 +439,7 @@ XrResult __declspec(dllexport) XRAPI_CALL
     return XR_ERROR_INITIALIZATION_FAILED;
   }
 
-  HandTrackedCockpitClicking::Config::Load();
+  HandTrackedCockpitClicking::Config::LoadForCurrentProcess();
 
   // TODO: check version fields etc in loaderInfo
 

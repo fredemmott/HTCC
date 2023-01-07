@@ -39,7 +39,7 @@ HandTrackedCockpitClicking_DWORD_SETTINGS
     HandTrackedCockpitClicking_STRING_SETTINGS
 #undef IT
 
-  static const std::wstring SubKey {
+  static const std::wstring BaseSubKey {
     L"SOFTWARE\\Fred Emmott\\HandTrackedCockpitClicking"};
 
 static std::wstring AppOverrideSubKey() {
@@ -53,7 +53,7 @@ static std::wstring AppOverrideSubKey() {
 
   sCache = std::format(
     L"{}\\AppOverrides\\{}",
-    SubKey,
+    BaseSubKey,
     std::filesystem::path(std::wstring_view {buf, bufLen})
       .filename()
       .wstring());
@@ -61,78 +61,87 @@ static std::wstring AppOverrideSubKey() {
 }
 
 template <class T>
-static void LoadDWord(T& value, const wchar_t* valueName) {
-  for (const auto& subKey: {AppOverrideSubKey(), SubKey}) {
-    DWORD data {};
-    DWORD dataSize = sizeof(data);
-    const auto result = RegGetValueW(
-      HKEY_LOCAL_MACHINE,
-      subKey.c_str(),
-      valueName,
-      RRF_RT_DWORD,
-      nullptr,
-      &data,
-      &dataSize);
-    if (result == ERROR_SUCCESS) {
-      value = static_cast<T>(data);
-      return;
-    }
+static void
+LoadDWord(const std::wstring& subKey, T& value, const wchar_t* valueName) {
+  DWORD data {};
+  DWORD dataSize = sizeof(data);
+  const auto result = RegGetValueW(
+    HKEY_LOCAL_MACHINE,
+    subKey.c_str(),
+    valueName,
+    RRF_RT_DWORD,
+    nullptr,
+    &data,
+    &dataSize);
+  if (result == ERROR_SUCCESS) {
+    value = static_cast<T>(data);
   }
 }
 
-static bool LoadString(std::string& value, const wchar_t* valueName) {
-  for (const auto& subKey: {AppOverrideSubKey(), SubKey}) {
-    DWORD dataSize = 0;
-    const auto sizeResult = RegGetValueW(
-      HKEY_LOCAL_MACHINE,
-      subKey.c_str(),
-      valueName,
-      RRF_RT_REG_SZ,
-      nullptr,
-      nullptr,
-      &dataSize);
-    if (sizeResult != ERROR_SUCCESS && sizeResult != ERROR_MORE_DATA) {
-      continue;
-    }
+static bool LoadString(
+  const std::wstring& subKey,
+  std::string& value,
+  const wchar_t* valueName) {
+  DWORD dataSize = 0;
+  const auto sizeResult = RegGetValueW(
+    HKEY_LOCAL_MACHINE,
+    subKey.c_str(),
+    valueName,
+    RRF_RT_REG_SZ,
+    nullptr,
+    nullptr,
+    &dataSize);
+  if (sizeResult != ERROR_SUCCESS && sizeResult != ERROR_MORE_DATA) {
+    return false;
+  }
 
-    std::vector<wchar_t> buffer(dataSize / sizeof(wchar_t), L'\0');
-    const auto dataResult = RegGetValueW(
-      HKEY_LOCAL_MACHINE,
-      subKey.c_str(),
-      valueName,
-      RRF_RT_REG_SZ,
-      nullptr,
-      buffer.data(),
-      &dataSize);
+  std::vector<wchar_t> buffer(dataSize / sizeof(wchar_t), L'\0');
+  const auto dataResult = RegGetValueW(
+    HKEY_LOCAL_MACHINE,
+    subKey.c_str(),
+    valueName,
+    RRF_RT_REG_SZ,
+    nullptr,
+    buffer.data(),
+    &dataSize);
 
-    if (dataResult == ERROR_SUCCESS) {
-      value = winrt::to_string(buffer.data());
-      return true;
-    }
+  if (dataResult == ERROR_SUCCESS) {
+    value = winrt::to_string(buffer.data());
+    return true;
   }
   return false;
 }
 
-static void LoadFloat(float& value, const wchar_t* valueName) {
+static void
+LoadFloat(const std::wstring& subKey, float& value, const wchar_t* valueName) {
   std::string buffer;
-  if (LoadString(buffer, valueName)) {
+  if (LoadString(subKey, buffer, valueName)) {
     value = std::atof(buffer.data());
   }
 }
 
-void Load() {
-  DebugPrint(L"Loading settings from HKLM\\{}", SubKey);
-  DebugPrint(L"Loading app overrides from HKLM\\{}", AppOverrideSubKey());
-
-#define IT(native_type, name, default) LoadDWord(Config::name, L#name);
+static void Load(const std::wstring& subKey) {
+#define IT(native_type, name, default) LoadDWord(subKey, Config::name, L#name);
   HandTrackedCockpitClicking_DWORD_SETTINGS
 #undef IT
-#define IT(name, default) LoadFloat(Config::name, L#name);
+#define IT(name, default) LoadFloat(subKey, Config::name, L#name);
     HandTrackedCockpitClicking_FLOAT_SETTINGS
 #undef IT
-#define IT(name, default) LoadString(Config::name, L#name);
+#define IT(name, default) LoadString(subKey, Config::name, L#name);
       HandTrackedCockpitClicking_STRING_SETTINGS
 #undef IT
+}
+
+void LoadBaseConfig() {
+  DebugPrint(L"Loading settings from HKLM\\{}", BaseSubKey);
+  Load(BaseSubKey);
+}
+
+void LoadForCurrentProcess() {
+  LoadBaseConfig();
+  const auto subKey = AppOverrideSubKey();
+  DebugPrint(L"Loading app overrides from HKLM\\{}", subKey);
+  Load(subKey);
 }
 
 template <class T>
@@ -140,7 +149,7 @@ static void SaveDWord(const wchar_t* valueName, T value) {
   auto data = static_cast<DWORD>(value);
   const auto result = RegSetKeyValueW(
     HKEY_LOCAL_MACHINE,
-    SubKey.c_str(),
+    BaseSubKey.c_str(),
     valueName,
     REG_DWORD,
     &data,
@@ -155,7 +164,7 @@ static void SaveString(const wchar_t* valueName, std::string_view value) {
   const std::wstring buffer {winrt::to_hstring(value)};
   const auto result = RegSetKeyValueW(
     HKEY_LOCAL_MACHINE,
-    SubKey.c_str(),
+    BaseSubKey.c_str(),
     valueName,
     REG_SZ,
     buffer.data(),
