@@ -1,5 +1,20 @@
 # DCS World
 
+## "PointCTRL Classic" (v0.2 and above)
+
+If you are using a PointCTRL and don't want to use any OpenXR features (e.g. Quest or Ultraleap hand tracking, or controller emulation), you can use the 'HTCC PointCTRL Classic' entry in the start menu instead of using OpenComposite.
+
+This will:
+- always use PointCTRL, regardless of your settings
+- always use the Virtual Touch Screen/Tablet, regardless of your settings
+- **only** work with DCS
+
+To launch, hit the Windows key, and type 'HTCC PointCTRL Classic', and run the item. You can then ignore the rest of this file.
+
+"PointCTRL Classic" is mostly useful for people who want to keep using their PointCTRL in DCS without using OpenComposite, but also want to use it in MSFS.
+
+## OpenXR/OpenComposite
+
 1. Install [OpenComposite] and enable it for DCS World. If you need help, go to [the OpenComposite Discord](https://discord.gg/sQ2jwSb62J)
 2. If using controller emulation, you probably want to hide DCS's default gloved hands. Inside DCS's installation folder, find `CoreMods\characters\models\glove_L.chanimgpu` and `glove_R.chanimgpu` - inside these files, change the `scale` to `0`
 3. If using a PointCTRL with custom firmware, unbind the PointCTRL X and Y axes within DCS
