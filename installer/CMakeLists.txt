@@ -25,6 +25,7 @@ set(
   CPACK_PACKAGE_EXECUTABLES
   "HTCCSettings;HTCC Settings"
   "PointCtrlCalibration;HTCC PointCTRL Calibration"
+  "PointCtrlClassic;HTCC PointCTRL Classic"
 )
 
 get_cmake_property(CPACK_COMPONENTS_ALL COMPONENTS)
