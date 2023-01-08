@@ -33,6 +33,8 @@ If using VR controller emulation, there doesn't appear to be a way to disable 't
 - 'scroll up'/Ring finger pinch to thumb: scroll wheel/VRthumbstick left (decrease value)
 - 'scroll down'/Little finger pinch to thumb: scroll wheel/VR thumbstick right (increase value)
 
+If you're using the Quest hand tracking gestures, you will need to use the real mouse instead in some DCS menus because of DCS handling mouse differently in some menus compared to in-game; this conflicts with HTCC's attempts to reduce accidental/incorrect clicks.
+
 ### PointCTRL FCU buttons
 
 - FCU1: left click
