@@ -42,7 +42,7 @@
           <ComboBox
             Header="Prefered game interface:"
             SelectedIndex="{x:Bind PointerSink}">
-            <x:String>Virtual touch screen (PointCTRL)</x:String>
+            <x:String>Virtual touch screen or tablet</x:String>
             <x:String>Virtual Oculus Touch VR controller</x:String>
           </ComboBox>
         </StackPanel>
