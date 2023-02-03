@@ -5,8 +5,8 @@ install(
   RENAME "LICENSE-ThirdParty-WiX.txt"
   COMPONENT Installer
 )
-install(
-  FILES
+add_signed_script(
+  UltraleapLayerOrderScript
   "UltraleapLayerOrder.ps1"
   DESTINATION installer
   COMPONENT Installer
