@@ -140,6 +140,7 @@ static bool WorldLockOrientation() {
     case VRControllerPointerSinkWorldLock::OrientationAndSoftPosition:
       return true;
   }
+  __assume(false);
 }
 
 std::optional<XrPosef> VirtualControllerSink::GetInputPose(
@@ -536,77 +537,109 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
 
   for (uint32_t i = 0; i < suggestedBindings->countSuggestedBindings; ++i) {
     const auto& it = suggestedBindings->suggestedBindings[i];
-    const auto binding = ResolvePath(it.binding);
-    mActionPaths[it.action] = binding;
-
-    if (Config::VerboseDebug >= 2) {
-      DebugPrint("Binding requested: {}", binding);
-    }
-
-    ControllerState* state;
-    if (binding.starts_with(gLeftHandPath)) {
-      state = &mLeftController;
-    } else if (binding.starts_with(gRightHandPath)) {
-      state = &mRightController;
-    } else {
-      continue;
-    }
-
-    if (IsPointerSink()) {
-      if (binding.ends_with(gAimPosePath)) {
-        state->aimActions.insert(it.action);
-        continue;
-      }
-
-      if (binding.ends_with(gGripPosePath)) {
-        state->gripActions.insert(it.action);
-        continue;
-      }
-
-      // Partially cosmetic, also helps with 'is using this controller' in
-      // some games
-      if (binding.ends_with(gSqueezeValuePath)) {
-        state->squeezeValueActions.insert(it.action);
-        continue;
-      }
-
-      // Cosmetic
-      if (binding.ends_with(gThumbstickTouchPath)) {
-        state->thumbstickTouchActions.insert(it.action);
-        continue;
-      }
-
-      if (binding.ends_with(gTriggerTouchPath)) {
-        state->triggerTouchActions.insert(it.action);
-        continue;
-      }
-    }
-
-    if (IsActionSink()) {
-      if (binding.ends_with(gThumbstickXPath)) {
-        state->thumbstickXActions.insert(it.action);
-        continue;
-      }
-
-      if (binding.ends_with(gThumbstickYPath)) {
-        state->thumbstickYActions.insert(it.action);
-        continue;
-      }
-
-      if (binding.ends_with(gTriggerTouchPath)) {
-        state->triggerTouchActions.insert(it.action);
-        continue;
-      }
-
-      if (binding.ends_with(gTriggerValuePath)) {
-        state->triggerValueActions.insert(it.action);
-        continue;
-      }
-    }
+    this->AddBinding(it.binding, it.action);
   }
   mHaveSuggestedBindings = true;
 
   return XR_SUCCESS;
+}
+
+XrResult VirtualControllerSink::xrCreateAction(
+  XrActionSet actionSet,
+  const XrActionCreateInfo* createInfo,
+  XrAction* action) {
+  const auto ret = mOpenXR->xrCreateAction(actionSet, createInfo, action);
+  if (!XR_SUCCEEDED(ret)) {
+    return ret;
+  }
+
+  for (uint32_t i = 0; i < createInfo->countSubactionPaths; ++i) {
+    AddBinding(createInfo->subactionPaths[i], *action);
+  }
+
+  return ret;
+}
+
+void VirtualControllerSink::AddBinding(XrPath path, XrAction action) {
+  const auto binding = ResolvePath(path);
+
+  ControllerState* state {nullptr};
+  if (binding.starts_with(gLeftHandPath)) {
+    state = &mLeftController;
+  } else if (binding.starts_with(gRightHandPath)) {
+    state = &mRightController;
+  } else {
+    return;
+  }
+
+  if (IsPointerSink()) {
+    if (binding.ends_with(gAimPosePath)) {
+      state->aimActions.emplace(action);
+      if (mActionSpaces.contains(action)) {
+        const auto actionSpaces = mActionSpaces.at(action);
+        state->aimSpaces.insert(actionSpaces.begin(), actionSpaces.end());
+      }
+      DebugPrint("Aim action found");
+      return;
+    }
+
+    if (binding.ends_with(gGripPosePath)) {
+      state->gripActions.emplace(action);
+      if (mActionSpaces.contains(action)) {
+        const auto actionSpaces = mActionSpaces.at(action);
+        state->gripSpaces.insert(actionSpaces.begin(), actionSpaces.end());
+      }
+      DebugPrint("Grip action found");
+      return;
+    }
+
+    // Partially cosmetic, also helps with 'is using this controller' in
+    // some games
+    if (binding.ends_with(gSqueezeValuePath)) {
+      state->squeezeValueActions.emplace(action);
+      DebugPrint("Squeeze action found");
+      return;
+    }
+
+    // Cosmetic
+    if (binding.ends_with(gThumbstickTouchPath)) {
+      state->thumbstickTouchActions.emplace(action);
+      DebugPrint("Thumbstick touch action found");
+      return;
+    }
+
+    if (binding.ends_with(gTriggerTouchPath)) {
+      state->triggerTouchActions.emplace(action);
+      DebugPrint("Trigger touch action found");
+      return;
+    }
+  }
+
+  if (IsActionSink()) {
+    if (binding.ends_with(gThumbstickXPath)) {
+      state->thumbstickXActions.emplace(action);
+      DebugPrint("Thumbstick X action found");
+      return;
+    }
+
+    if (binding.ends_with(gThumbstickYPath)) {
+      state->thumbstickYActions.emplace(action);
+      DebugPrint("Thumbstick Y action found");
+      return;
+    }
+
+    if (binding.ends_with(gTriggerTouchPath)) {
+      state->triggerTouchActions.emplace(action);
+      DebugPrint("Trigger touch action found");
+      return;
+    }
+
+    if (binding.ends_with(gTriggerValuePath)) {
+      state->triggerValueActions.emplace(action);
+      DebugPrint("Trigger value action found");
+      return;
+    }
+  }
 }
 
 XrResult VirtualControllerSink::xrCreateActionSpace(
@@ -619,25 +652,39 @@ XrResult VirtualControllerSink::xrCreateActionSpace(
     return nextResult;
   }
 
-  mActionSpaces[*space] = createInfo->action;
+  // It's fine to call xrCreateActionSpace before the bindings have
+  // been suggested - so, we need to track the space, even if we have no
+  // reason yet to think that the action is relevant
+  mActionSpaces[createInfo->action].emplace(*space);
 
   const auto path = createInfo->subactionPath;
-  ResolvePath(path);
+  if (path) {
+    // Populate hand.path
+    ResolvePath(path);
+  }
+
   for (auto hand: {&mLeftController, &mRightController}) {
-    if (path != XR_NULL_PATH && path != hand->path) {
-      continue;
-    }
     if (hand->aimActions.contains(createInfo->action)) {
-      hand->aimSpace = *space;
+      if (path && path != hand->path) {
+        DebugPrint(
+          "Created space for aim action, but with different subactionPath");
+        continue;
+      }
+      hand->aimSpaces.emplace(*space);
       DebugPrint(
         "Found aim space: {:#016x}", reinterpret_cast<uintptr_t>(*space));
       return XR_SUCCESS;
     }
 
     if (hand->gripActions.contains(createInfo->action)) {
+      if (path && path != hand->path) {
+        DebugPrint(
+          "Created space for grip action, but with different subactionPath");
+        continue;
+      }
       DebugPrint(
         "Found grip space: {:#016x}", reinterpret_cast<uintptr_t>(*space));
-      hand->gripSpace = *space;
+      hand->gripSpaces.emplace(*space);
       return XR_SUCCESS;
     }
   }
@@ -780,7 +827,10 @@ XrResult VirtualControllerSink::xrLocateSpace(
   XrTime time,
   XrSpaceLocation* location) {
   for (const ControllerState& hand: {mLeftController, mRightController}) {
-    if (space != hand.aimSpace && space != hand.gripSpace) {
+    const bool isAimSpace = hand.aimSpaces.contains(space);
+    const bool isGripSpace = hand.gripSpaces.contains(space);
+    if (!(isAimSpace || isGripSpace)) {
+      TraceLoggingWrite(gTraceProvider, "xrLocateSpace_notAimOrGripSpace");
       continue;
     }
 
@@ -810,7 +860,7 @@ XrResult VirtualControllerSink::xrLocateSpace(
       : XR_POSEF_IDENTITY;
     const auto aimPose = hand.aimPose;
 
-    if (space == hand.aimSpace) {
+    if (isAimSpace) {
       location->pose = aimPose * spacePose;
       location->locationFlags |= poseValid | poseTracked;
       TraceLoggingWrite(gTraceProvider, "xrLocateSpace_handAimSpace");

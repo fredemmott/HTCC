@@ -30,29 +30,32 @@
 
 #include "DebugPrint.h"
 
-#define NEXT_OPENXR_FUNCS \
+#define INTERCEPTED_OPENXR_FUNCS \
   IT(xrDestroyInstance) \
   IT(xrCreateSession) \
   IT(xrDestroySession) \
-  IT(xrGetInstanceProperties) \
-  IT(xrCreateReferenceSpace) \
-  IT(xrDestroySpace) \
   IT(xrLocateSpace) \
-  IT(xrEnumerateInstanceExtensionProperties) \
   IT(xrWaitFrame) \
-  IT(xrCreateHandTrackerEXT) \
-  IT(xrDestroyHandTrackerEXT) \
-  IT(xrLocateHandJointsEXT) \
-  IT(xrLocateViews) \
   IT(xrSuggestInteractionProfileBindings) \
-  IT(xrPathToString) \
+  IT(xrCreateAction) \
   IT(xrCreateActionSpace) \
   IT(xrGetActionStateBoolean) \
   IT(xrGetActionStateFloat) \
   IT(xrGetActionStatePose) \
   IT(xrSyncActions) \
   IT(xrGetCurrentInteractionProfile) \
-  IT(xrPollEvent) \
+  IT(xrPollEvent)
+#define NEXT_OPENXR_FUNCS \
+  INTERCEPTED_OPENXR_FUNCS \
+  IT(xrCreateReferenceSpace) \
+  IT(xrDestroySpace) \
+  IT(xrLocateViews) \
+  IT(xrPathToString) \
+  IT(xrCreateHandTrackerEXT) \
+  IT(xrDestroyHandTrackerEXT) \
+  IT(xrLocateHandJointsEXT) \
+  IT(xrGetInstanceProperties) \
+  IT(xrEnumerateInstanceExtensionProperties) \
   IT(xrConvertTimeToWin32PerformanceCounterKHR) \
   IT(xrConvertWin32PerformanceCounterToTimeKHR)
 

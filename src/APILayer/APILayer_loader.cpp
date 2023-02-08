@@ -135,6 +135,16 @@ static XrResult xrPollEvent(XrInstance instance, XrEventDataBuffer* eventData) {
   return gNext->xrPollEvent(instance, eventData);
 }
 
+static XrResult xrCreateAction(
+  XrActionSet actionSet,
+  const XrActionCreateInfo* createInfo,
+  XrAction* action) {
+  if (gInstance) {
+    return gInstance->xrCreateAction(actionSet, createInfo, action);
+  }
+  return gNext->xrCreateAction(actionSet, createInfo, action);
+}
+
 static XrResult xrCreateActionSpace(
   XrSession session,
   const XrActionSpaceCreateInfo* createInfo,
@@ -188,60 +198,13 @@ static XrResult xrGetInstanceProcAddr(
   PFN_xrVoidFunction* function) {
   std::string_view name {name_cstr};
 
-  if (name == "xrCreateSession") {
-    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrCreateSession);
-    return XR_SUCCESS;
+#define IT(x) \
+  if (name == #x) { \
+    *function = reinterpret_cast<PFN_xrVoidFunction>(&x); \
+    return XR_SUCCESS; \
   }
-  if (name == "xrDestroySession") {
-    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrDestroySession);
-    return XR_SUCCESS;
-  }
-  if (name == "xrDestroyInstance") {
-    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrDestroyInstance);
-    return XR_SUCCESS;
-  }
-  if (name == "xrWaitFrame") {
-    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrWaitFrame);
-    return XR_SUCCESS;
-  }
-  if (name == "xrSuggestInteractionProfileBindings") {
-    *function = reinterpret_cast<PFN_xrVoidFunction>(
-      &xrSuggestInteractionProfileBindings);
-    return XR_SUCCESS;
-  }
-  if (name == "xrCreateActionSpace") {
-    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrCreateActionSpace);
-    return XR_SUCCESS;
-  }
-  if (name == "xrGetActionStateBoolean") {
-    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrGetActionStateBoolean);
-    return XR_SUCCESS;
-  }
-  if (name == "xrGetActionStateFloat") {
-    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrGetActionStateFloat);
-    return XR_SUCCESS;
-  }
-  if (name == "xrGetActionStatePose") {
-    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrGetActionStatePose);
-    return XR_SUCCESS;
-  }
-  if (name == "xrLocateSpace") {
-    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrLocateSpace);
-    return XR_SUCCESS;
-  }
-  if (name == "xrSyncActions") {
-    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrSyncActions);
-    return XR_SUCCESS;
-  }
-  if (name == "xrPollEvent") {
-    *function = reinterpret_cast<PFN_xrVoidFunction>(&xrPollEvent);
-    return XR_SUCCESS;
-  }
-  if (name == "xrGetCurrentInteractionProfile") {
-    *function
-      = reinterpret_cast<PFN_xrVoidFunction>(&xrGetCurrentInteractionProfile);
-    return XR_SUCCESS;
-  }
+  INTERCEPTED_OPENXR_FUNCS
+#undef IT
 
   if (gNext) {
     const auto result

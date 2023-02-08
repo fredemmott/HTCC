@@ -55,6 +55,11 @@ class VirtualControllerSink final {
     XrInstance instance,
     const XrInteractionProfileSuggestedBinding* suggestedBindings);
 
+  XrResult xrCreateAction(
+    XrActionSet actionSet,
+    const XrActionCreateInfo* createInfo,
+    XrAction* action);
+
   XrResult xrCreateActionSpace(
     XrSession session,
     const XrActionSpaceCreateInfo* createInfo,
@@ -109,10 +114,10 @@ class VirtualControllerSink final {
     std::optional<XrPosef> savedAimPose {};
     bool mUnlockedPosition {false};
     XrPosef aimPose {};
-    XrSpace aimSpace {};
+    std::unordered_set<XrSpace> aimSpaces {};
     std::unordered_set<XrAction> aimActions {};
 
-    XrSpace gripSpace {};
+    std::unordered_set<XrSpace> gripSpaces {};
     std::unordered_set<XrAction> gripActions {};
 
     // Cosmetic and 'is using controller'
@@ -168,6 +173,7 @@ class VirtualControllerSink final {
 
   std::string_view ResolvePath(XrPath path);
   std::unordered_map<XrPath, std::string> mPaths;
+  std::unordered_map<XrAction, std::unordered_set<XrSpace>> mActionSpaces;
 
   void SetControllerActions(
     XrTime predictedDisplayTime,
@@ -187,9 +193,7 @@ class VirtualControllerSink final {
     const InputState& hand,
     ControllerState* controller);
 
-  // For debugging
-  std::unordered_map<XrAction, std::string> mActionPaths;
-  std::unordered_map<XrSpace, XrAction> mActionSpaces;
+  void AddBinding(XrPath, XrAction);
 };
 
 }// namespace HandTrackedCockpitClicking

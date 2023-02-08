@@ -57,6 +57,11 @@ class APILayer final {
     XrPath topLevelUserPath,
     XrInteractionProfileState* interactionProfile);
 
+  XrResult xrCreateAction(
+    XrActionSet actionSet,
+    const XrActionCreateInfo* createInfo,
+    XrAction* action);
+
   XrResult xrCreateActionSpace(
     XrSession session,
     const XrActionSpaceCreateInfo* createInfo,

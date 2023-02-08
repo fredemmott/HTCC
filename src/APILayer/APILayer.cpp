@@ -178,6 +178,16 @@ XrResult APILayer::xrGetCurrentInteractionProfile(
     session, topLevelUserPath, interactionProfile);
 }
 
+XrResult APILayer::xrCreateAction(
+  XrActionSet actionSet,
+  const XrActionCreateInfo* createInfo,
+  XrAction* space) {
+  if (mVirtualController) {
+    return mVirtualController->xrCreateAction(actionSet, createInfo, space);
+  }
+  return mOpenXR->xrCreateAction(actionSet, createInfo, space);
+}
+
 XrResult APILayer::xrCreateActionSpace(
   XrSession session,
   const XrActionSpaceCreateInfo* createInfo,
