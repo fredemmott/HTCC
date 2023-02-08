@@ -23,9 +23,14 @@
  */
 #pragma once
 
+#include <TraceLoggingActivity.h>
+#include <TraceLoggingProvider.h>
+
 #include <format>
 
 namespace HandTrackedCockpitClicking {
+
+TRACELOGGING_DECLARE_PROVIDER(gTraceProvider);
 
 namespace detail {
 void DebugPrintString(std::wstring_view);

@@ -786,16 +786,34 @@ XrResult VirtualControllerSink::xrLocateSpace(
 
     if (!hand.present) {
       *location = {XR_TYPE_SPACE_LOCATION};
+      TraceLoggingWrite(gTraceProvider, "xrLocateSpace_handNotPresent");
       return XR_SUCCESS;
     }
 
-    mOpenXR->xrLocateSpace(mLocalSpace, baseSpace, time, location);
+    const auto nextRet
+      = mOpenXR->xrLocateSpace(mLocalSpace, baseSpace, time, location);
+    if (!XR_SUCCEEDED(nextRet)) {
+      TraceLoggingWrite(
+        gTraceProvider,
+        "xrLocateSpace_failedNext",
+        TraceLoggingValue(static_cast<const int64_t>(nextRet), "XrResult"));
+      return nextRet;
+    }
 
-    const auto spacePose = location->pose;
+    constexpr auto poseValid = XR_SPACE_LOCATION_ORIENTATION_VALID_BIT
+      | XR_SPACE_LOCATION_POSITION_VALID_BIT;
+    constexpr auto poseTracked = XR_SPACE_LOCATION_ORIENTATION_TRACKED_BIT
+      | XR_SPACE_LOCATION_POSITION_TRACKED_BIT;
+
+    const auto spacePose = ((location->locationFlags & poseValid) == poseValid)
+      ? location->pose
+      : XR_POSEF_IDENTITY;
     const auto aimPose = hand.aimPose;
 
     if (space == hand.aimSpace) {
       location->pose = aimPose * spacePose;
+      location->locationFlags |= poseValid | poseTracked;
+      TraceLoggingWrite(gTraceProvider, "xrLocateSpace_handAimSpace");
       return XR_SUCCESS;
     }
 
@@ -815,6 +833,8 @@ XrResult VirtualControllerSink::xrLocateSpace(
     const auto handPose = aimToGrip * aimPose;
 
     location->pose = handPose * spacePose;
+    location->locationFlags |= poseValid | poseTracked;
+    TraceLoggingWrite(gTraceProvider, "xrLocateSpace_handGripSpace");
 
     return XR_SUCCESS;
   }

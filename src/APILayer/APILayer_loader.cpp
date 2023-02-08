@@ -452,3 +452,15 @@ XrResult __declspec(dllexport) XRAPI_CALL
   return XR_SUCCESS;
 }
 }
+
+BOOL WINAPI DllMain(HINSTANCE hinstDll, DWORD fdwReason, LPVOID lpReserved) {
+  switch (fdwReason) {
+    case DLL_PROCESS_ATTACH:
+      TraceLoggingRegister(HandTrackedCockpitClicking::gTraceProvider);
+      break;
+    case DLL_PROCESS_DETACH:
+      TraceLoggingUnregister(HandTrackedCockpitClicking::gTraceProvider);
+      break;
+  }
+  return TRUE;
+}
