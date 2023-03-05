@@ -1,3 +1,6 @@
+---
+nav_order: 2
+---
 # Getting Started
 
 ## What's this 'OpenXR' thing anyway?
@@ -15,17 +18,16 @@ These other projects are not needed, but the names are often confused:
 
 As DCS World does not support OpenXR (regardless of headset), OpenComposite is needed to use OpenXR software, like Hand Tracked Cockpit Clicking or OpenXR Toolkit.
 
+## Installing HTCC
+
+Download and install the MSI from [the latest release](https://github.com/fredemmott/hand-tracked-cockpit-clicking/releases/latest), then configure your devices and games.
+
 ## Configuring your devices
 
-- [PointCTRL]
-- [Oculus Hand Tracking]
+- [PointCTRL](hardware/pointctrl/README.md)
+- [Oculus Hand Tracking](hardware/oculus-hand-tracking/README.md)
 
 ## Configuring your games
 
-- [DCS World]
-- [MSFS]
-
-[Oculus Hand Tracking]: oculus-hand-tracking/README.md
-[DCS World]: dcs-world/README.md
-[PointCTRL]: pointctrl/README.md
-[MSFS]: msfs/README.md
+- [DCS World](games/dcs-world/README.md)
+- [MSFS](games/msfs/README.md)

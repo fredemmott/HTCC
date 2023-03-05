@@ -1,0 +1,18 @@
+repository: fredemmott/hand-tracked-cockpit-clicking
+title: HTCC
+description: OpenXR hand tracking and PointCTRL for DCS and MSFS
+theme: just-the-docs
+color_scheme: dark
+gh_edit_link: true
+gh_edit_link_text: "Edit this page on GitHub"
+gh_edit_repository: https://github.com/fredemmott/hand-tracked-cockpit-clicking
+gh_edit_branch: master
+gh_edit_source: docs
+gh_edit_view_mode: edit
+aux_links:
+  "Download":
+    - "https://github.com/fredemmott/hand-tracked-cockpit-clicking/releases/latest"
+  "Discord":
+    - "https://go.fredemmott.com/discord"
+  "GitHub":
+    - "https://github.com/fredemmott/hand-tracked-cockpit-clicking"

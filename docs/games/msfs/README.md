@@ -1,3 +1,7 @@
+---
+parent: Game Setup
+---
+
 # MSFS
 
 No special setup needed; just be sure to follow the setup instructions for your hardware before installing Hand Tracked Cockpit Clicking:

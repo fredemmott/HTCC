@@ -1,3 +1,7 @@
+---
+parent: Game Setup
+---
+
 # DCS World
 
 ## "PointCTRL Classic" (v0.2 and above)

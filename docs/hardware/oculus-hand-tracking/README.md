@@ -1,3 +1,7 @@
+---
+parent: Device Setup
+---
+
 # Oculus Hand Tracking
 
 "Hand tracking" via link is considered a developer feature by Meta, so there's a few hoops you need to jump through.

@@ -1,3 +1,7 @@
+---
+parent: Device Setup
+---
+
 # PointCTRL v2
 
 Requirements:
