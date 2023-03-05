@@ -50,15 +50,15 @@ As long as OpenXR support is enabled in Ultraleap settings, an ultraleap can be 
 
 The PointCTRL finger-mounted buttons can be used (with the HMS being used as a dongle, not as a tracker).
 
-Other devices can also be used if Windows considers them a joystick/gamepad with a VID+PID - take a look at [docs/settings.md](docs/settings.md).
+Other devices can also be used if Windows considers them a joystick/gamepad with a VID+PID - take a look at [docs/settings.md](settings.md).
 
 ## Installation and setup
 
 - [Getting started](getting%20started.md)
-- [PointCTRL](docs/hardware/pointctrl/README.md)
-- [Oculus hand tracking](docs/hardware/oculus-hand-tracking/README.md)
-- [DCS World](docs/games/dcs-world/README.md)
-- [MSFS](docs/games/msfs/README.md)
+- [PointCTRL](hardware/pointctrl/README.md)
+- [Oculus hand tracking](hardware/oculus-hand-tracking/README.md)
+- [DCS World](games/dcs-world/README.md)
+- [MSFS](games/msfs/README.md)
 
 
 [OpenComposite]: https://gitlab.com/znixian/OpenOVR/-/tree/openxr#downloading-and-installation
