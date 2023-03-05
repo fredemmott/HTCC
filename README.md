@@ -48,7 +48,7 @@ Other devices can also be used if Windows considers them a joystick/gamepad with
 ## Installation and setup
 
 - [Downloads](https://github.com/fredemmott/hand-tracked-cockpit-clicking/releases/latest)
-- [Getting started](docs/getting%20started.md)
+- [Getting started](docs/getting-started.md)
 - [PointCTRL](docs/pointctrl/README.md)
 - [Oculus hand tracking](docs/oculus-hand-tracking/README.md)
 - [DCS World](docs/dcs-world/README.md)

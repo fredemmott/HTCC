@@ -54,7 +54,7 @@ Other devices can also be used if Windows considers them a joystick/gamepad with
 
 ## Installation and setup
 
-- [Getting started](getting%20started.md)
+- [Getting started](getting-started.md)
 - [PointCTRL](hardware/pointctrl/README.md)
 - [Oculus hand tracking](hardware/oculus-hand-tracking/README.md)
 - [DCS World](games/dcs-world/README.md)
