@@ -100,13 +100,9 @@ VirtualTouchScreenSink::CalibrationFromOpenXR(
 
 VirtualTouchScreenSink::Calibration
 VirtualTouchScreenSink::CalibrationFromOpenXRFOV(const XrFovf& eyeFov) {
-  // ideally this should be the sum of left+right and up+down FOVs - which
-  // aren't symmetric - but this seems to match what DCS does
-
   XrVector2f windowInputFov {
     2 * std::max(std::abs(eyeFov.angleRight), std::abs(eyeFov.angleLeft)),
-    2 * std::abs(eyeFov.angleUp),
-  };
+    std::abs(eyeFov.angleUp) + std::abs(eyeFov.angleDown)};
 
   XrVector2f fovOrigin0To1 {
     0.5,
