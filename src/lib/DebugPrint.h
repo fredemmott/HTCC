@@ -27,6 +27,7 @@
 #include <TraceLoggingProvider.h>
 
 #include <format>
+#include <version>
 
 namespace HandTrackedCockpitClicking {
 
@@ -34,15 +35,30 @@ TRACELOGGING_DECLARE_PROVIDER(gTraceProvider);
 
 namespace detail {
 void DebugPrintString(std::wstring_view);
-}
+
+#if __cpp_lib_format >= 202207L
+// Standard
+template <class... T>
+using format_string = std::format_string<T...>;
+template <class... T>
+using wformat_string = std::wformat_string<T...>;
+#else
+// MSVC-specific, but removed in VS 2022 v17.5
+template <class... T>
+using format_string = std::_Fmt_string<T...>;
+template <class... T>
+using wformat_string = std::_Fmt_wstring<T...>;
+#endif
+
+}// namespace detail
 
 template <class... Args>
-void DebugPrint(std::_Fmt_wstring<Args...> fmt, Args&&... args) {
+void DebugPrint(detail::wformat_string<Args...> fmt, Args&&... args) {
   detail::DebugPrintString(std::format(fmt, std::forward<Args>(args)...));
 }
 
 template <class... Args>
-void DebugPrint(std::_Fmt_string<Args...> fmt, Args&&... args) {
+void DebugPrint(detail::format_string<Args...> fmt, Args&&... args) {
   detail::DebugPrintString(
     winrt::to_hstring(std::format(fmt, std::forward<Args>(args)...)));
 }
