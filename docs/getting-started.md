@@ -8,15 +8,12 @@ nav_order: 2
 OpenXR is a specification - a language - that components *can* use to talk to each other; both components need to speak OpenXR to work together. OpenXR is not something you can install - but you can install 'translation' projects to translate between OpenXR and other systems.
 
 The most important of these are:
-- OpenComposite (not needed for DCS Open Beta): this turns SteamVR games into OpenXR games, by pretending to be SteamVR.
-- PimaxXR: this makes it possible for OpenXR games - or SteamVR games using OpenComposite - to use Pimax headsets.
+- PimaxXR: this makes it possible for OpenXR games - or SteamVR games using OpenComposite - to use Pimax headsets, without using SteamVR.
 
 These other projects are not needed, but the names are often confused:
-- OpenXR Tools for Windows Mixed Reality: offers basic settings and diagnostics. Primarily used for WMR headsets like the HP Reverb G2
+- OpenXR Tools for Windows Mixed Reality: offers basic settings and diagnostics. **Only useful for WMR headsets** like the HP Reverb G2
 - OpenXR Toolkit: advanced settings for any OpenXR game - or SteamVR game using OpenComposite - on any OpenXR headset
 - "OpenXR Tools": not a separate project; sometimes refers to "OpenXR Tools for Windows Mixed Reality", sometimes refers to "OpenXR Toolkit"
-
-As DCS World Stable does not support OpenXR (regardless of headset), OpenComposite is needed to use OpenXR software, like Hand Tracked Cockpit Clicking or OpenXR Toolkit; for Open Beta, DCS's native OpenXR support can be used.
 
 ## Installing HTCC
 

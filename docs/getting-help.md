@@ -1,6 +1,6 @@
 ## Getting Help
 
-**This is an experiment**; you should only use this if you're already comfortable with OpenComposite and other required projects, I have very limited time to support.
+**This is an experiment**; I have very limited time to support.
 
 I make this for my own use, and I share this in the hope others find it useful; I'm not able to commit to support, bug fixes, or feature development.
 

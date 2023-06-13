@@ -15,14 +15,14 @@ This is **not** intended to be or usable as general-purpose hand tracking suppor
 
 | Game | Compatible? | Notes |
 |------|-------------|-------|
-| MSFS | ✅ |  |
-| DCS World | ✅ | Stable requires [OpenComposite] |
+| MSFS | ✅ | |
+| DCS World | ✅ | Must use native OpenXR or [OpenComposite] |
 | All others | ❌ | |
 
 If you have a PointCTRL:
 - you must calibrate using the included calibration app instead of the standard calibration procedure
 - the custom firmware is **required** for MSFS
-- the custom firmware is *optional* in DCS, however if you are using the custom firmware, DCS **must** be using [OpenComposite] or native OpenXR support (Open Beta only)
+- the custom firmware is *optional* in DCS, however you must either be using OpenXR or OpenComposite.
 
 To use PointCTRL in Stable DCS without OpenComposite, you must restore the standard firmware.
 
