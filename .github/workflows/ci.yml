@@ -12,12 +12,13 @@ jobs:
         id: fetch-key
         env:
           CODE_SIGNING_PFX_BASE64: ${{ secrets.CODE_SIGNING_KEY_PFX_BASE64 }}
-        if: ${{ (github.repository == 'fredemmott/HTCC') && (github.event_name == 'push')}}
         run: |
-          $pfxPath="${{runner.temp}}/MyCert.pfx"
-          [System.Convert]::FromBase64String($Env:CODE_SIGNING_PFX_BASE64) | Set-Content $pfxPath -AsByteStream
-          Add-Content $Env:GITHUB_OUTPUT "HAVE_KEY=true"
-          Add-Content $Env:GITHUB_OUTPUT "PATH=$pfxPath"
+          if ("${Env:CODE_SIGNING_PFX_BASE64}" -ne "") {
+            $pfxPath="${{runner.temp}}/MyCert.pfx"
+            [System.Convert]::FromBase64String($Env:CODE_SIGNING_PFX_BASE64) | Set-Content $pfxPath -AsByteStream
+            Add-Content $Env:GITHUB_OUTPUT "HAVE_KEY=true"
+            Add-Content $Env:GITHUB_OUTPUT "PATH=$pfxPath"
+          }
       - uses: actions/checkout@v3
         with:
           path: source
