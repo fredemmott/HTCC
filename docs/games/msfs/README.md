@@ -7,7 +7,7 @@ parent: Game Setup
 No special setup needed; just be sure to follow the setup instructions for your hardware before installing Hand Tracked Cockpit Clicking:
 
 - [Oculus Hand Tracking](../oculus-hand-tracking/README.md)
-- [PointCTRL](../pointctrl/README.md)
+- [PointCTRL](../../hardware/pointctrl/README.md)
 
 ## Controls
 
