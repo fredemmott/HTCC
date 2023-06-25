@@ -58,7 +58,7 @@ class VirtualTouchScreenSink final {
     XrTime nextDisplayTime,
     XrSpace viewSpace);
 
-  static Calibration CalibrationFromOpenXRFOV(const XrFovf& eyeFov);
+  static Calibration CalibrationFromOpenXRView(const XrView& view);
   static std::optional<Calibration> CalibrationFromConfig();
 
  private:

@@ -65,32 +65,41 @@ VirtualTouchScreenSink::CalibrationFromOpenXR(
     .space = viewSpace,
   };
   XrViewState viewState {XR_TYPE_VIEW_STATE};
-  std::array<XrView, 2> views;
-  views.fill({XR_TYPE_VIEW});
-  uint32_t viewCount {views.size()};
+  uint32_t viewCount {};
   if (!oxr->check_xrLocateViews(
         session,
         &viewLocateInfo,
         &viewState,
-        viewCount,
+        /* view count = */ 0,
+        &viewCount,
+        nullptr)) {
+    DebugPrint("Failed to get number of views.");
+    return {};
+  }
+  if (viewCount == 0) {
+    DebugPrint("View count is 0");
+    return {};
+  }
+
+  std::vector<XrView> views;
+  views.resize(viewCount, {XR_TYPE_VIEW});
+
+  if (!oxr->check_xrLocateViews(
+        session,
+        &viewLocateInfo,
+        &viewState,
+        views.size(),
         &viewCount,
         views.data())) {
     DebugPrint("Failed to find FOV");
     return {};
   }
 
-  const auto eyeFov = views[0].fov;
-
-  auto calibration = CalibrationFromOpenXRFOV(eyeFov);
+  auto calibration = CalibrationFromOpenXRView(views[0]);
 
   DebugPrint(
-    "Reported eye FOV: L {} R {} U {} D {} (input FOV {}x{}) - tracking origin "
-    "at ({}, "
-    "{})",
-    eyeFov.angleLeft,
-    eyeFov.angleRight,
-    eyeFov.angleUp,
-    eyeFov.angleDown,
+    "Reported eye FOV: {}x{} - tracking origin "
+    "at ({}, {})",
     calibration.mWindowInputFov.x,
     calibration.mWindowInputFov.y,
     calibration.mWindowInputFovOrigin0To1.x,
@@ -99,10 +108,42 @@ VirtualTouchScreenSink::CalibrationFromOpenXR(
 }
 
 VirtualTouchScreenSink::Calibration
-VirtualTouchScreenSink::CalibrationFromOpenXRFOV(const XrFovf& eyeFov) {
+VirtualTouchScreenSink::CalibrationFromOpenXRView(const XrView& view) {
+  using namespace DirectX::SimpleMath;
+  DebugPrint(
+    "Original FOV: {}l, {}r, {}u, {}d",
+    view.fov.angleLeft,
+    view.fov.angleRight,
+    view.fov.angleUp,
+    view.fov.angleRight);
+  const auto poseQ = XrQuatToSM(view.pose.orientation);
+
+  const auto leftQ = poseQ
+    * Quaternion::CreateFromAxisAngle(Vector3::UnitY, view.fov.angleLeft);
+  const auto rightQ = poseQ
+    * Quaternion::CreateFromAxisAngle(Vector3::UnitY, view.fov.angleRight);
+  const auto upQ
+    = poseQ * Quaternion::CreateFromAxisAngle(Vector3::UnitX, view.fov.angleUp);
+  const auto downQ = poseQ
+    * Quaternion::CreateFromAxisAngle(Vector3::UnitX, view.fov.angleDown);
+
+  const XrFovf fov = {
+    .angleLeft = leftQ.ToEuler().y,
+    .angleRight = rightQ.ToEuler().y,
+    .angleUp = upQ.ToEuler().x,
+    .angleDown = downQ.ToEuler().x,
+  };
+
+  DebugPrint(
+    "Adjusted FOV: {}l, {}r, {}u, {}d",
+    fov.angleLeft,
+    fov.angleRight,
+    fov.angleUp,
+    fov.angleRight);
+
   XrVector2f windowInputFov {
-    2 * std::max(std::abs(eyeFov.angleRight), std::abs(eyeFov.angleLeft)),
-    std::abs(eyeFov.angleUp) + std::abs(eyeFov.angleDown)};
+    2 * std::max(std::abs(fov.angleRight), std::abs(fov.angleLeft)),
+    std::abs(fov.angleUp) + std::abs(fov.angleDown)};
 
   XrVector2f fovOrigin0To1 {
     0.5,
@@ -118,13 +159,17 @@ VirtualTouchScreenSink::CalibrationFromConfig() {
     return {};
   }
 
-  const XrFovf eyeFov {
-    .angleLeft = Config::LeftEyeFOVLeft,
-    .angleRight = Config::LeftEyeFOVRight,
-    .angleUp = Config::LeftEyeFOVUp,
-    .angleDown = Config::LeftEyeFOVDown,
+  const XrView view {
+    .type = XR_TYPE_VIEW,
+    .pose = XR_POSEF_IDENTITY,
+    .fov = XrFovf {
+      .angleLeft = Config::LeftEyeFOVLeft,
+      .angleRight = Config::LeftEyeFOVRight,
+      .angleUp = Config::LeftEyeFOVUp,
+      .angleDown = Config::LeftEyeFOVDown,
+  },
   };
-  return CalibrationFromOpenXRFOV(eyeFov);
+  return CalibrationFromOpenXRView(view);
 }
 
 void VirtualTouchScreenSink::UpdateMainWindow() {
