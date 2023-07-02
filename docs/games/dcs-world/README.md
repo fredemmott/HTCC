@@ -17,20 +17,24 @@ To launch, hit the Windows key, and type 'HTCC PointCTRL Classic', and run the i
 
 "PointCTRL Classic" is mostly useful for people who want to keep using their PointCTRL with DCS without using OpenXR, but also want to use it with DCS.
 
-## OpenXR/OpenComposite
+## OpenXR
 
-You **must** either use DCS's native OpenXR support, or OpenComposite. **If you are using the multithreaded beta, you can only use native OpenXR**.
+HTCC requires that DCS is using OpenXR.
 
-1.If you are using [OpenComposite](https://gitlab.com/znixian/OpenOVR) install it, and enable it for DCS World. If you need help, go to [the OpenComposite Discord](https://discord.gg/sQ2jwSb62J)
-2. If using controller emulation, you probably want to hide DCS's default gloved hands. Inside DCS's installation folder, find `CoreMods\characters\models\glove_L.chanimgpu` and `glove_R.chanimgpu` - inside these files, change the `scale` to `0`
-3. If using a PointCTRL with custom firmware, unbind the PointCTRL X and Y axes within DCS
-4. Even though you won't be using SteamVR, to use OpenComposite you need to launch DCS with the `--force_steam_VR` option, or if you're using Skatezilla's launcher, select SteamVR. You must do this even if you're not using Steam, and even if you have an Oculus headset, as OpenComposite works by pretending to be SteamVR. If SteamVR launches, OpenComposite is not set up correctly.
-5. If using touchscreen emulation (recommended), enable DCS's option to lock the mouse cursor to the window, and enable mouse support
-6. If using a virtual VR controller, enable DCS's option to support touch controllers in VR settings
-
-![Skatezilla's SteamVR option](skatezilla-steamvr.png).
+1. If using controller emulation, you probably want to hide DCS's default gloved hands. Inside DCS's installation folder, find `CoreMods\characters\models\glove_L.chanimgpu` and `glove_R.chanimgpu` - inside these files, change the `scale` to `0`
+2. If using a PointCTRL with custom firmware, unbind the PointCTRL X and Y axes within DCS, and unbind the buttons from all categories
+3. If using touchscreen emulation (recommended), enable DCS's option to lock the mouse cursor to the window, and enable mouse support
+4. If using a virtual VR controller, enable DCS's option to support touch controllers in VR settings
 
 If using VR controller emulation, there doesn't appear to be a way to disable 'touch to interact'; be careful not to accidentally touch the controls. This is especially problematic for the fire suppression pull handles in the A10C. If accidental control interactions are a problem, switch to 'Virtual Touch Screen' mode - though you may then need to use a mouse for menus.
+
+### OpenComposite
+
+- HTCC will no longer be tested with OpenComposite
+- no support is available for HTCC with OpenComposite
+- no bug reports related to OpenComposite will be worked on
+
+That said, as of 2023-07-01, HTCC does still work with OpenComposite; there are no HTCC-specific installation or configuration steps required. If it does not work for you, use DCS's native OpenXR support instead.
 
 ## Controls
 
