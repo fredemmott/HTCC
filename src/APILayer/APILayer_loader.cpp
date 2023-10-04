@@ -192,6 +192,28 @@ static XrResult xrDestroyInstance(XrInstance instance) {
   return result;
 }
 
+static XrResult xrEnumerateApiLayerProperties(
+  uint32_t propertyCapacityInput,
+  uint32_t* propertyCountOutput,
+  XrApiLayerProperties* properties) {
+  if (propertyCapacityInput == 0) {
+    return XR_ERROR_SIZE_INSUFFICIENT;
+  }
+
+  *properties = XrApiLayerProperties {
+    .type = XR_TYPE_API_LAYER_PROPERTIES,
+    .layerName = "XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking",
+    .specVersion = XR_CURRENT_API_VERSION,
+    .layerVersion = 1,
+    .description
+    = "Hand-tracked cockpit clicking for flight simulators - "
+      "https://github.com/fredemmott/hand-tracked-cockpit-clicking",
+  };
+
+  *propertyCountOutput = 1;
+  return XR_SUCCESS;
+}
+
 static XrResult xrGetInstanceProcAddr(
   XrInstance instance,
   const char* name_cstr,
@@ -219,7 +241,8 @@ static XrResult xrGetInstanceProcAddr(
   }
 
   if (name == "xrEnumerateApiLayerProperties") {
-    // No need to do anything here; should be implemented by the runtime
+    *function
+      = reinterpret_cast<PFN_xrVoidFunction>(&xrEnumerateApiLayerProperties);
     return XR_SUCCESS;
   }
 
