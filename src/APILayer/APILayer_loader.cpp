@@ -312,17 +312,29 @@ static XrResult xrCreateApiLayerInstance(
 
   XrInstance dummyInstance {};
   {
-    // Workaround UltraLeap bug: it should be possible to enumerate
-    // extensions without an XrInstance, but ultraleap's API layer
-    // breaks this.
+    // While the OpenXR specification says that
+    // `xrEnumerateInstanceExtensionProperties()` does not require an
+    // `XrInstance`, if there is a 'next' API layer, it will not be able to
+    // retrieve the extension list from the runtime or an n+2 API layer unless
+    // an instance has been created, as it won't have the next
+    // `xrGetInstanceProcAddr()` pointer yet.
     XrInstanceCreateInfo dummyInfo {
-    .type = XR_TYPE_INSTANCE_CREATE_INFO,
-    .applicationInfo = {
-      .applicationName = "FREDEMMOTT_HTCC ultraleap compat hack",
-      .applicationVersion = 1,
-      .apiVersion = XR_CURRENT_API_VERSION,
-    },
-  };
+      .type = XR_TYPE_INSTANCE_CREATE_INFO,
+      .applicationInfo = {
+        .applicationVersion = originalInfo->applicationInfo.applicationVersion,
+        .engineName = "FREDEMMOTT_HTCC",
+        .engineVersion = 1,
+        .apiVersion = XR_CURRENT_API_VERSION,
+      },
+    };
+    {
+      auto [it, count] = std::format_to_n(
+        dummyInfo.applicationInfo.applicationName,
+        XR_MAX_APPLICATION_NAME_SIZE - 1,
+        "FREDEMMOTT_HTCC Init: {}",
+        originalInfo->applicationInfo.applicationName);
+      *it = '\0';
+    }
     auto dummyLayerInfo = *layerInfo;
     dummyLayerInfo.nextInfo = dummyLayerInfo.nextInfo->next;
     layerInfo->nextInfo->nextCreateApiLayerInstance(
@@ -347,7 +359,8 @@ static XrResult xrCreateApiLayerInstance(
       }
 
       enabledExtensions.push_back(XR_EXT_HAND_TRACKING_EXTENSION_NAME);
-      // We need 'real time' units to rotate the hand at a known speed for MSFS
+      // We need 'real time' units to rotate the hand at a known speed for
+      // MSFS
       if (Environment::Have_XR_KHR_win32_convert_performance_counter_time) {
         enabledExtensions.push_back(
           XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME);
