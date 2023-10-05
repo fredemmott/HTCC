@@ -206,7 +206,11 @@ VirtualTouchScreenSink::EnumWindowCallback(HWND hwnd, LPARAM lparam) {
   self->mWindow = hwnd;
 
   RECT rect {};
-  GetWindowRect(hwnd, &rect);
+  // ... this is annoyingly enough in client coordinates
+  GetClientRect(hwnd, &rect);
+  ClientToScreen(hwnd, reinterpret_cast<LPPOINT>(&rect.left));
+  ClientToScreen(hwnd, reinterpret_cast<LPPOINT>(&rect.right));
+
   self->mWindowRect = rect;
   self->mWindowSize = {
     static_cast<float>(rect.right - rect.left),
