@@ -24,7 +24,7 @@ struct MainWindow : MainWindowT<MainWindow> {
   int16_t PointerSink() const noexcept;
   void PointerSink(int16_t) noexcept;
 
-  ///// Meta Quest /////
+  ///// Gestures (XR_FB_hand_tracking_aim) /////
   bool PinchToClick() const noexcept;
   void PinchToClick(bool) noexcept;
 
@@ -38,6 +38,13 @@ struct MainWindow : MainWindowT<MainWindow> {
 
   int16_t PointCtrlFCUMapping() const noexcept;
   void PointCtrlFCUMapping(int16_t) noexcept;
+
+  ///// Workarounds /////
+  bool ForceXRExtHandTracking() const noexcept;
+  void ForceXRExtHandTracking(bool) noexcept;
+
+  bool ForceXRFBHandTrackingAim() const noexcept;
+  void ForceXRFBHandTrackingAim(bool) noexcept;
 
   ///// Help/about /////
 

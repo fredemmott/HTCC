@@ -439,6 +439,7 @@ XrResult __declspec(dllexport) XRAPI_CALL
   }
 
   HandTrackedCockpitClicking::Config::LoadForCurrentProcess();
+  HandTrackedCockpitClicking::Environment::Load();
 
   // TODO: check version fields etc in loaderInfo
 

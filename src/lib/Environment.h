@@ -33,6 +33,8 @@
 
 namespace HandTrackedCockpitClicking::Environment {
 
+void Load();
+
 #define IT(native_type, name, default) \
   extern native_type name; \
   constexpr native_type name##Default {default};

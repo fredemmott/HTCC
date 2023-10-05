@@ -46,9 +46,9 @@
             <x:String>Virtual Oculus Touch VR controller</x:String>
           </ComboBox>
         </StackPanel>
-        <!-- Quest Settings -->
+        <!-- XR_FB_hand_tracking_aim Settings -->
         <TextBlock
-          Text="Meta Quest"
+          Text="Gestures"
           Style="{StaticResource SubtitleTextBlockStyle}"
         />
         <StackPanel
@@ -59,6 +59,11 @@
           BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
           CornerRadius="4"
           BorderThickness="1">
+          <TextBlock Style="{StaticResource BodyTextBlockStyle}">
+            Gestures require the XR_FB_hand_tracking_aim extension, which is currently available
+            on Quest headsets via Link/AirLink if developer mode and developer link features are
+            enabled.
+          </TextBlock>
           <ToggleSwitch
             Header="Pinch to click:"
             OnContent="Enabled"
@@ -103,6 +108,37 @@
             <x:String>Classic</x:String>
             <x:String>Modal</x:String>
           </ComboBox>
+        </StackPanel>
+        <!-- Workarounds -->
+        <TextBlock
+          Text="Workarounds"
+          Style="{StaticResource SubtitleTextBlockStyle}"
+        />
+        <StackPanel
+          Orientation="Vertical"
+          Spacing="12"
+          Padding="8"
+          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+          BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+          CornerRadius="4"
+          BorderThickness="1">
+          <TextBlock Style="{StaticResource BodyTextBlockStyle}">
+            Some hand tracking drivers do not report that hand tracking features are supported;
+            it may be possible to enable HTCC in these cases with the options below. If the
+            features do not actually work, it may crash the game or cause other problems.
+          </TextBlock>
+          <ToggleSwitch
+            Header="Force-enable XR_EXT_hand_tracking:"
+            OnContent="XR_EXT_hand_tracking is always assumed to be usable"
+            OffContent="XR_EXT_hand_tracking will be used if detected"
+            IsOn="{x:Bind ForceXRExtHandTracking}"
+          />
+          <ToggleSwitch
+            Header="Force-enable XR_FB_hand_tracking_aim:"
+            OnContent="XR_FB_hand_tracking_aim is always assumed to be usable"
+            OffContent="XR_FB_hand_tracking_aim will be used if detected"
+            IsOn="{x:Bind ForceXRFBHandTrackingAim}"
+          />
         </StackPanel>
         <!-- VERSION INFO -->
         <Grid ColumnDefinitions="Auto,*,Auto,Auto">

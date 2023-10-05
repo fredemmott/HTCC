@@ -7,12 +7,16 @@ namespace HTCCSettings {
   Int16 PointerSource;
   Int16 PointerSink;
 
-  // Quest
+  // XR_FB_hand_tracking_aim (Quest, Ultraleap Gemini 5.16+)
   Boolean PinchToClick;
   Boolean PinchToScroll;
 
   // PointCTRL
   Int16 PointCtrlFCUMapping;
+
+  // Workarounds
+  Boolean ForceXRExtHandTracking;
+  Boolean ForceXRFBHandTrackingAim;
 }
 
 }// namespace HTCCSettings

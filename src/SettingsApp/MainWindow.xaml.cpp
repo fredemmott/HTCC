@@ -226,4 +226,20 @@ void MainWindow::PointCtrlFCUMapping(int16_t value) noexcept {
     static_cast<HTCC::PointCtrlFCUMapping>(value));
 }
 
+bool MainWindow::ForceXRExtHandTracking() const noexcept {
+  return HTCC::Config::ForceHaveXRExtHandTracking;
+}
+
+void MainWindow::ForceXRExtHandTracking(bool value) noexcept {
+  HTCC::Config::SaveForceHaveXRExtHandTracking(value);
+}
+
+bool MainWindow::ForceXRFBHandTrackingAim() const noexcept {
+  return HTCC::Config::ForceHaveXRFBHandTrackingAim;
+}
+
+void MainWindow::ForceXRFBHandTrackingAim(bool value) noexcept {
+  HTCC::Config::SaveForceHaveXRFBHandTrackingAim(value);
+}
+
 }// namespace winrt::HTCCSettings::implementation
