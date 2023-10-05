@@ -393,6 +393,12 @@ static XrResult xrCreateApiLayerInstance(
         enabledExtensions.push_back(XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME);
       }
 
+      {
+        auto last
+          = std::unique(enabledExtensions.begin(), enabledExtensions.end());
+        enabledExtensions.erase(last, enabledExtensions.end());
+      }
+
       DebugPrint("Requesting extensions:");
       for (const auto& ext: enabledExtensions) {
         DebugPrint("- {}", ext);
