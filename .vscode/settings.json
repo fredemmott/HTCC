@@ -91,5 +91,6 @@
     "*.idl": "cpp"
   },
   "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
-  "cmake.configureOnOpen": true
+  "cmake.configureOnOpen": true,
+  "editor.tabSize": 2
 }
