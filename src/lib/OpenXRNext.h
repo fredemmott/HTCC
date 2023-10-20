@@ -82,11 +82,7 @@ class OpenXRNext final {
   } \
   template <class... Args> \
   auto func(Args&&... args) { \
-    const auto result = raw_##func(std::forward<Args>(args)...); \
-    if (result < 0) { \
-      DebugPrint("{} failed: {}", #func, static_cast<int>(result)); \
-    } \
-    return result; \
+    return raw_##func(std::forward<Args>(args)...); \
   } \
   template <class... Args> \
   bool check_##func(Args&&... args) { \
