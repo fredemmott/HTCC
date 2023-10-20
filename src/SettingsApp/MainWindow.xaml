@@ -62,7 +62,7 @@
           <TextBlock Style="{StaticResource BodyTextBlockStyle}">
             Gestures require the XR_FB_hand_tracking_aim extension, which is currently available
             on Quest headsets via Link/AirLink if developer mode and developer link features are
-            enabled.
+            enabled, or on Ultraleap Gemini v5.16 and above.
           </TextBlock>
           <ToggleSwitch
             Header="Pinch to click:"

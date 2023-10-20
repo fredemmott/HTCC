@@ -12,6 +12,7 @@ This is only tested with a Quest 2 and a Quest Pro. It probably doesn't work wit
 2. Set up your account as an Oculus Developer account - [documentation](https://developer.oculus.com/documentation/native/android/mobile-device-setup/) - you do not need to allow USB debugging or install the ADB drivers
 3. Restart the Oculus PC software
 4. Enable 'Developer Runtime Features' under Settings -> Beta. If you don't see the option yet, try again later - it can take a few hours
+5. In HTCC settings, set 'hand tracking source' to 'OpenXR Hand Tracking'
 
 ![Developer Runtime Features option](developer-runtime-features.png)
 

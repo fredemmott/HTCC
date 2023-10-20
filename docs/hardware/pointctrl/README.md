@@ -4,6 +4,9 @@ parent: Device Setup
 
 # PointCTRL v2
 
+- if using PointCTRL as a hand tracker, set 'Hand tracking device' to 'PointCTRL'
+- if using the FCUs as buttons, disable the gesture recognition options
+
 Requirements:
 - you must be comfortable updating the firmware
 - you must have a PointCTRL v2, not v1
