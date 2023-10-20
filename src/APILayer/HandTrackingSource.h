@@ -62,6 +62,9 @@ class HandTrackingSource final : public InputSource {
     XrTime mLastKeepAliveAt {};
     XrTime mWakeConditionsSince {};
     XrTime mHibernateGestureSince {};
+
+    ActionState mRawActions {};
+    XrTime mRawActionsSince {};
   };
 
   bool mHibernating {false};

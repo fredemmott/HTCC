@@ -138,6 +138,7 @@ enum class HandTrackingHands : DWORD {
   IT(uint32_t, HandTrackingHibernateIntervalMilliseconds, 1500) \
   IT(bool, HandTrackingWakeSleepBeeps, false) \
   IT(bool, HandTrackingHibernateBeeps, true) \
+  IT(uint32_t, HandTrackingGestureMilliseconds, 50) \
   IT(uint16_t, PointCtrlVID, 0x04d8) \
   IT(uint16_t, PointCtrlPID, 0xeeec) \
   IT(uint8_t, PointCtrlFCUButtonL1, 0) \

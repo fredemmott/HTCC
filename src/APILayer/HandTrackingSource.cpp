@@ -252,9 +252,10 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
 
   const bool wasSleeping = hand->mSleeping;
 
-  if (
-    arx <= (Config::HandTrackingActionVFOV / 2)
-    && ary <= (Config::HandTrackingActionHFOV / 2)) {
+  const auto inActionFOV = arx <= (Config::HandTrackingActionVFOV / 2)
+    && ary <= (Config::HandTrackingActionHFOV / 2);
+
+  if (inActionFOV) {
     hand->mLastKeepAliveAt = frameInfo.mNow;
   }
 
@@ -273,21 +274,27 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
   {
     ActionState rawActions {};
     PopulateInteractions(aimFB.status, &rawActions);
-    // Inverted because l-r movement is rotation in x axis
-    const auto inActionFOV
-      = std::abs(rotation.x) <= (Config::HandTrackingActionVFOV / 2)
-      && std::abs(rotation.y) <= (Config::HandTrackingActionHFOV / 2);
+    if (rawActions != hand->mRawActions) {
+      hand->mRawActionsSince = frameInfo.mNow;
+      hand->mRawActions = rawActions;
+    } else if (
+      hand->mRawActionsSince
+      && std::chrono::nanoseconds(frameInfo.mNow - hand->mRawActionsSince)
+        >= std::chrono::milliseconds(Config::HandTrackingGestureMilliseconds)) {
+      // Inverted because l-r movement is rotation in x axis
 #define FILTER_ACTION(x) \
   state.mActions.x = rawActions.x && (state.mActions.x || inActionFOV)
-    FILTER_ACTION(mPrimary);
-    FILTER_ACTION(mSecondary);
+      FILTER_ACTION(mPrimary);
+      FILTER_ACTION(mSecondary);
 #undef FILTER_ACTION
-    using ValueChange = ActionState::ValueChange;
-    if (
-      inActionFOV || (rawActions.mValueChange == state.mActions.mValueChange)) {
-      state.mActions.mValueChange = rawActions.mValueChange;
-    } else {
-      state.mActions.mValueChange = ValueChange::None;
+      using ValueChange = ActionState::ValueChange;
+      if (
+        inActionFOV
+        || (rawActions.mValueChange == state.mActions.mValueChange)) {
+        state.mActions.mValueChange = rawActions.mValueChange;
+      } else {
+        state.mActions.mValueChange = ValueChange::None;
+      }
     }
   }
 
