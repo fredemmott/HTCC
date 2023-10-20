@@ -29,5 +29,6 @@ SpaceBeforeRangeBasedForLoopColon: 'false'
 SpacesBeforeTrailingComments: '0'
 Standard: c++20
 TabWidth: '2'
+LineEnding: 'LF'
 UseCRLF: false
 UseTab: Never
