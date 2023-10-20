@@ -27,3 +27,10 @@ Only Eagle Dynamics are able to make hand tracking in DCS immersive, reliable, *
 ## Why does is the pointer in a line from my head?
 
 See the previous question.
+
+## How do I improve gesture recognition?
+
+- Make sure your area is well-lit
+- Make sure your hand tracker can see the gesture
+
+Gesture recognition is provided by your hand trackers' driver; there is nearly no scope for improvement within HTCC.
