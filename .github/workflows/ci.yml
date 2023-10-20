@@ -1,5 +1,13 @@
 name: Continuous Integration
-on: [push, pull_request]
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
+      - '.github/workflows/pages.yml'
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '.github/workflows/pages.yml'
 jobs:
   build:
     name: Build (${{matrix.config}})
