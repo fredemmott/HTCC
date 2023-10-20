@@ -222,6 +222,7 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
       && std::chrono::nanoseconds(frameInfo.mNow - hand->mLastKeepAliveAt)
         >= std::chrono::milliseconds(Config::HandTrackingSleepMilliseconds)) {
       hand->mWakeConditionsSince = {};
+      hand->mHibernateGestureSince = {};
       hand->mSleeping = true;
       PlayBeeps(BeepEvent::Sleep);
     }
@@ -290,11 +291,24 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
     }
   }
 
+  if (
+    Config::HandTrackingHibernateIntervalMilliseconds
+    && Config::HandTrackingHibernateCutoff > 0.001
+    && rotation.x >= Config::HandTrackingHibernateCutoff
+    && std::chrono::nanoseconds(frameInfo.mNow - mLastHibernationChangeAt)
+      >= std::chrono::milliseconds(
+         Config::HandTrackingHibernateIntervalMilliseconds)) {
+    if (!hand->mHibernateGestureSince) {
+      hand->mHibernateGestureSince = frameInfo.mNow;
+    }
+  } else {
+    hand->mHibernateGestureSince = {};
+  }
+
   if (state.mActions.Any()) {
     hand->mLastKeepAliveAt = frameInfo.mNow;
-    if (wasSleeping) {
-      DebugPrint("Keeping alive due to actions");
-    }
+    hand->mHibernateGestureSince = {};
+
     hand->mSleeping = false;
   }
 
@@ -306,7 +320,24 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
     PlayBeeps(BeepEvent::Wake);
   }
 
-  if (hand->mSleeping) {
+  if (
+    hand->mHibernateGestureSince && Config::HandTrackingHibernateMilliseconds
+    && std::chrono::nanoseconds(frameInfo.mNow - hand->mHibernateGestureSince)
+      >= std::chrono::milliseconds(Config::HandTrackingHibernateMilliseconds)) {
+    hand->mHibernateGestureSince = {};
+    mLastHibernationChangeAt = frameInfo.mNow;
+    if (mHibernating) {
+      DebugPrint("Waking from hibernation");
+      PlayBeeps(BeepEvent::HibernateWake);
+      mHibernating = false;
+    } else {
+      DebugPrint("Entering hibernation");
+      PlayBeeps(BeepEvent::HibernateSleep);
+      mHibernating = true;
+    }
+  }
+
+  if (hand->mSleeping || mHibernating) {
     state = {hand->mHand};
     return;
   }
@@ -359,8 +390,17 @@ void HandTrackingSource::InitHandTracker(Hand* hand) {
 }
 
 void HandTrackingSource::PlayBeeps(BeepEvent event) const {
-  if (!Config::HandTrackingWakeSleepBeeps) {
-    return;
+  switch (event) {
+    case BeepEvent::Wake:
+    case BeepEvent::Sleep:
+      if (!Config::HandTrackingWakeSleepBeeps) {
+        return;
+      }
+    case BeepEvent::HibernateWake:
+    case BeepEvent::HibernateSleep:
+      if (!Config::HandTrackingHibernateBeeps) {
+        return;
+      }
   }
 
   std::thread beepThread {[event]() {
@@ -369,10 +409,18 @@ void HandTrackingSource::PlayBeeps(BeepEvent event) const {
     constexpr DWORD ms = {100};
 
     switch (event) {
+      case BeepEvent::HibernateWake:
+        Beep(lowNote, ms);
+        Beep(highNote, ms);
+        [[fallthrough]];
       case BeepEvent::Wake:
         Beep(lowNote, ms);
         Beep(highNote, ms);
         return;
+      case BeepEvent::HibernateSleep:
+        Beep(highNote, ms);
+        Beep(lowNote, ms);
+        [[fallthrough]];
       case BeepEvent::Sleep:
         Beep(highNote, ms);
         Beep(lowNote, ms);

@@ -134,7 +134,10 @@ enum class HandTrackingHands : DWORD {
     HandTrackedCockpitClicking::HandTrackingHands::Both) \
   IT(uint32_t, HandTrackingWakeMilliseconds, 100) \
   IT(uint32_t, HandTrackingSleepMilliseconds, 500) \
+  IT(uint32_t, HandTrackingHibernateMilliseconds, 1000) \
+  IT(uint32_t, HandTrackingHibernateIntervalMilliseconds, 1500) \
   IT(bool, HandTrackingWakeSleepBeeps, false) \
+  IT(bool, HandTrackingHibernateBeeps, true) \
   IT(uint16_t, PointCtrlVID, 0x04d8) \
   IT(uint16_t, PointCtrlPID, 0xeeec) \
   IT(uint8_t, PointCtrlFCUButtonL1, 0) \
@@ -155,10 +158,11 @@ enum class HandTrackingHands : DWORD {
   IT(VRFarDistance, 0.8f) \
   IT(VRControllerActionSinkSecondsPerRotation, 4.0f) \
   IT(VRControllerPointerSinkSoftWorldLockDistance, 0.05f) \
-  IT(HandTrackingWakeVFOV, std::numbers::pi_v<float> / 6) \
+  IT(HandTrackingWakeVFOV, std::numbers::pi_v<float> / 3) \
   IT(HandTrackingWakeHFOV, std::numbers::pi_v<float> / 3) \
-  IT(HandTrackingActionVFOV, std::numbers::pi_v<float> / 4) \
-  IT(HandTrackingActionHFOV, std::numbers::pi_v<float> / 3) \
+  IT(HandTrackingActionVFOV, std::numbers::pi_v<float> / 2) \
+  IT(HandTrackingActionHFOV, std::numbers::pi_v<float> / 2) \
+  IT(HandTrackingHibernateCutoff, std::numbers::pi_v<float> / 8) \
   IT(SmoothingFactor, 0.5f) \
   IT(LeftEyeFOVLeft, 0.0f) \
   IT(LeftEyeFOVRight, 0.0f) \

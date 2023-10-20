@@ -61,7 +61,11 @@ class HandTrackingSource final : public InputSource {
     bool mSleeping {true};
     XrTime mLastKeepAliveAt {};
     XrTime mWakeConditionsSince {};
+    XrTime mHibernateGestureSince {};
   };
+
+  bool mHibernating {false};
+  XrTime mLastHibernationChangeAt {};
 
   Hand mLeftHand {XR_HAND_LEFT_EXT};
   Hand mRightHand {XR_HAND_RIGHT_EXT};
@@ -75,6 +79,8 @@ class HandTrackingSource final : public InputSource {
   enum class BeepEvent {
     Wake,
     Sleep,
+    HibernateWake,
+    HibernateSleep,
   };
   void PlayBeeps(BeepEvent) const;
 };
