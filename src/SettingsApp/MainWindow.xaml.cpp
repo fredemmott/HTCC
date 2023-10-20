@@ -226,6 +226,14 @@ void MainWindow::PointCtrlFCUMapping(int16_t value) noexcept {
     static_cast<HTCC::PointCtrlFCUMapping>(value));
 }
 
+bool MainWindow::DisableAimPointFB() const noexcept {
+  return !HTCC::Config::UseHandTrackingAimPointFB;
+}
+
+void MainWindow::DisableAimPointFB(bool value) noexcept {
+  HTCC::Config::SaveUseHandTrackingAimPointFB(!value);
+}
+
 bool MainWindow::ForceXRExtHandTracking() const noexcept {
   return HTCC::Config::ForceHaveXRExtHandTracking;
 }

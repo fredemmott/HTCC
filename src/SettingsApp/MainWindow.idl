@@ -15,6 +15,7 @@ namespace HTCCSettings {
   Int16 PointCtrlFCUMapping;
 
   // Workarounds
+  Boolean DisableAimPointFB;
   Boolean ForceXRExtHandTracking;
   Boolean ForceXRFBHandTrackingAim;
 }

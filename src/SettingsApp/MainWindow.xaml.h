@@ -40,6 +40,9 @@ struct MainWindow : MainWindowT<MainWindow> {
   void PointCtrlFCUMapping(int16_t) noexcept;
 
   ///// Workarounds /////
+  bool DisableAimPointFB() const noexcept;
+  void DisableAimPointFB(bool) noexcept;
+
   bool ForceXRExtHandTracking() const noexcept;
   void ForceXRExtHandTracking(bool) noexcept;
 

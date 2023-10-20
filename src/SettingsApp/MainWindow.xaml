@@ -122,6 +122,12 @@
           BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
           CornerRadius="4"
           BorderThickness="1">
+          <ToggleSwitch
+            Header="Ignore XR_FB_hand_tracking_aim pose:"
+            OnContent="A finger joint pose is used instead"
+            OffContent="XR_FB_hand_tracking_aim's pose is used if available"
+            IsOn="{x:Bind DisableAimPointFB}"
+          />
           <TextBlock Style="{StaticResource BodyTextBlockStyle}">
             Some hand tracking drivers do not report that hand tracking features are supported;
             it may be possible to enable HTCC in these cases with the options below. If the
