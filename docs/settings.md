@@ -41,8 +41,37 @@ DWORD
 Play beeps when hand tracking wakes up or sleeps. This is useful when tweaking the wake/sleep settings,
 but generally not for normal use.
 
-- 0: Wake/sleep beeps are disabled
-- 1: Wake/sleep beeps are enabled
+- 0: No wake/sleep beeps
+- 1: Beep 'hi-lo' when sleeping, 'lo-hi' when waking
+
+## OpenXR Hand Tracking Hibernate Settings
+
+'Hibernate' lets you completely disable OpenXR Hand Tracking until you re-enable it. To toggle hibernation on/off, hold one hand near the top of your field of view until you hear the beeps and the input stops.
+
+### HandTrackingHibernateCutoff
+
+STRING
+
+Angle above 'straight ahead' (in radians) that the hand needs to be above to enable hibernation.
+
+### HandTrackingHibernateMilliseconds
+
+DWORD
+
+Time that the hibernate gesture must be held.
+
+### HandTrackingHibernateIntervalMilliseconds
+
+DWORD
+
+After a hibernate on/off gesture is recognized, HTCC will ignore the gesture for this amount of time. This is to avoid accidentally double-toggling it.
+
+### HandTrackingHibernateBeeps
+
+DWORD
+
+- 0: No hibernation beeps
+- 1: beep 'hi-lo-hi-lo' when hibernating, 'lo-hi-lo-hi' when waking from hibernation
 
 ## Other OpenXR Hand Tracking Settings
 
