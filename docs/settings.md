@@ -22,25 +22,23 @@ Field of view - in radians - that the hand must be in for the start of a gesture
 
 DWORD
 
-Number of milliseconds that the hand must be moving for hand tracking to activate.
-
-### HandTrackingWakeSpeed
-
-STRING
-
-Speed - in meters per second - that the hand must be moving for hand tracking to activate.
+Number of milliseconds that the hand must be in the Active FOV for hand tracking to activate.
 
 ### HandTrackingSleepMilliseconds
 
 DWORD
 
-Number of milliseconds that the hand must be still for hand tracking to deactivate.
+Number of milliseconds that the hand must be outside of the Sleep FOV for hand tracking to deactivate.
 
-### HandTrackingSleepSpeed
+### HandTrackingWakeSleepBeeps
 
-STRING
+DWORD
 
-Maximum speed, in meters per second, that the hand must be moving to be considered still.
+Play beeps when hand tracking wakes up or sleeps. This is useful when tweaking the wake/sleep settings,
+but generally not for normal use.
+
+- 0: Wake/sleep beeps are disabled
+- 1: Wake/sleep beeps are enabled
 
 ## Other OpenXR Hand Tracking Settings
 

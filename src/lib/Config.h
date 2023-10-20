@@ -88,8 +88,6 @@ enum class HandTrackingHands : DWORD {
   IT(uint16_t, ScrollWheelDelayMilliseconds, 600) \
   IT(uint16_t, ScrollWheelIntervalMilliseconds, 50) \
   IT(uint16_t, VRControllerScrollAccelerationDelayMilliseconds, 3000) \
-  IT(uint32_t, HandTrackingWakeMilliseconds, 100) \
-  IT(uint32_t, HandTrackingSleepMilliseconds, 3000) \
   IT(bool, PointCtrlSupportHotplug, true) \
   IT(uint16_t, PointCtrlCenterX, 32767) \
   IT(uint16_t, PointCtrlCenterY, 32767) \
@@ -134,6 +132,9 @@ enum class HandTrackingHands : DWORD {
     HandTrackedCockpitClicking::HandTrackingHands, \
     HandTrackingHands, \
     HandTrackedCockpitClicking::HandTrackingHands::Both) \
+  IT(uint32_t, HandTrackingWakeMilliseconds, 100) \
+  IT(uint32_t, HandTrackingSleepMilliseconds, 500) \
+  IT(bool, HandTrackingWakeSleepBeeps, false) \
   IT(uint16_t, PointCtrlVID, 0x04d8) \
   IT(uint16_t, PointCtrlPID, 0xeeec) \
   IT(uint8_t, PointCtrlFCUButtonL1, 0) \
@@ -154,8 +155,6 @@ enum class HandTrackingHands : DWORD {
   IT(VRFarDistance, 0.8f) \
   IT(VRControllerActionSinkSecondsPerRotation, 4.0f) \
   IT(VRControllerPointerSinkSoftWorldLockDistance, 0.05f) \
-  IT(HandTrackingSleepSpeed, 0.1f) \
-  IT(HandTrackingWakeSpeed, 0.3f) \
   IT(HandTrackingWakeVFOV, std::numbers::pi_v<float> / 6) \
   IT(HandTrackingWakeHFOV, std::numbers::pi_v<float> / 3) \
   IT(HandTrackingActionVFOV, std::numbers::pi_v<float> / 4) \

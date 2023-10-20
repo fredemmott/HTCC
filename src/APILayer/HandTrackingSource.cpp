@@ -181,25 +181,17 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
   };
 
   std::array<XrHandJointLocationEXT, XR_HAND_JOINT_COUNT_EXT> jointLocations;
-  std::array<XrHandJointVelocityEXT, XR_HAND_JOINT_COUNT_EXT> jointVelocities;
   jointLocations.fill({});
-  jointVelocities.fill({});
-  XrHandJointVelocitiesEXT velocities {
-    .type = XR_TYPE_HAND_JOINT_VELOCITIES_EXT,
-    .jointCount = jointVelocities.size(),
-    .jointVelocities = jointVelocities.data(),
-  };
 
   XrHandJointLocationsEXT joints {
     .type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT,
-    .next = &velocities,
     .jointCount = jointLocations.size(),
     .jointLocations = jointLocations.data(),
   };
 
   XrHandTrackingAimStateFB aimFB {XR_TYPE_HAND_TRACKING_AIM_STATE_FB};
   if (Environment::Have_XR_FB_HandTracking_Aim) {
-    velocities.next = &aimFB;
+    joints.next = &aimFB;
   }
 
   if (!mOpenXR->check_xrLocateHandJointsEXT(
@@ -225,63 +217,56 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
 
   if (!state.mPose) {
     state = {hand->mHand};
-    return;
-  }
-
-  const auto [raycastPose, rotation] = RaycastPose(frameInfo, *state.mPose);
-  const auto rdiff
-    = std::sqrtf((rotation.x * rotation.x) + (rotation.y * rotation.y));
-
-  const auto velocity3 = jointVelocities[Config::HandTrackingAimJoint];
-  if (HasFlags(velocity3.velocityFlags, XR_SPACE_VELOCITY_LINEAR_VALID_BIT)) {
-    const auto linearVelocity = std::sqrtf(
-      (velocity3.linearVelocity.x * velocity3.linearVelocity.x)
-      + (velocity3.linearVelocity.y * velocity3.linearVelocity.y)
-      + (velocity3.linearVelocity.z * velocity3.linearVelocity.z));
-    if (linearVelocity >= Config::HandTrackingSleepSpeed) {
-      hand->mLastKeepAliveAt = frameInfo.mNow;
-      if (
-        hand->mSleeping && linearVelocity >= Config::HandTrackingWakeSpeed
-        && std::abs(rotation.x) <= (Config::HandTrackingWakeVFOV / 2)
-        && std::abs(rotation.y) <= (Config::HandTrackingWakeHFOV / 2)
-        && std::chrono::nanoseconds(frameInfo.mNow - hand->mLastSleepSpeedAt)
-          >= std::chrono::milliseconds(Config::HandTrackingWakeMilliseconds)) {
-        DebugPrint(
-          "{} > {}, waking hand {}",
-          linearVelocity,
-          Config::HandTrackingWakeSpeed,
-          static_cast<int>(hand->mHand));
-        hand->mSleeping = false;
-      }
-    } else {
-      hand->mLastSleepSpeedAt = frameInfo.mNow;
-      if (
-        (!hand->mSleeping)
-        && std::chrono::nanoseconds(frameInfo.mNow - hand->mLastKeepAliveAt)
-          > std::chrono::milliseconds(Config::HandTrackingSleepMilliseconds)) {
-        DebugPrint(
-          "{} < {} for at least {}ms, sleeping hand {}",
-          linearVelocity,
-          Config::HandTrackingSleepSpeed,
-          Config::HandTrackingSleepMilliseconds,
-          static_cast<int>(hand->mHand));
-        hand->mSleeping = true;
-      }
+    if (
+      hand->mLastKeepAliveAt && (!hand->mSleeping)
+      && std::chrono::nanoseconds(frameInfo.mNow - hand->mLastKeepAliveAt)
+        >= std::chrono::milliseconds(Config::HandTrackingSleepMilliseconds)) {
+      hand->mWakeConditionsSince = {};
+      hand->mSleeping = true;
+      PlayBeeps(BeepEvent::Sleep);
     }
-  }
-
-  if (hand->mSleeping) {
-    state = {hand->mHand};
     return;
   }
 
   const auto age
     = std::chrono::nanoseconds(frameInfo.mNow - state.mPositionUpdatedAt);
-  const auto stale = age > std::chrono::milliseconds(200);
-
-  if (stale) {
+  if (age > std::chrono::milliseconds(200)) {
     state = {hand->mHand};
     return;
+  }
+
+  const auto [raycastPose, rotation] = RaycastPose(frameInfo, *state.mPose);
+
+  const auto arx = std::abs(rotation.x);
+  const auto ary = std::abs(rotation.y);
+  if (
+    arx <= (Config::HandTrackingWakeVFOV / 2)
+    && ary <= (Config::HandTrackingWakeHFOV / 2)) {
+    if (!hand->mWakeConditionsSince) {
+      hand->mWakeConditionsSince = frameInfo.mNow;
+    }
+  } else {
+    hand->mWakeConditionsSince = {};
+  }
+
+  const bool wasSleeping = hand->mSleeping;
+
+  if (
+    arx <= (Config::HandTrackingActionVFOV / 2)
+    && ary <= (Config::HandTrackingActionHFOV / 2)) {
+    hand->mLastKeepAliveAt = frameInfo.mNow;
+  }
+
+  if (
+    hand->mWakeConditionsSince
+    && std::chrono::nanoseconds(frameInfo.mNow - hand->mWakeConditionsSince)
+      >= std::chrono::milliseconds(Config::HandTrackingWakeMilliseconds)) {
+    hand->mSleeping = false;
+  } else if (
+    hand->mLastKeepAliveAt
+    && std::chrono::nanoseconds(frameInfo.mNow - hand->mLastKeepAliveAt)
+      >= std::chrono::milliseconds(Config::HandTrackingSleepMilliseconds)) {
+    hand->mSleeping = true;
   }
 
   {
@@ -307,6 +292,23 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
 
   if (state.mActions.Any()) {
     hand->mLastKeepAliveAt = frameInfo.mNow;
+    if (wasSleeping) {
+      DebugPrint("Keeping alive due to actions");
+    }
+    hand->mSleeping = false;
+  }
+
+  if (hand->mSleeping && !wasSleeping) {
+    DebugPrint("Sleeping hand {}", static_cast<int>(hand->mHand));
+    PlayBeeps(BeepEvent::Sleep);
+  } else if (wasSleeping && !hand->mSleeping) {
+    DebugPrint("Waking hand {}", static_cast<int>(hand->mHand));
+    PlayBeeps(BeepEvent::Wake);
+  }
+
+  if (hand->mSleeping) {
+    state = {hand->mHand};
+    return;
   }
 
   state.mDirection = {rotation};
@@ -354,6 +356,30 @@ void HandTrackingSource::InitHandTracker(Hand* hand) {
   }
 
   DebugPrint("Initialized hand tracker {}.", static_cast<int>(hand->mHand));
+}
+
+void HandTrackingSource::PlayBeeps(BeepEvent event) const {
+  if (!Config::HandTrackingWakeSleepBeeps) {
+    return;
+  }
+
+  std::thread beepThread {[event]() {
+    constexpr DWORD lowNote {262};// C4
+    constexpr DWORD highNote {440};// A4
+    constexpr DWORD ms = {100};
+
+    switch (event) {
+      case BeepEvent::Wake:
+        Beep(lowNote, ms);
+        Beep(highNote, ms);
+        return;
+      case BeepEvent::Sleep:
+        Beep(highNote, ms);
+        Beep(lowNote, ms);
+        return;
+    }
+  }};
+  beepThread.detach();
 }
 
 }// namespace HandTrackedCockpitClicking

@@ -58,9 +58,9 @@ class HandTrackingSource final : public InputSource {
     XrHandEXT mHand;
     InputState mState {mHand};
     XrHandTrackerEXT mTracker {};
-    bool mSleeping {false};
+    bool mSleeping {true};
     XrTime mLastKeepAliveAt {};
-    XrTime mLastSleepSpeedAt {};
+    XrTime mWakeConditionsSince {};
   };
 
   Hand mLeftHand {XR_HAND_LEFT_EXT};
@@ -71,6 +71,12 @@ class HandTrackingSource final : public InputSource {
   std::tuple<XrPosef, XrVector2f> RaycastPose(
     const FrameInfo&,
     const XrPosef& pose);
+
+  enum class BeepEvent {
+    Wake,
+    Sleep,
+  };
+  void PlayBeeps(BeepEvent) const;
 };
 
 }// namespace HandTrackedCockpitClicking
