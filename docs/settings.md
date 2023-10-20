@@ -171,6 +171,13 @@ DWORD:
 
 Which game's mappings are used for VR controllers.
 
+## SmoothingFactor
+
+STRING
+
+Value between `0.0` and `1.0` weighing the two most recent inputs. A value of `1.0` is equivalent to no smoothing, and a value of `0.5` averages the last two frames (maximum smoothing). `0.0` entirely uses the previous frame's data,
+and is not generally useful.
+
 ## Rendering offset
 
 ### VRVerticalOffset

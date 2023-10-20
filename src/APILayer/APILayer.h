@@ -27,6 +27,9 @@
 
 #include <memory>
 
+#include "FrameInfo.h"
+#include "InputState.h"
+
 namespace HandTrackedCockpitClicking {
 
 class HandTrackingSource;
@@ -35,7 +38,6 @@ class PointCtrlSource;
 class VirtualControllerSink;
 class VirtualTouchScreenSink;
 struct FrameInfo;
-struct InputState;
 
 class APILayer final {
  public:
@@ -95,7 +97,17 @@ class APILayer final {
  private:
   std::optional<XrPosef> ProjectDirection(
     const FrameInfo& frameInfo,
-    const InputState& hand);
+    const InputState& hand) const;
+
+  struct InputSnapshot {
+    FrameInfo mFrameInfo {};
+    InputState mInputState {};
+  };
+
+  InputState SmoothHand(
+    const InputSnapshot& currentFrame,
+    const std::optional<InputSnapshot>& previousFrame) const;
+  XrPosef SmoothPose(const XrPosef& current, const XrPosef& previous) const;
 
   std::shared_ptr<OpenXRNext> mOpenXR;
   XrInstance mInstance {};
@@ -106,6 +118,9 @@ class APILayer final {
   std::unique_ptr<PointCtrlSource> mPointCtrl;
   std::unique_ptr<VirtualTouchScreenSink> mVirtualTouchScreen;
   std::unique_ptr<VirtualControllerSink> mVirtualController;
+
+  std::optional<InputSnapshot> mPreviousFrameLeftHand;
+  std::optional<InputSnapshot> mPreviousFrameRightHand;
 };
 
 }// namespace HandTrackedCockpitClicking

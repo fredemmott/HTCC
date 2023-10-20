@@ -288,6 +288,12 @@ XrResult APILayer::xrWaitFrame(
     }
   }
 
+  const InputSnapshot leftSnapshot {frameInfo, leftHand};
+  const InputSnapshot rightSnapshot {frameInfo, rightHand};
+
+  leftHand = this->SmoothHand(leftSnapshot, mPreviousFrameLeftHand);
+  rightHand = this->SmoothHand(rightSnapshot, mPreviousFrameRightHand);
+
   if (mVirtualTouchScreen) {
     mVirtualTouchScreen->Update(leftHand, rightHand);
   }
@@ -302,12 +308,19 @@ XrResult APILayer::xrWaitFrame(
     mVirtualController->Update(frameInfo, leftHand, rightHand);
   }
 
+  mPreviousFrameLeftHand = leftSnapshot;
+  mPreviousFrameRightHand = rightSnapshot;
+
   return XR_SUCCESS;
 }
 
 std::optional<XrPosef> APILayer::ProjectDirection(
   const FrameInfo& frameInfo,
-  const InputState& hand) {
+  const InputState& hand) const {
+  if (hand.mPose) {
+    return hand.mPose;
+  }
+
   if (!hand.mDirection) {
     return {};
   }
@@ -330,6 +343,80 @@ std::optional<XrPosef> APILayer::ProjectDirection(
 
   const auto worldPose = viewPose * frameInfo.mViewInLocal;
   return worldPose;
+}
+
+InputState APILayer::SmoothHand(
+  const InputSnapshot& currentFrame,
+  const std::optional<InputSnapshot>& maybePreviousFrame) const {
+  const auto& currentInput = currentFrame.mInputState;
+  if (currentInput.mPointerMode == PointerMode::None) {
+    return currentInput;
+  }
+
+  if (Config::SmoothingFactor > 0.99f) {
+    return currentInput;
+  }
+
+  if (!maybePreviousFrame) {
+    return currentInput;
+  }
+  const auto& previousFrame = *maybePreviousFrame;
+  const auto& previousInput = previousFrame.mInputState;
+
+  if (currentInput.mPointerMode != previousInput.mPointerMode) {
+    return currentInput;
+  }
+
+  switch (currentInput.mPointerMode) {
+    case PointerMode::None:
+      // TODO (C++23): std::unreachable()
+      __assume(false);
+    case PointerMode::Direction: {
+      if (!(currentInput.mDirection && previousInput.mDirection)) {
+        return currentInput;
+      }
+
+      const auto currentPose
+        = this->ProjectDirection(currentFrame.mFrameInfo, currentInput);
+      const auto previousPose
+        = this->ProjectDirection(previousFrame.mFrameInfo, previousInput);
+      if (!(currentPose && previousPose)) {
+        return currentInput;
+      }
+
+      const auto p = (this->SmoothPose(*currentPose, *previousPose)
+                      * currentFrame.mFrameInfo.mLocalInView)
+                       .position;
+      const auto rx = std::atan2f(p.y, -p.z);
+      const auto ry = std::atan2f(p.x, -p.z);
+      auto ret = currentInput;
+      ret.mDirection = {rx, ry};
+      return ret;
+    }
+    case PointerMode::Pose: {
+      if (!(currentInput.mPose && previousInput.mPose)) {
+        return currentInput;
+      }
+
+      auto ret = currentInput;
+      ret.mPose = this->SmoothPose(*currentInput.mPose, *previousInput.mPose);
+      return ret;
+    }
+  }
+}
+
+XrPosef APILayer::SmoothPose(
+  const XrPosef& currentPose,
+  const XrPosef& previousPose) const {
+  const auto ao = XrQuatToSM(previousPose.orientation);
+  const auto bo = XrQuatToSM(currentPose.orientation);
+  const auto ap = XrVecToSM(previousPose.position);
+  const auto bp = XrVecToSM(currentPose.position);
+
+  return {
+    SMQuatToXr(Quaternion::Slerp(ao, bo, Config::SmoothingFactor)),
+    SMVecToXr(Vector3::Lerp(ap, bp, Config::SmoothingFactor)),
+  };
 }
 
 }// namespace HandTrackedCockpitClicking
