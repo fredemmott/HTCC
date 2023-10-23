@@ -11,6 +11,7 @@ parent: Device Setup
    - Turn on 'Ignore XR_FB_hand_tracking_aim_pose'
    - Turn on 'Force-enable XR_EXT_hand_tracking'
    - Turn on 'Force-enable XR_FB_hand_tracking_aim'
+   - If these options cause any issues, the Ultraleap driver is outdated or not installed correctly.
 
 ## DCS
 
