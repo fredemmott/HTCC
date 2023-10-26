@@ -75,6 +75,14 @@ PointCtrlSource::PointCtrlSource(HANDLE eventNotification)
   }
 }
 
+PointCtrlSource::~PointCtrlSource() {
+  // avoid any destructor ordering issues
+  if (mConnectDeviceThread) {
+    mConnectDeviceThread->request_stop();
+    mConnectDeviceThread->join();
+  }
+}
+
 void PointCtrlSource::ConnectDevice() {
   if (mDevice) {
     return;

@@ -40,6 +40,7 @@ class PointCtrlSource final : public InputSource {
  public:
   explicit PointCtrlSource(HANDLE eventNotification);
   PointCtrlSource();
+  ~PointCtrlSource();
 
   bool IsConnected() const;
   std::tuple<InputState, InputState> Update(PointerMode, const FrameInfo&)
