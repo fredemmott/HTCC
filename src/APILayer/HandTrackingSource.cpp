@@ -302,6 +302,7 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
     Config::HandTrackingHibernateIntervalMilliseconds
     && Config::HandTrackingHibernateCutoff > 0.001
     && rotation.x >= Config::HandTrackingHibernateCutoff
+    && hand->mState.mPose->position.y > frameInfo.mViewInLocal.position.y
     && std::chrono::nanoseconds(frameInfo.mNow - mLastHibernationChangeAt)
       >= std::chrono::milliseconds(
          Config::HandTrackingHibernateIntervalMilliseconds)) {
