@@ -45,6 +45,16 @@ class APILayer final {
   APILayer(XrInstance, XrSession, const std::shared_ptr<OpenXRNext>&);
   virtual ~APILayer();
 
+  XrResult xrGetSystemProperties(
+    XrInstance instance,
+    XrSystemId systemId,
+    XrSystemProperties* properties);
+
+  XrResult xrCreateHandTrackerEXT(
+    XrSession session,
+    const XrHandTrackerCreateInfoEXT* createInfo,
+    XrHandTrackerEXT* handTracker);
+
   XrResult xrWaitFrame(
     XrSession session,
     const XrFrameWaitInfo* frameWaitInfo,

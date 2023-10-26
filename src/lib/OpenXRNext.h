@@ -31,6 +31,7 @@
 #include "DebugPrint.h"
 
 #define INTERCEPTED_OPENXR_FUNCS \
+  IT(xrGetSystemProperties) \
   IT(xrDestroyInstance) \
   IT(xrCreateSession) \
   IT(xrDestroySession) \
@@ -44,14 +45,14 @@
   IT(xrGetActionStatePose) \
   IT(xrSyncActions) \
   IT(xrGetCurrentInteractionProfile) \
-  IT(xrPollEvent)
+  IT(xrPollEvent) \
+  IT(xrCreateHandTrackerEXT)
 #define NEXT_OPENXR_FUNCS \
   INTERCEPTED_OPENXR_FUNCS \
   IT(xrCreateReferenceSpace) \
   IT(xrDestroySpace) \
   IT(xrLocateViews) \
   IT(xrPathToString) \
-  IT(xrCreateHandTrackerEXT) \
   IT(xrDestroyHandTrackerEXT) \
   IT(xrLocateHandJointsEXT) \
   IT(xrGetInstanceProperties) \

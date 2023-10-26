@@ -45,6 +45,26 @@ static_assert(OpenXRLayerName.size() <= XR_MAX_API_LAYER_NAME_SIZE);
 static std::shared_ptr<OpenXRNext> gNext;
 static APILayer* gInstance = nullptr;
 
+static XrResult xrGetSystemProperties(
+  XrInstance instance,
+  XrSystemId systemId,
+  XrSystemProperties* properties) {
+  if (gInstance) {
+    return gInstance->xrGetSystemProperties(instance, systemId, properties);
+  }
+  return gNext->xrGetSystemProperties(instance, systemId, properties);
+}
+
+static XrResult xrCreateHandTrackerEXT(
+  XrSession session,
+  const XrHandTrackerCreateInfoEXT* createInfo,
+  XrHandTrackerEXT* handTracker) {
+  if (gInstance) {
+    return gInstance->xrCreateHandTrackerEXT(session, createInfo, handTracker);
+  }
+  return gNext->xrCreateHandTrackerEXT(session, createInfo, handTracker);
+}
+
 static XrResult xrWaitFrame(
   XrSession session,
   const XrFrameWaitInfo* info,
