@@ -28,7 +28,7 @@ This should show up in Ultraleap's software as a "Stereo IR 170", and your hands
 
 ```json
 {
-  "pos": [0, 0, 0],
+  "pos": [0.0, 0.0, 0.0],
   "tilt_angle": 25
 }
 ```
