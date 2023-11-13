@@ -26,11 +26,12 @@ See [Ultraleap's documentation](https://docs.ultraleap.com/openxr/configuration/
 
 This should show up in Ultraleap's software as a "Stereo IR 170", and your hands likely appear ~ 10-15cm too high; this can be fixed by following Ultraleap's documentation above; you should start with a tilt angle of 25 degrees, e.g:
 
-```JSON
+```json
 {
   "pos": [0, 0, 0],
   "tilt_angle": 25
-}```
+}
+```
 
 You can also [download this `api_layer_config.json`](pimax/api_layer_config.json); follow Ultraleap's documentation, create `%PROGRAMDATA%\Ultraleap\OpenXR` if necessary (this is *usually* equivalent to `C:\ProgramData\Ultraleap\OpenXR\api_layer_config.json`), and put the .json file there. **If you need assistance, contact Ultraleap support.**
 
