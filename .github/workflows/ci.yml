@@ -76,7 +76,7 @@ jobs:
           echo "::endgroup::"
       - name: Attach debug symbols to build
         if: ${{matrix.config != 'Debug' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: HandTrackedCockpitClicking-GHA-${{github.run_number}}-DebugSymbols
           path: ${{steps.symbols.outputs.PATH}}/*.pdb
@@ -115,7 +115,7 @@ jobs:
             "${{steps.installer.outputs.PATH}}"
       - name: Attach installer to build
         if: ${{matrix.config != 'Debug' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{steps.installer.outputs.NAME}}
           path: ${{steps.installer.outputs.PATH}}
