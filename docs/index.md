@@ -8,7 +8,7 @@ This project is an OpenXR API layer aimed to make it easy to click on cockpits i
 
 This is **not** intended to be:
 - usable as general-purpose hand tracking support: it is designed to work well with specific games (DCS and MSFS).
-- a way to see your hands in VR: it priorities ability to point-and-click reliably over immersion. In-game hands/gloves will not line up with your hands, as this conflicts with the goal of providing reliable pointing - the instructions for DCS include making the hands/gloves invisible. **This can only be solved by game developers adding/improving built-in hand-tracking support. It can not be improved by HTCC without sacrificing usability.**
+- a way to see your hands in VR: it priorities ability to point-and-click reliably over immersion. In-game hands/gloves will not line up with your hands, as this conflicts with the goal of providing reliable pointing - the instructions for DCS include making the hands/gloves invisible. **This can only be solved by game developers adding/improving built-in hand-tracking support or deeper modifications to the game itself. It can not be improved by HTCC without sacrificing usability.**
 
 1. TOC
 {:toc}
