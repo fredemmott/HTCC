@@ -23,9 +23,13 @@ This is **not** intended to be:
 | All others | ❌ | |
 
 If you have a PointCTRL:
-- you must calibrate using the included calibration app instead of the standard calibration procedure
-- the custom firmware is **required** for MSFS
-- the custom firmware is *optional* for DCS
+- HTCC is *optional* for DCS
+- HTCC is **required** for MSFS
+- if you are using HTCC:
+  - the custom firwmare is **required**
+  - you must calibrate using the included calibration app instead of the standard calibration procedure
+- if you are not using HTCC, you **must not** use the custom firmware
+
 
 ## Hardware Compatibility
 
