@@ -23,7 +23,7 @@ This is **not** intended to be:
 | All others | ❌ | |
 
 If you have a PointCTRL:
-- HTCC is *optional* for DCS
+- HTCC is **optional** for DCS
 - HTCC is **required** for MSFS
 - if you are using HTCC:
   - the custom firwmare is **required**
