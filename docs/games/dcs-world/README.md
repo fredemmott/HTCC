@@ -28,6 +28,8 @@ HTCC requires that DCS is using OpenXR.
 
 If using VR controller emulation, there doesn't appear to be a way to disable 'touch to interact'; be careful not to accidentally touch the controls. This is especially problematic for the fire suppression pull handles in the A10C. If accidental control interactions are a problem, switch to 'Virtual Touch Screen' mode - though you may then need to use a mouse for menus.
 
+If hand tracking interferes with the mouse, you can temporarily disable HTCC by holding one hand above your head for a few seconds, near the top of your field of view - you should hear a few beeps. You can re-enable it by repeating the gesture.
+
 ### OpenComposite
 
 - HTCC will no longer be tested with OpenComposite
