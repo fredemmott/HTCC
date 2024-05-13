@@ -17,6 +17,13 @@ To launch, hit the Windows key, and type 'HTCC PointCTRL Classic', and run the i
 
 "PointCTRL Classic" is mostly useful for people who want to keep using their PointCTRL with DCS without using OpenXR, but also want to use it with DCS.
 
+## Quest via Link/AirLink
+
+These steps are *only* for Link/AirLink, not Virtual Desktop, Steam Link, or any other tools. As of 2024-05-13, additional steps are needed for Link/AirLink because of a compatibility issue introduced into Meta's drivers.
+
+1. Follow the generic OpenXR steps below
+2. Delete `dbghelp.dll` from DCS's `bin` and `bin-mt` folders; these will need to be deleted again every time DCS updates, and can be recovered by a DCS 'quick repair'
+
 ## OpenXR
 
 HTCC requires that DCS is using OpenXR.
