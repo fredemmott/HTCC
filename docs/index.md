@@ -35,9 +35,9 @@ If you have a PointCTRL:
 
 | Hardware | Compatible? | Notes |
 |--------------|-------------------|----|
-| Quest 2      | ✅ | Requires Oculus Developer Mode |
-| Quest Pro    | ✅ | Requires Oculus Developer Mode |
-| Quest 3      | ✅ | Requires Oculus Developer Mode |
+| Quest 2      | ✅ | Requires Oculus Developer Mode or Virtual Desktop |
+| Quest Pro    | ✅ | Requires Oculus Developer Mode or Virtual Desktop |
+| Quest 3      | ✅ | Requires Oculus Developer Mode or Virtual Desktop |
 | PointCTRL    | ✅ | Requires custom firmware |
 | Ultraleap    | ✅ | Includes Pimax hand tracking modules |
 | All others   | ❌ | Includes HP Reverb G2, Varjo Aero |
