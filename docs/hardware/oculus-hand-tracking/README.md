@@ -18,7 +18,9 @@ This is only tested with a Quest 2 and a Quest Pro. It probably doesn't work wit
 
 ## Virtual Desktop
 
-Virtual Desktop is not supported; you must use Link or AirLink instead. This may change in the future if Virtual Desktop gains support for OpenXR and OpenXR hand tracking.
+- you must use VDXR
+- turn on 'send tracking data to PC' so that your PC - and HTCC - receive the hand tracking data
+- turn *off* hand tracking in Virtual Desktop, otherwise its' own controller emulation will be used instead. It is possible to mix both, but complicated, and makes it much harder to diagnose issues
 
 ## Sleep/wake
 
