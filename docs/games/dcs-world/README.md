@@ -4,6 +4,17 @@ parent: Game Setup
 
 # DCS World
 
+## In-Game Options
+
+Any other hand-tracking interferes with HTCC or entirely stops it from functioning.
+
+- Turn off hand tracking in the game
+- Turn off hand tracking controller emulation in any other tools except for device drivers - for example, OpenXR Toolkit
+- Turn off Ultraleap in the game; if you have an Ultraleap device (including the Pimax hand tracking module), keep OpenXR support enabled in the Ultraleap driver settings, but do not enable it in game
+- Unless you are using Oculus Touch controller emulation in HTCC (**not** recommended), turn off hand controller support in DCS
+
+To test if DCS is configured correctly, *disable HTCC*, restart DCS, and move your hands; if your hands move in-game, you have some other hand tracking turned on which needs to be turned off. Once you have no hand tracking in DCS, re-enable HTCC.
+
 ## "PointCTRL Classic" (v0.2 and above)
 
 If you are using a PointCTRL and don't want to use any OpenXR features (e.g. Quest or Ultraleap hand tracking, or controller emulation), you can use the 'HTCC PointCTRL Classic' entry in the start menu.
