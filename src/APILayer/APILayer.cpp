@@ -433,6 +433,8 @@ InputState APILayer::SmoothHand(
       ret.mPose = this->SmoothPose(*currentInput.mPose, *previousInput.mPose);
       return ret;
     }
+    default:
+      __assume(false);
   }
 }
 
