@@ -321,3 +321,11 @@ To disable pinch gestures, use the `PinchToClick` and `PinchToScroll` settings i
 ### VirtualControllerInteractionProfilePath
 
 STRING: OpenXR path to the interaction profile of the emulated controllers.
+
+### Quirk_Conformance_ExtensionCount
+
+DWORD:
+- 1: enabled (default)
+- 0: disabled
+
+As of 2024-07-22, the Meta Link PTC runtime has a bug where it inappropriately returns `XR_ERROR_SIZE_INSUFFICIENT` from `xrEnumerateInstanceExtensionProperties()` when `propertyCapacityInput` is 0; this registry setting enables/disables a workaround, which (incorrectly) makes HTCC consider `XR_ERROR_SIZE_INSUFFICIENT` to also indicate success for this call.
