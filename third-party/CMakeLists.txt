@@ -16,3 +16,11 @@ include(cppwinrt.cmake)
 include(directxtk.cmake)
 include(openxr.cmake)
 include(nuget-versions.cmake)
+
+return(
+  PROPAGATE
+  CPPWINRT_VERSION
+  WINDOWSAPPSDK_VERSION
+  WINDOWS_SDK_BUILDTOOLS_VERSION
+  WINDOWS_IMPLEMENTATIONLIBRARY_VERSION
+)

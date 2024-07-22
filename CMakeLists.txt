@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.25)
 
 # No specific need for this version, but let's set *something* so
 # the lower bound is known and enforced
