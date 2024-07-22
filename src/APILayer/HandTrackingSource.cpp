@@ -299,7 +299,8 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
   }
 
   if (
-    Config::HandTrackingHibernateIntervalMilliseconds
+    Config::HandTrackingHibernateGestureEnabled
+    && Config::HandTrackingHibernateIntervalMilliseconds
     && Config::HandTrackingHibernateCutoff > 0.001
     && rotation.x >= Config::HandTrackingHibernateCutoff
     && hand->mState.mPose->position.y > frameInfo.mViewInLocal.position.y

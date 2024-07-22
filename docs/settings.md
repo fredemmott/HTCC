@@ -52,6 +52,15 @@ but generally not for normal use.
 
 'Hibernate' lets you completely disable OpenXR Hand Tracking until you re-enable it. To toggle hibernation on/off, hold one hand near the top of your field of view until you hear the beeps and the input stops.
 
+### HandTrackingHibernateGestureEnabled
+
+DWORD
+
+- 1 (default): The hibernate gesture is recognized
+- 0: the hibernate gesture will be ignored
+
+This setting requires HTCC v1.1 or above, which will also include an option in the settings app.
+
 ### HandTrackingHibernateCutoff
 
 STRING

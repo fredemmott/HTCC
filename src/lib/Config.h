@@ -135,6 +135,7 @@ enum class HandTrackingHands : DWORD {
     HandTrackedCockpitClicking::HandTrackingHands::Both) \
   IT(uint32_t, HandTrackingWakeMilliseconds, 100) \
   IT(uint32_t, HandTrackingSleepMilliseconds, 500) \
+  IT(bool, HandTrackingHibernateGestureEnabled, true) \
   IT(uint32_t, HandTrackingHibernateMilliseconds, 1000) \
   IT(uint32_t, HandTrackingHibernateIntervalMilliseconds, 1500) \
   IT(bool, HandTrackingWakeSleepBeeps, false) \
