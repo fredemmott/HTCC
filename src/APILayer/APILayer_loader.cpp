@@ -325,7 +325,11 @@ static void EnumerateExtensions(OpenXRNext* oxr) {
 
   auto nextResult = oxr->xrEnumerateInstanceExtensionProperties(
     nullptr, 0, &extensionCount, nullptr);
-  if (nextResult != XR_SUCCESS) {
+
+  // Workaround for Meta Link PTC as of 2024-07-22:
+  const auto workAroundNonConformantImplementations
+    = (nextResult == XR_ERROR_SIZE_INSUFFICIENT) && (extensionCount > 0);
+  if (nextResult != XR_SUCCESS && !workAroundNonConformantImplementations) {
     DebugPrint("Getting extension count failed: {}", nextResult);
     return;
   }
