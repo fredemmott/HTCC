@@ -327,6 +327,9 @@ static void EnumerateExtensions(OpenXRNext* oxr) {
     nullptr, 0, &extensionCount, nullptr);
 
   // Workaround for Meta Link PTC as of 2024-07-22:
+  //
+  // XR_ERROR_SIZE_SUFFICIENT should *never* be returned for a buffer size of 0:
+  // https://registry.khronos.org/OpenXR/specs/1.0/html/xrspec.html#buffer-size-parameters
   const auto workAroundNonConformantImplementations
     = (nextResult == XR_ERROR_SIZE_INSUFFICIENT) && (extensionCount > 0);
   if (nextResult != XR_SUCCESS && !workAroundNonConformantImplementations) {
