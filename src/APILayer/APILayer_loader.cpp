@@ -218,6 +218,11 @@ static XrResult xrEnumerateApiLayerProperties(
   XrApiLayerProperties* properties) {
   // We only return our own properties per spec:
   // https://registry.khronos.org/OpenXR/specs/1.0/loader.html#api-layer-conventions-and-rules
+  //
+  // TODO: follow-up on "is the spec wrong?" in the Khronos discord - posted at
+  // https://discord.com/channels/1044671358782681128/1044672025752514640/1264924075105456199
+  //
+  // If so, we need to check `gNext`
   *propertyCountOutput = 1;
 
   if (propertyCapacityInput == 0) {
@@ -258,6 +263,12 @@ static XrResult xrGetInstanceProcAddr(
   INTERCEPTED_OPENXR_FUNCS
 #undef IT
 
+  if (name == "xrEnumerateApiLayerProperties") {
+    *function
+      = reinterpret_cast<PFN_xrVoidFunction>(&xrEnumerateApiLayerProperties);
+    return XR_SUCCESS;
+  }
+
   if (gNext) {
     const auto result
       = gNext->raw_xrGetInstanceProcAddr(instance, name_cstr, function);
@@ -268,12 +279,6 @@ static XrResult xrGetInstanceProcAddr(
         name_cstr);
     }
     return result;
-  }
-
-  if (name == "xrEnumerateApiLayerProperties") {
-    *function
-      = reinterpret_cast<PFN_xrVoidFunction>(&xrEnumerateApiLayerProperties);
-    return XR_SUCCESS;
   }
 
   DebugPrint(
