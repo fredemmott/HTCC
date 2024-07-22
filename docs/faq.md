@@ -34,3 +34,7 @@ See the previous question.
 - Make sure your hand tracker can see the gesture
 
 Gesture recognition is provided by your hand trackers' driver; there is nearly no scope for improvement within HTCC.
+
+## Why does the cursor move when I move my head in DCS?
+
+This is a limitation of DCS's mouse handling.
