@@ -333,6 +333,12 @@ static void EnumerateExtensions(OpenXRNext* oxr) {
   const auto workAroundNonConformantImplementations
     = Config::Quirk_Conformance_ExtensionCount
     && (nextResult == XR_ERROR_SIZE_INSUFFICIENT) && (extensionCount > 0);
+  if (workAroundNonConformantImplementations) {
+    DebugPrint(
+      "Buggy OpenXR runtime or other API layer; ignoring incorrect "
+      "XR_ERROR_SIZE_INSUFFICIENT response from "
+      "xrEnumerateInstanceExtensionProperties(nulllptr, 0, &count, nullptr)");
+  }
   if (nextResult != XR_SUCCESS && !workAroundNonConformantImplementations) {
     DebugPrint("Getting extension count failed: {}", nextResult);
     return;
