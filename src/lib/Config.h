@@ -47,6 +47,9 @@ enum class PointCtrlFCUMapping : DWORD {
   Classic = 1,
   Modal = 2,
   ModalWithLeftLock = 3,
+  // Not supported on a PointCtrl device, but usable with others if you edit the
+  // registry
+  DedicatedScrollButtons = 4,
 };
 enum class HandTrackingOrientation : DWORD {
   Raw = 0,
@@ -149,6 +152,8 @@ enum class HandTrackingHands : DWORD {
   IT(uint8_t, PointCtrlFCUButtonR1, 3) \
   IT(uint8_t, PointCtrlFCUButtonR2, 4) \
   IT(uint8_t, PointCtrlFCUButtonR3, 5) \
+  IT(uint8_t, GameControllerWheelUpButton, 0) \
+  IT(uint8_t, GameControllerWheelDownButton, 0) \
   IT(uint32_t, PointCtrlSleepMilliseconds, 20000) \
   IT(bool, ForceHaveXRExtHandTracking, false) \
   IT(bool, ForceHaveXRFBHandTrackingAim, false)

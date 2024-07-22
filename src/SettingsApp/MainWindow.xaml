@@ -110,11 +110,15 @@
           CornerRadius="4"
           BorderThickness="1">
           <ComboBox
+            x:Name="FCUMapping"
             Header="FCU button mapping:"
             SelectedIndex="{x:Bind PointCtrlFCUMapping}">
             <x:String>Disabled</x:String>
             <x:String>Classic</x:String>
             <x:String>Modal</x:String>
+            <x:String>Modal with left button lock</x:String>
+            <!-- removed at runtime unless it's set -->
+            <x:String>UNSUPPORTED: dedicated wheel up and down buttons</x:String>
           </ComboBox>
         </StackPanel>
         <!-- Workarounds -->

@@ -230,6 +230,8 @@ std::tuple<InputState, InputState> PointCtrlSource::Update(
       case PointCtrlFCUMapping::ModalWithLeftLock:
         MapActionsModal(hand, now, buttons);
         break;
+      case PointCtrlFCUMapping::DedicatedScrollButtons:
+        MapActionsDedicatedScrollButtons(hand, now, buttons);
     }
   }
 
@@ -299,8 +301,8 @@ bool PointCtrlSource::IsConnected() const {
 
 void PointCtrlSource::MapActionsClassic(
   Hand* hand,
-  XrTime now,
-  const decltype(DIJOYSTATE2::rgbButtons)& buttons) {
+  [[maybe_unused]] XrTime now,
+  const RawButtons& buttons) {
   auto& state = hand->mState.mActions;
   const auto b1 = HAS_BUTTON(HAND_FCUB(hand->mHand, 1));
   const auto b2 = HAS_BUTTON(HAND_FCUB(hand->mHand, 2));
@@ -324,10 +326,28 @@ void PointCtrlSource::MapActionsClassic(
   }
 }
 
+void PointCtrlSource::MapActionsDedicatedScrollButtons(
+  Hand* hand,
+  XrTime now,
+  const RawButtons& buttons) {
+  auto& state = hand->mState.mActions;
+  state.mPrimary = HAS_BUTTON(HAND_FCUB(hand->mHand, 1));
+  state.mSecondary = HAS_BUTTON(HAND_FCUB(hand->mHand, 2));
+  state.mValueChange = ActionState::ValueChange::None;
+
+  const auto scrollUp = HAS_BUTTON(Config::GameControllerWheelUpButton);
+  const auto scrollDown = HAS_BUTTON(Config::GameControllerWheelDownButton);
+  if (scrollUp && !scrollDown) {
+    state.mValueChange = ActionState::ValueChange::Decrease;
+  } else if (scrollDown && !scrollUp) {
+    state.mValueChange = ActionState::ValueChange::Increase;
+  }
+}
+
 void PointCtrlSource::MapActionsModal(
   Hand* hand,
   XrTime now,
-  const decltype(DIJOYSTATE2::rgbButtons)& buttons) {
+  const RawButtons& buttons) {
   auto& state = hand->mState.mActions;
   const auto b1 = HAS_BUTTON(HAND_FCUB(hand->mHand, 1));
   const auto b2 = HAS_BUTTON(HAND_FCUB(hand->mHand, 2));

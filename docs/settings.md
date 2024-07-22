@@ -120,6 +120,7 @@ DWORD:
 - 1: Classic
 - 2: Modal (intended for MSFS, but no longer required due to other changes)
 - 3: Modal, but long-pressing buttons 1 & 2 together enters scroll lock mode but with  button 1 held
+- 4: For custom devices; FCU3 is ignored, `GameControllerWheelUpButton` and `GameControllerWheelDown` buttons are used instead
 
 ### ShortPressLongPressMilliseconds
 
@@ -291,6 +292,18 @@ Change the USB vendor ID and product ID that this project looks for when trying 
 DWORD button indices starting at 0.
 
 FCU L1 is the button farthest from your wrist on your left hand, L3 is closest. R1-R3 are the buttons on your right hand.
+
+### GameControllerWheelUpButton
+
+DWORD button indices starting at 0
+
+If you want to use separate buttons for 'wheel up' and 'wheel down' instead of emulating a pointctrl, set `PointCtrlFCUMapping` to `4` (dedicated scroll buttons), and this to a desired button index.
+
+### GameControllerWheelDownButton
+
+DWORD button indices starting at 0
+
+If you want to use separate buttons for 'wheel up' and 'wheel down' instead of emulating a pointctrl, set `PointCtrlFCUMapping` to `4` (dedicated scroll buttons), and this to a desired button index.
 
 ## Developers only
 

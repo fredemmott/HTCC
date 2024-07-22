@@ -45,6 +45,12 @@ In both modes:
 - short-tap FCU3 to switch to normal mode
 - long-press FCU3 to switch to scroll mode
 
+### Modal with left click lock
+
+Like modal, but additionally, pressing FCU1 and FCU2 together ends scroll mode with 'left click' held. This can be useful for 'click-hold-and-scroll' controls.
+
+This feature requires HTCC v1.1 or above.
+
 ## Projection distance
 
 The PointCTRL HMS only detects left/right and up/down position - not distance. You can choose what distance is used for emulated VR controllers in the registry at:

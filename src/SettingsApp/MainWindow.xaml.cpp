@@ -57,6 +57,14 @@ MainWindow::MainWindow() {
   Title(L"HTCC Settings");
   InitVersion();
 
+  if (
+    HTCC::Config::PointCtrlFCUMapping
+    != HTCC::PointCtrlFCUMapping::DedicatedScrollButtons) {
+    auto items = FCUMapping().Items();
+    items.RemoveAt(
+      static_cast<uint32_t>(HTCC::PointCtrlFCUMapping::DedicatedScrollButtons));
+  }
+
   // Get an AppWindow so that we can resize...
   auto windowNative = this->try_as<::IWindowNative>();
   if (!windowNative) {

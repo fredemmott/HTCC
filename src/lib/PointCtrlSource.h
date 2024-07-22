@@ -46,6 +46,7 @@ class PointCtrlSource final : public InputSource {
   std::tuple<InputState, InputState> Update(PointerMode, const FrameInfo&)
     override;
 
+  // Just used for calibration
   struct RawValues {
     uint16_t mX {};
     uint16_t mY {};
@@ -116,12 +117,12 @@ class PointCtrlSource final : public InputSource {
 
   void UpdatePose(const FrameInfo&, InputState* hand);
   void UpdateWakeState(bool hasButtons, XrTime now, Hand* hand);
-  void MapActionsClassic(
-    Hand*,
-    XrTime now,
-    const decltype(DIJOYSTATE2::rgbButtons)&);
-  void
-  MapActionsModal(Hand*, XrTime now, const decltype(DIJOYSTATE2::rgbButtons)&);
+
+  using RawButtons = decltype(DIJOYSTATE2::rgbButtons);
+
+  void MapActionsClassic(Hand*, XrTime now, const RawButtons&);
+  void MapActionsModal(Hand*, XrTime now, const RawButtons&);
+  void MapActionsDedicatedScrollButtons(Hand*, XrTime now, const RawButtons&);
 };
 
 }// namespace HandTrackedCockpitClicking
