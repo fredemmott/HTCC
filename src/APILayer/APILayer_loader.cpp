@@ -216,12 +216,23 @@ static XrResult xrEnumerateApiLayerProperties(
   uint32_t propertyCapacityInput,
   uint32_t* propertyCountOutput,
   XrApiLayerProperties* properties) {
+  // We only return our own properties per spec:
+  // https://registry.khronos.org/OpenXR/specs/1.0/loader.html#api-layer-conventions-and-rules
+  *propertyCountOutput = 1;
+
   if (propertyCapacityInput == 0) {
-    return XR_ERROR_SIZE_INSUFFICIENT;
+    // Do not return XR_ERROR_SIZE_SUFFICIENT for 0, per
+    // https://registry.khronos.org/OpenXR/specs/1.0/html/xrspec.html#buffer-size-parameters
+    return XR_SUCCESS;
+  }
+
+  if (properties->type != XR_TYPE_API_LAYER_PROPERTIES) {
+    return XR_ERROR_VALIDATION_FAILURE;
   }
 
   *properties = XrApiLayerProperties {
     .type = XR_TYPE_API_LAYER_PROPERTIES,
+    .next = properties->next,
     .layerName = "XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking",
     .specVersion = XR_CURRENT_API_VERSION,
     .layerVersion = 1,
@@ -230,7 +241,6 @@ static XrResult xrEnumerateApiLayerProperties(
       "https://github.com/fredemmott/hand-tracked-cockpit-clicking",
   };
 
-  *propertyCountOutput = 1;
   return XR_SUCCESS;
 }
 
@@ -452,10 +462,10 @@ using HandTrackedCockpitClicking::DebugPrint;
 
 extern "C" {
 XrResult __declspec(dllexport) XRAPI_CALL
-  HandTrackedCockpitClicking_xrNegotiateLoaderApiLayerInterface(
-    const XrNegotiateLoaderInfo* loaderInfo,
-    const char* layerName,
-    XrNegotiateApiLayerRequest* apiLayerRequest) {
+HandTrackedCockpitClicking_xrNegotiateLoaderApiLayerInterface(
+  const XrNegotiateLoaderInfo* loaderInfo,
+  const char* layerName,
+  XrNegotiateApiLayerRequest* apiLayerRequest) {
   if (layerName != HandTrackedCockpitClicking::Loader::OpenXRLayerName) {
     DebugPrint(
       "Layer name mismatch:\n -{}\n +{}",
