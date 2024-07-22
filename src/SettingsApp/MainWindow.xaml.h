@@ -18,8 +18,13 @@ struct MainWindow : MainWindowT<MainWindow> {
   bool IsEnabled() const noexcept;
   void IsEnabled(bool) noexcept;
 
+  bool IsHibernationGestureEnabled() const noexcept;
+  void IsHibernationGestureEnabled(bool) noexcept;
+
   int16_t PointerSource() const noexcept;
   void PointerSource(int16_t) noexcept;
+
+  bool IsPointerSourceOpenXRHandTracking() const noexcept;
 
   int16_t PointerSink() const noexcept;
   void PointerSink(int16_t) noexcept;
@@ -53,10 +58,18 @@ struct MainWindow : MainWindowT<MainWindow> {
 
   void OnCopyVersionDataClick(const IInspectable&, const MUX::RoutedEventArgs&);
 
+  /// PropertyChanged
+  winrt::event_token PropertyChanged(
+    const winrt::Microsoft::UI::Xaml::Data::PropertyChangedEventHandler&);
+  void PropertyChanged(const winrt::event_token&) noexcept;
+
  private:
   void InitVersion();
   std::string mVersionString;
   HWND mHwnd {};
+
+  winrt::event<winrt::Microsoft::UI::Xaml::Data::PropertyChangedEventHandler>
+    mPropertyChangedEvent;
 };
 }// namespace winrt::HTCCSettings::implementation
 

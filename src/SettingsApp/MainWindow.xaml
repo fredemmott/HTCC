@@ -6,9 +6,17 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   mc:Ignorable="d"
   x:DefaultBindMode="TwoWay">
-  <Grid RowDefinitions="Auto,*" x:Name="RootGrid">
-    <Border x:Name="AppTitleBar" Grid.Row="0" VerticalAlignment="Top" Background="{StaticResource WindowCaptionBackground}" Height="32">
-      <TextBlock Text="HTCC Settings" VerticalAlignment="Center" Margin="8,0,0,0" Style="{StaticResource CaptionTextBlockStyle}" />
+  <Grid RowDefinitions="Auto,*"
+        x:Name="RootGrid">
+    <Border x:Name="AppTitleBar"
+            Grid.Row="0"
+            VerticalAlignment="Top"
+            Background="{StaticResource WindowCaptionBackground}"
+            Height="32">
+      <TextBlock Text="HTCC Settings"
+                 VerticalAlignment="Center"
+                 Margin="8,0,0,0"
+                 Style="{StaticResource CaptionTextBlockStyle}"/>
     </Border>
     <ScrollViewer
       Grid.Row="1"
@@ -31,14 +39,19 @@
             Header="Enable HTCC:"
             OnContent="HTCC is enabled"
             OffContent="HTCC is fully disabled in all games"
-            IsOn="{x:Bind IsEnabled}"
-          />
+            IsOn="{x:Bind IsEnabled}"/>
           <ComboBox
             Header="Hand tracking device:"
             SelectedIndex="{x:Bind PointerSource}">
             <x:String>OpenXR hand tracking</x:String>
             <x:String>PointCTRL</x:String>
           </ComboBox>
+          <ToggleSwitch
+            Header="OpenXR hand tracking hibernation gesture:"
+            OnContent="HTCC will recognize the gesture"
+            OffContent="HTCC never hibernates"
+            IsOn="{x:Bind IsHibernationGestureEnabled}"
+            IsEnabled="{x:Bind IsPointerSourceOpenXRHandTracking, Mode=OneWay}"/>
           <ComboBox
             Header="Prefered game interface:"
             SelectedIndex="{x:Bind PointerSink}">
@@ -49,8 +62,7 @@
         <!-- XR_FB_hand_tracking_aim Settings -->
         <TextBlock
           Text="Gestures"
-          Style="{StaticResource SubtitleTextBlockStyle}"
-        />
+          Style="{StaticResource SubtitleTextBlockStyle}"/>
         <StackPanel
           Orientation="Vertical"
           Spacing="12"
@@ -68,14 +80,12 @@
             Header="Pinch to click:"
             OnContent="Enabled"
             OffContent="Disabled"
-            IsOn="{x:Bind PinchToClick}"
-          />
+            IsOn="{x:Bind PinchToClick}"/>
           <ToggleSwitch
             Header="Pinch to scroll:"
             OnContent="Enabled"
             OffContent="Disabled"
-            IsOn="{x:Bind PinchToScroll}"
-          />
+            IsOn="{x:Bind PinchToScroll}"/>
         </StackPanel>
         <!-- PointCTRL -->
         <Grid
@@ -84,14 +94,12 @@
             Grid.Column="0"
             Text="PointCTRL"
             Style="{StaticResource SubtitleTextBlockStyle}"
-            VerticalAlignment="Center"
-          />
+            VerticalAlignment="Center"/>
           <Button
             Grid.Column="1"
             Content="Calibrate"
             VerticalAlignment="Center"
-            Click="OnPointCtrlCalibrateClick"
-          />
+            Click="OnPointCtrlCalibrateClick"/>
         </Grid>
         <StackPanel
           Orientation="Vertical"
@@ -112,8 +120,7 @@
         <!-- Workarounds -->
         <TextBlock
           Text="Workarounds"
-          Style="{StaticResource SubtitleTextBlockStyle}"
-        />
+          Style="{StaticResource SubtitleTextBlockStyle}"/>
         <StackPanel
           Orientation="Vertical"
           Spacing="12"
@@ -126,8 +133,7 @@
             Header="Ignore XR_FB_hand_tracking_aim pose:"
             OnContent="A finger joint pose is used instead"
             OffContent="XR_FB_hand_tracking_aim's pose is used if available"
-            IsOn="{x:Bind DisableAimPointFB}"
-          />
+            IsOn="{x:Bind DisableAimPointFB}"/>
           <TextBlock Style="{StaticResource BodyTextBlockStyle}">
             Some hand tracking drivers do not report that hand tracking features are supported;
             it may be possible to enable HTCC in these cases with the options below. If the
@@ -137,14 +143,12 @@
             Header="Force-enable XR_EXT_hand_tracking:"
             OnContent="XR_EXT_hand_tracking is always assumed to be usable"
             OffContent="XR_EXT_hand_tracking will be used if detected"
-            IsOn="{x:Bind ForceXRExtHandTracking}"
-          />
+            IsOn="{x:Bind ForceXRExtHandTracking}"/>
           <ToggleSwitch
             Header="Force-enable XR_FB_hand_tracking_aim:"
             OnContent="XR_FB_hand_tracking_aim is always assumed to be usable"
             OffContent="XR_FB_hand_tracking_aim will be used if detected"
-            IsOn="{x:Bind ForceXRFBHandTrackingAim}"
-          />
+            IsOn="{x:Bind ForceXRFBHandTrackingAim}"/>
         </StackPanel>
         <!-- VERSION INFO -->
         <Grid ColumnDefinitions="Auto,*,Auto,Auto">
@@ -153,21 +157,18 @@
             Glyph="&#xE74C;"
             FontFamily="{StaticResource SymbolThemeFontFamily}"
             Margin="0,0,12,0"
-            VerticalAlignment="Center"
-          />
+            VerticalAlignment="Center"/>
           <TextBlock
             Grid.Column="1"
             Text="About HTCC"
             Style="{StaticResource SubtitleTextBlockStyle}"
+            VerticalAlignment="Center"/>
+          <Button
+            Grid.Column="2"
+            Content="Copy"
+            Click="OnCopyVersionDataClick"
             VerticalAlignment="Center"
-          />
-					<Button
-						Grid.Column="2"
-						Content="Copy"
-						Click="OnCopyVersionDataClick"
-						VerticalAlignment="Center"
-            Margin="0,0,8,0"
-					/>
+            Margin="0,0,8,0"/>
           <Button
             Grid.Column="3"
             Click="OnSponsorClick">
@@ -177,9 +178,9 @@
                 Glyph="&#xEB51;"
                 VerticalAlignment="Center"
                 HorizontalAlignment="Center"
-                Foreground="#db61a2"
-              />
-              <TextBlock Grid.Column="1" Margin="8,0,0,0">
+                Foreground="#db61a2"/>
+              <TextBlock Grid.Column="1"
+                         Margin="8,0,0,0">
                 Support HTCC
               </TextBlock>
             </Grid>
@@ -196,8 +197,7 @@
             Grid.Row="0"
             x:Name="VersionText"
             Style="{ThemeResource BodyTextBlockStyle}"
-            IsTextSelectionEnabled="true"
-          />
+            IsTextSelectionEnabled="true"/>
         </Grid>
       </StackPanel>
     </ScrollViewer>

@@ -1,11 +1,17 @@
 namespace HTCCSettings {
-[default_interface] runtimeclass MainWindow : Microsoft.UI.Xaml.Window {
+[default_interface] runtimeclass MainWindow : Microsoft.UI.Xaml.Window,
+  Microsoft.UI.Xaml.Data.INotifyPropertyChanged {
   MainWindow();
 
   // General settings
   Boolean IsEnabled;
+  Boolean IsHibernationGestureEnabled;
   Int16 PointerSource;
   Int16 PointerSink;
+
+  Boolean IsPointerSourceOpenXRHandTracking {
+    get;
+  };
 
   // XR_FB_hand_tracking_aim (Quest, Ultraleap Gemini 5.16+)
   Boolean PinchToClick;

@@ -164,12 +164,29 @@ void MainWindow::IsEnabled(bool enabled) noexcept {
   }
 }
 
+bool MainWindow::IsHibernationGestureEnabled() const noexcept {
+  return HTCC::Config::HandTrackingHibernateGestureEnabled;
+}
+
+void MainWindow::IsHibernationGestureEnabled(bool value) noexcept {
+  HTCC::Config::SaveHandTrackingHibernateGestureEnabled(value);
+}
+
+bool MainWindow::IsPointerSourceOpenXRHandTracking() const noexcept {
+  return HTCC::Config::PointerSource == HTCC::PointerSource::OpenXRHandTracking;
+}
+
 int16_t MainWindow::PointerSource() const noexcept {
   return static_cast<int16_t>(HTCC::Config::PointerSource);
 }
 
 void MainWindow::PointerSource(int16_t value) noexcept {
   HTCC::Config::SavePointerSource(static_cast<HTCC::PointerSource>(value));
+
+  mPropertyChangedEvent(
+    *this,
+    winrt::Microsoft::UI::Xaml::Data::PropertyChangedEventArgs {
+      L"IsPointerSourceOpenXRHandTracking"});
 }
 
 int16_t MainWindow::PointerSink() const noexcept {
@@ -248,6 +265,16 @@ bool MainWindow::ForceXRFBHandTrackingAim() const noexcept {
 
 void MainWindow::ForceXRFBHandTrackingAim(bool value) noexcept {
   HTCC::Config::SaveForceHaveXRFBHandTrackingAim(value);
+}
+
+winrt::event_token MainWindow::PropertyChanged(
+  const winrt::Microsoft::UI::Xaml::Data::PropertyChangedEventHandler&
+    handler) {
+  return mPropertyChangedEvent.add(handler);
+}
+
+void MainWindow::PropertyChanged(const winrt::event_token& token) noexcept {
+  return mPropertyChangedEvent.remove(token);
 }
 
 }// namespace winrt::HTCCSettings::implementation
