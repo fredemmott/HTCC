@@ -31,6 +31,8 @@
 #include "DebugPrint.h"
 
 #define INTERCEPTED_OPENXR_FUNCS \
+  IT(xrEnumerateApiLayerProperties) \
+  IT(xrEnumerateInstanceExtensionProperties) \
   IT(xrGetSystemProperties) \
   IT(xrDestroyInstance) \
   IT(xrCreateSession) \
@@ -56,7 +58,6 @@
   IT(xrDestroyHandTrackerEXT) \
   IT(xrLocateHandJointsEXT) \
   IT(xrGetInstanceProperties) \
-  IT(xrEnumerateInstanceExtensionProperties) \
   IT(xrConvertTimeToWin32PerformanceCounterKHR) \
   IT(xrConvertWin32PerformanceCounterToTimeKHR)
 
@@ -88,6 +89,9 @@ class OpenXRNext final {
   template <class... Args> \
   bool check_##func(Args&&... args) { \
     return this->func(std::forward<Args>(args)...) == XR_SUCCESS; \
+  } \
+  inline bool have_##func() const noexcept { \
+    return m_##func != nullptr; \
   }
   IT(xrGetInstanceProcAddr)
   NEXT_OPENXR_FUNCS

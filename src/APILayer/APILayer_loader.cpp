@@ -212,6 +212,44 @@ static XrResult xrDestroyInstance(XrInstance instance) {
   return result;
 }
 
+static XrResult xrEnumerateInstanceExtensionProperties(
+  const char* layerName,
+  uint32_t propertyCapacityInput,
+  uint32_t* propertyCountOutput,
+  XrExtensionProperties* properties) {
+  // This is installed as an implicit layer; for behavior spec, see:
+  // https://registry.khronos.org/OpenXR/specs/1.0/loader.html#api-layer-conventions-and-rules
+  if (layerName && std::string_view {layerName} == OpenXRLayerName) {
+    *propertyCountOutput = 0;
+    // We don't implement any instance extensions
+    return XR_SUCCESS;
+  }
+
+  // As we don't implement any extensions, just delegate to the runtime or next
+  // layer.
+  if (gNext && gNext->have_xrEnumerateInstanceExtensionProperties()) {
+    // We *could* strip the hand tracking extensions here, but we're not
+    // - applications wouldn't see this, as the loader just uses the manifest
+    // files instead
+    // - we can just make the extension functions report failure
+    // - probably best to have consistent behavior for applications and API
+    // layers
+    return gNext->raw_xrEnumerateInstanceExtensionProperties(
+      layerName, propertyCapacityInput, propertyCountOutput, properties);
+  }
+
+  if (layerName) {
+    // If layerName is non-null and not our layer, it should be an earlier
+    // layer, or we should have a `next`
+    return XR_ERROR_API_LAYER_NOT_PRESENT;
+  }
+
+  // for NULL layerName, we append our list to the next; as we have none, that
+  // just means we have 0 again
+  *propertyCountOutput = 0;
+  return XR_SUCCESS;
+}
+
 static XrResult xrEnumerateApiLayerProperties(
   uint32_t propertyCapacityInput,
   uint32_t* propertyCountOutput,
@@ -262,12 +300,6 @@ static XrResult xrGetInstanceProcAddr(
   }
   INTERCEPTED_OPENXR_FUNCS
 #undef IT
-
-  if (name == "xrEnumerateApiLayerProperties") {
-    *function
-      = reinterpret_cast<PFN_xrVoidFunction>(&xrEnumerateApiLayerProperties);
-    return XR_SUCCESS;
-  }
 
   if (gNext) {
     const auto result
