@@ -3,12 +3,21 @@ nav_order: 7
 ---
 
 # Registry Settings
+{: .no_toc }
 
-**ALL SETTINGS ARE UNSUPPORTED AND NO HELP IS AVAILABLE** - they are documented primarily for my own reference, but may be useful for advanced users.
+All supported settings are in the HTCC settings app; this page is for advanced users only.
 
-All settings are in the registry, in `HKEY_LOCAL_MACHINE\SOFTWARE\Fred Emmott\HandTrackedCockpitClicking`; per-app overrides are in `HKEY_LOCAL_MACHINE\SOFTWARE\Fred Emmott\HandTrackedCockpitClicking\AppOverrides\EXECUTABLE_NAME.exe\`, e.g. `AppOverrides\DCS.exe\`
+**ALL REGISTRY SETTINGS ARE UNSUPPORTED AND NO HELP IS AVAILABLE** - they are documented primarily for my own reference, but may be useful for advanced users.
+
+All the settings are in the registry, in `HKEY_LOCAL_MACHINE\SOFTWARE\Fred Emmott\HandTrackedCockpitClicking`; per-app overrides are in `HKEY_LOCAL_MACHINE\SOFTWARE\Fred Emmott\HandTrackedCockpitClicking\AppOverrides\EXECUTABLE_NAME.exe\`, e.g. `AppOverrides\DCS.exe\`
 
 Defaults are in [Config.h](https://github.com/fredemmott/HTCC/blob/master/src/lib/Config.h) and change between versions.
+
+## Table of Contents
+{: .no_toc, .text-delta }
+
+1. TOC
+{:toc}
 
 ## OpenXR hand tracking wake/sleep/false clicks
 
