@@ -129,7 +129,7 @@ DWORD:
 - 1: Classic
 - 2: Modal (intended for MSFS, but no longer required due to other changes)
 - 3: Modal, but long-pressing buttons 1 & 2 together enters scroll lock mode but with  button 1 held
-- 4: For custom devices; FCU3 is ignored, `GameControllerWheelUpButton` and `GameControllerWheelDown` buttons are used instead
+- 4: For custom devices; FCU3 is ignored, `GameControllerWheelUpButton` and `GameControllerWheelDownButton` are used instead
 
 ### ShortPressLongPressMilliseconds
 
