@@ -97,6 +97,11 @@ install(
   DESTINATION "SettingsApp"
   PATTERN "*.pdb" EXCLUDE
   PATTERN "*.lib" EXCLUDE
+  # WinUI3 includes these localizations, but they are not supported by WiX v3,
+  # so including them breaks building the installer on github actions
+  PATTERN "gd-db/*" EXCLUDE
+  PATTERN "mi-NZ/*" EXCLUDE
+  PATTERN "ug-CN/*" EXCLUDE
 )
 install(
   FILES
