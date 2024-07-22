@@ -75,6 +75,7 @@ enum class HandTrackingHands : DWORD {
 }// namespace HandTrackedCockpitClicking
 
 #define HandTrackedCockpitClicking_DWORD_SETTINGS \
+  IT(bool, Quirk_Conformance_ExtensionCount, true) \
   IT(bool, Enabled, false) \
   IT(uint8_t, VerboseDebug, 0) \
   IT(bool, EnableFBOpenXRExtensions, true) \

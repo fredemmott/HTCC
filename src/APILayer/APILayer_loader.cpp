@@ -331,7 +331,8 @@ static void EnumerateExtensions(OpenXRNext* oxr) {
   // XR_ERROR_SIZE_SUFFICIENT should *never* be returned for a buffer size of 0:
   // https://registry.khronos.org/OpenXR/specs/1.0/html/xrspec.html#buffer-size-parameters
   const auto workAroundNonConformantImplementations
-    = (nextResult == XR_ERROR_SIZE_INSUFFICIENT) && (extensionCount > 0);
+    = Config::Quirk_Conformance_ExtensionCount
+    && (nextResult == XR_ERROR_SIZE_INSUFFICIENT) && (extensionCount > 0);
   if (nextResult != XR_SUCCESS && !workAroundNonConformantImplementations) {
     DebugPrint("Getting extension count failed: {}", nextResult);
     return;
