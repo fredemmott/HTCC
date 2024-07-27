@@ -335,8 +335,14 @@ void PointCtrlSource::MapActionsDedicatedScrollButtons(
   state.mSecondary = HAS_BUTTON(HAND_FCUB(hand->mHand, 2));
   state.mValueChange = ActionState::ValueChange::None;
 
-  const auto scrollUp = HAS_BUTTON(Config::GameControllerWheelUpButton);
-  const auto scrollDown = HAS_BUTTON(Config::GameControllerWheelDownButton);
+  const auto isLeftHand = hand->mHand == XR_HAND_LEFT_EXT;
+
+  const auto scrollUp = HAS_BUTTON(
+    isLeftHand ? Config::GameControllerLWheelUpButton
+               : Config::GameControllerRWheelUpButton);
+  const auto scrollDown = HAS_BUTTON(
+    isLeftHand ? Config::GameControllerLWheelDownButton
+               : Config::GameControllerRWheelDownButton);
   if (scrollUp && !scrollDown) {
     state.mValueChange = ActionState::ValueChange::Decrease;
   } else if (scrollDown && !scrollUp) {

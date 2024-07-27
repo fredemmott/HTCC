@@ -302,17 +302,21 @@ DWORD button indices starting at 0.
 
 FCU L1 is the button farthest from your wrist on your left hand, L3 is closest. R1-R3 are the buttons on your right hand.
 
-### GameControllerWheelUpButton
+### GameControllerLWheelUpButton, GameControllerRWheelUpButton
 
 DWORD button indices starting at 0
 
 If you want to use separate buttons for 'wheel up' and 'wheel down' instead of emulating a pointctrl, set `PointCtrlFCUMapping` to `4` (dedicated scroll buttons), and this to a desired button index.
 
-### GameControllerWheelDownButton
+The naming of 'wheel up' is based on mouse events, where 'up' means correlates with moving the top of the mouse wheel away from you - traditionally, scrolling up. In-game, 'scrolling up' will usually decrease a value, but 'scrolling down' will usually increase a value.
+
+### GameControllerLWheelDownButton, GameControllerRWheelDownButton
 
 DWORD button indices starting at 0
 
 If you want to use separate buttons for 'wheel up' and 'wheel down' instead of emulating a pointctrl, set `PointCtrlFCUMapping` to `4` (dedicated scroll buttons), and this to a desired button index.
+
+The naming of 'wheel up' is based on mouse events, where 'up' means correlates with moving the top of the mouse wheel away from you - traditionally, scrolling up. In-game, 'scrolling up' will usually decrease a value, but 'scrolling down' will usually increase a value.
 
 ## Developers only
 
