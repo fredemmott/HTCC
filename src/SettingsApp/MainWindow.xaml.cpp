@@ -117,14 +117,6 @@ void MainWindow::OnCopyVersionDataClick(
   Windows::ApplicationModel::DataTransfer::Clipboard::SetContent(package);
 }
 
-winrt::fire_and_forget MainWindow::OnSponsorClick(
-  const IInspectable&,
-  const MUX::RoutedEventArgs&) {
-  co_await winrt::Windows::System::Launcher::LaunchUriAsync(
-    winrt::Windows::Foundation::Uri {
-      to_hstring(L"https://github.com/sponsors/fredemmott")});
-}
-
 static std::wstring GetAPILayerPath() {
   wchar_t buf[MAX_PATH];
   const auto bufLen = GetModuleFileNameW(nullptr, buf, MAX_PATH);
