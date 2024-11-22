@@ -1,2 +1,4 @@
-/build*/
+build*/
 docs/_site/
+.idea/
+cmake-build-*/
