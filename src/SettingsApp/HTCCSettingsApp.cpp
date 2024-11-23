@@ -11,6 +11,7 @@
 #include <shellapi.h>
 #include <wil/com.h>
 #include <wil/registry.h>
+#include <dwmapi.h>
 #include <wil/resource.h>
 #include <winuser.h>
 
@@ -55,6 +56,20 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
   WPARAM wParam,
   LPARAM lParam);
 
+template<const GUID& TFolderID> auto GetKnownFolderPath() {
+    static std::filesystem::path sPath;
+    static std::once_flag sOnce;
+    std::call_once(sOnce, [&path = sPath]() {
+      wil::unique_cotaskmem_string buf;
+      THROW_IF_FAILED(SHGetKnownFolderPath(TFolderID, KF_FLAG_DEFAULT, nullptr, buf.put()));
+      path = { std::wstring_view { buf.get() } };
+      if (std::filesystem::exists(path)) {
+        path = std::filesystem::canonical(path);
+      }
+    });
+  return sPath;
+}
+
 class HTCCSettingsApp {
  public:
   HTCCSettingsApp() = delete;
@@ -87,11 +102,14 @@ class HTCCSettingsApp {
         nullptr,
         instance,
         nullptr));
-      ImGui::GetMa
     }
     if (!mHwnd) {
       throw std::runtime_error(
         std::format("Failed to create window: {}", GetLastError()));
+    }
+    {
+      BOOL darkMode { true};
+      DwmSetWindowAttribute(mHwnd.get(), DWMWA_USE_IMMERSIVE_DARK_MODE, &darkMode, sizeof(darkMode));
     }
     RECT clientRect {};
     GetClientRect(mHwnd.get(), &clientRect);
@@ -148,6 +166,8 @@ class HTCCSettingsApp {
     ImGui::CreateContext();
     auto& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.IniFilename = mIniPath.c_str();
+
     ImGui_ImplWin32_Init(mHwnd.get());
     ImGui_ImplDX11_Init(mD3DDevice.get(), mD3DContext.get());
 
@@ -162,16 +182,7 @@ class HTCCSettingsApp {
   }
 
   void LoadFonts() {
-    static std::filesystem::path sFontsPath;
-    static std::once_flag sFontsPathOnce;
-    std::call_once(sFontsPathOnce, [&path = sFontsPath]() {
-      wil::unique_cotaskmem_string buf;
-      THROW_IF_FAILED(SHGetKnownFolderPath(FOLDERID_Fonts, KF_FLAG_DEFAULT, nullptr, buf.put()));
-      path = { std::wstring_view { buf.get() } };
-      if (std::filesystem::exists(path)) {
-        path = std::filesystem::canonical(path);
-      }
-    });
+    static const auto sFontsPath = GetKnownFolderPath<FOLDERID_Fonts>();
     if (sFontsPath.empty()) {
       return;
     }
@@ -303,6 +314,7 @@ class HTCCSettingsApp {
       ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
         | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
+    ImGui::SeparatorText("Common Settings");
     if (ImGui::Checkbox("Enable HTCC", &mIsAPILayerEnabled)) {
       const auto apiLayerPath = GetAPILayerPath();
       const DWORD disabled = mIsAPILayerEnabled ? 0 : 1;
@@ -474,6 +486,8 @@ class HTCCSettingsApp {
 
     ImGui::EndCombo();
   }
+
+  const std::string mIniPath = (GetKnownFolderPath<FOLDERID_LocalAppData>() / "Fred Emmmott" / "HTCC" / "imgui.ini").string();
 };
 
 HTCCSettingsApp* HTCCSettingsApp::gInstance {nullptr};
