@@ -293,6 +293,9 @@ class HTCCSettingsApp {
 
     ImGui::SeparatorText("About HTCC");
     ImGui::Text("%s", VersionString.c_str());
+    if (ImGui::Button("Copy")) {
+      ImGui::SetClipboardText(VersionString.c_str());
+    }
 
     ImGui::End();
 
