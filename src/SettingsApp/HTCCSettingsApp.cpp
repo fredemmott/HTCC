@@ -11,7 +11,6 @@
 #include <wil/resource.h>
 #include <winuser.h>
 
-#include <chrono>
 #include <optional>
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
@@ -111,24 +110,14 @@ class HTCCSettingsApp {
   }
 
   [[nodiscard]] int Run() noexcept {
-    constexpr auto frameRate = 60;
-    constexpr auto frameInterval
-      = std::chrono::duration_cast<std::chrono::microseconds>(
-          std::chrono::seconds(1))
-      / frameRate;
-
     while (!mExitCode) {
-      const auto start = std::chrono::steady_clock::now();
-
       MSG msg {};
-      if (const auto result = GetMessage(&msg, nullptr, 0, 0)) [[likely]] {
-        if (result == -1) [[unlikely]] {
-          throw std::logic_error("Invalid argument to GetMessage()");
-        }
+      while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-      } else {
-        return mExitCode.value_or(0);
+        if (msg.message == WM_QUIT) {
+          return mExitCode.value_or(0);
+        }
       }
 
       const auto rawRTV = mRenderTargetView.get();
@@ -144,12 +133,7 @@ class HTCCSettingsApp {
       ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
       mSwapChain->Present(1, 0);
 
-      const auto end = std::chrono::steady_clock::now();
-      const auto frameDuration = end - start;
-      const auto wait = frameInterval - frameDuration;
-      if (wait > std::chrono::microseconds::zero()) {
-        std::this_thread::sleep_for(wait);
-      }
+      WaitMessage();
     }
 
     return *mExitCode;
