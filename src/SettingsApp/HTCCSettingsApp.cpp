@@ -76,7 +76,7 @@ class HTCCSettingsApp {
         WS_EX_APPWINDOW | WS_EX_CLIENTEDGE,
         MAKEINTATOM(classAtom),
         L"HTCC Settings",
-        WS_OVERLAPPEDWINDOW,
+        WS_OVERLAPPEDWINDOW & (~WS_MAXIMIZEBOX),
         CW_USEDEFAULT,
         CW_USEDEFAULT,
         width,
