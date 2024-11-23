@@ -31,6 +31,7 @@ jobs:
         with:
           path: source
           fetch-depth: 0
+          submodules: true
       - name: Make build directory
         run: cmake -E make_directory build
       - name: Configure
