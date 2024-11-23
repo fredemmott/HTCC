@@ -22,6 +22,8 @@
 #include "../lib/PointCtrlSource.h"
 #include "version.h"
 
+#include <shlobj_core.h>
+
 namespace HTCC = HandTrackedCockpitClicking;
 namespace Config = HTCC::Config;
 namespace Version = HTCCSettings::Version;
@@ -70,7 +72,7 @@ class HTCCSettingsApp {
     {
       const auto screenHeight = GetSystemMetrics(SM_CYSCREEN);
       const auto height = screenHeight / 2;
-      const auto width = height / 2;
+      const auto width = (height * 2) / 3;
 
       mHwnd.reset(CreateWindowExW(
         WS_EX_APPWINDOW | WS_EX_CLIENTEDGE,
@@ -85,6 +87,7 @@ class HTCCSettingsApp {
         nullptr,
         instance,
         nullptr));
+      ImGui::GetMa
     }
     if (!mHwnd) {
       throw std::runtime_error(
@@ -147,6 +150,8 @@ class HTCCSettingsApp {
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     ImGui_ImplWin32_Init(mHwnd.get());
     ImGui_ImplDX11_Init(mD3DDevice.get(), mD3DContext.get());
+
+    this->LoadFonts();
   }
 
   ~HTCCSettingsApp() {
@@ -154,6 +159,36 @@ class HTCCSettingsApp {
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
     gInstance = nullptr;
+  }
+
+  void LoadFonts() {
+    static std::filesystem::path sFontsPath;
+    static std::once_flag sFontsPathOnce;
+    std::call_once(sFontsPathOnce, [&path = sFontsPath]() {
+      wil::unique_cotaskmem_string buf;
+      THROW_IF_FAILED(SHGetKnownFolderPath(FOLDERID_Fonts, KF_FLAG_DEFAULT, nullptr, buf.put()));
+      path = { std::wstring_view { buf.get() } };
+      if (std::filesystem::exists(path)) {
+        path = std::filesystem::canonical(path);
+      }
+    });
+    if (sFontsPath.empty()) {
+      return;
+    }
+
+    auto fonts = ImGui::GetIO().Fonts;
+    fonts->Clear();
+
+    const auto dpi = GetDpiForWindow(mHwnd.get());
+    const auto scale = static_cast<FLOAT>(dpi) / USER_DEFAULT_SCREEN_DPI;
+    const auto size = std::floorf(scale * 16);
+
+    fonts->AddFontFromFileTTF(
+      (sFontsPath / "segoeui.ttf").string().c_str(), size);
+    fonts->Build();
+    ImGui_ImplDX11_InvalidateDeviceObjects();
+
+    ImGui::GetStyle().ScaleAllSizes(scale);
   }
 
   [[nodiscard]] HWND GetHWND() const noexcept {
@@ -307,7 +342,7 @@ class HTCCSettingsApp {
     ImGui::TextWrapped(
       "HTCC attempts to detect available features; this may not work with some "
       "buggy drivers. You can bypass the detection below - if the features are "
-      "not actually availalbe, this may make games crash.");
+      "not actually available, this may make games crash.");
     if (ImGui::Checkbox(
           "Always enable XR_ext_hand_tracking",
           &Config::ForceHaveXRExtHandTracking)) {
