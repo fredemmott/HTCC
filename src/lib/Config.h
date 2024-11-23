@@ -195,7 +195,8 @@ namespace HandTrackedCockpitClicking::Config {
   constexpr native_type name {defaultValue}; \
   }; \
   extern native_type name; \
-  void Save##name(native_type);
+  void Save##name(native_type); \
+  inline void Save##name() { Save##name(Config::name); }
 HandTrackedCockpitClicking_DWORD_SETTINGS
 #undef IT
 #define IT(name, defaultValue) \

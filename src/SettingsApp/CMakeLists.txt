@@ -13,11 +13,13 @@ target_link_libraries(
   HTCCSettings
   PRIVATE
   HTCCLibCommon
+  HTCCLibPointCtrl
   System::D3D11
   System::Shell32
   System::User32
   imgui::imgui
 )
+target_link_options(HTCCSettings PRIVATE "/MANIFESTUAC:level='requireAdministrator'")
 sign_target(HTCCSettings)
 
 set(VERSION_CPP_FILE "${CMAKE_CURRENT_BINARY_DIR}/version.cpp")

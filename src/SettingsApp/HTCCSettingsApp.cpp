@@ -2,16 +2,50 @@
 // SPDX-License-Identifier: MIT
 
 #include <Windows.h>
+#include <d2d1helper.h>
 #include <d3d11.h>
 #include <dxgi1_3.h>
 #include <imgui.h>
 #include <imgui_impl_dx11.h>
 #include <imgui_impl_win32.h>
+#include <shellapi.h>
 #include <wil/com.h>
+#include <wil/registry.h>
 #include <wil/resource.h>
 #include <winuser.h>
 
+#include <filesystem>
+#include <format>
 #include <optional>
+
+#include "../lib/Config.h"
+#include "../lib/PointCtrlSource.h"
+#include "version.h"
+
+namespace HTCC = HandTrackedCockpitClicking;
+namespace Config = HTCC::Config;
+namespace Version = HTCCSettings::Version;
+
+static const auto VersionString = std::format(
+  "HTCC {}\n\n"
+  "Copyright © 2022 Frederick Emmott.\n\n"
+  "Build: v{}.{}.{}.{}-{}-{}-{}",
+  Version::ReleaseName,
+  Version::Major,
+  Version::Minor,
+  Version::Patch,
+  Version::Build,
+  Version::IsGitHubActionsBuild ? std::format("GHA-{}", Version::Build)
+                                : "local",
+  Version::BuildMode,
+#ifdef _WIN32
+#ifdef _WIN64
+  "Win64"
+#else
+  "Win32"
+#endif
+#endif
+);
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(
   HWND hWnd,
@@ -23,29 +57,39 @@ class HTCCSettingsApp {
  public:
   HTCCSettingsApp() = delete;
   explicit HTCCSettingsApp(const HINSTANCE instance) {
+    Config::LoadBaseConfig();
+
     const WNDCLASSW wc {
       .lpfnWndProc = &WindowProc,
       .hInstance = instance,
       .lpszClassName = L"HTCC Settings",
     };
-    const auto classAtom = RegisterClass(&wc);
+    const auto classAtom = RegisterClassW(&wc);
 
-    mHwnd.reset(CreateWindowExW(
-      WS_EX_APPWINDOW | WS_EX_CLIENTEDGE,
-      wc.lpszClassName,
-      L"HTCC Settings",
-      WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT,
-      CW_USEDEFAULT,
-      CW_USEDEFAULT,
-      CW_USEDEFAULT,
-      nullptr,
-      nullptr,
-      instance,
-      nullptr));
+    {
+      const auto screenHeight = GetSystemMetrics(SM_CYSCREEN);
+      const auto height = screenHeight / 2;
+      const auto width = height / 2;
 
-    RECT windowRect {};
-    GetClientRect(mHwnd.get(), &windowRect);
+      mHwnd.reset(CreateWindowExW(
+        WS_EX_APPWINDOW | WS_EX_CLIENTEDGE,
+        MAKEINTATOM(classAtom),
+        L"HTCC Settings",
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        width,
+        height,
+        nullptr,
+        nullptr,
+        instance,
+        nullptr));
+    }
+    if (!mHwnd) {
+      throw std::runtime_error(std::format("Failed to create window: {}", GetLastError()));
+    }
+    RECT clientRect {};
+    GetClientRect(mHwnd.get(), &clientRect);
 
     UINT d3dFlags = D3D11_CREATE_DEVICE_SINGLETHREADED;
     UINT dxgiFlags = 0;
@@ -69,14 +113,18 @@ class HTCCSettingsApp {
       CreateDXGIFactory2(dxgiFlags, IID_PPV_ARGS(dxgiFactory.put())));
 
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc {
-      .Width = static_cast<UINT>(windowRect.right - windowRect.left),
-      .Height = static_cast<UINT>(windowRect.bottom - windowRect.top),
+      .Width = static_cast<UINT>(clientRect.right - clientRect.left),
+      .Height = static_cast<UINT>(clientRect.bottom - clientRect.top),
       .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
       .SampleDesc = {1, 0},
       .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
       .BufferCount = 2,
       .SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD,
       .AlphaMode = DXGI_ALPHA_MODE_IGNORE,
+    };
+    mWindowSize = {
+      static_cast<FLOAT>(swapChainDesc.Width),
+      static_cast<FLOAT>(swapChainDesc.Height),
     };
     THROW_IF_FAILED(dxgiFactory->CreateSwapChainForHwnd(
       mD3DDevice.get(),
@@ -146,6 +194,8 @@ class HTCCSettingsApp {
   wil::com_ptr<ID3D11DeviceContext> mD3DContext;
   wil::com_ptr<ID3D11RenderTargetView> mRenderTargetView;
   std::optional<int> mExitCode;
+  ImVec2 mWindowSize;
+  std::optional<std::tuple<UINT, UINT>> mPendingResize;
 
   static LRESULT
   WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept {
@@ -155,8 +205,210 @@ class HTCCSettingsApp {
     return DefWindowProcW(hwnd, uMsg, wParam, lParam);
   }
 
+  bool mIsAPILayerEnabled = IsAPILayerEnabled();
+
+  static std::wstring GetAPILayerPath() {
+    wchar_t buf[MAX_PATH];
+    const auto bufLen = GetModuleFileNameW(nullptr, buf, MAX_PATH);
+    return std::filesystem::weakly_canonical(
+             std::filesystem::path(std::wstring_view {buf, bufLen})
+               .parent_path()
+               .parent_path()
+             / "APILayer.json")
+      .wstring();
+  }
+
+  static constexpr wchar_t APILayerSubkey[]
+    = L"SOFTWARE\\Khronos\\OpenXR\\1\\ApiLayers\\Implicit";
+
+  static bool IsAPILayerEnabled() noexcept {
+    const auto path = GetAPILayerPath();
+    const auto disabled = wil::reg::try_get_value_dword(
+                            HKEY_LOCAL_MACHINE, APILayerSubkey, path.c_str())
+                            .value_or(1);
+    return !disabled;
+  }
+
+  HTCC::PointCtrlSource mPointCtrl;
+
   void FrameTick() noexcept {
+    ImGui::SetNextWindowPos({0, 0});
+    ImGui::SetNextWindowSize(mWindowSize);
+    ImGui::Begin(
+      "MainWindow",
+      nullptr,
+      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
+        | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
+
+    if (ImGui::Checkbox("Enable HTCC", &mIsAPILayerEnabled)) {
+      const auto apiLayerPath = GetAPILayerPath();
+      const DWORD disabled = mIsAPILayerEnabled ? 0 : 1;
+      wil::reg::set_value_dword(HKEY_LOCAL_MACHINE, APILayerSubkey, disabled);
+    }
+    if (ImGui::Checkbox(
+          "Enable hibernation gesture",
+          &Config::HandTrackingHibernateGestureEnabled)) {
+      Config::SaveHandTrackingHibernateGestureEnabled();
+    }
+    Gui_PointerSource();
+    Gui_PointerSink();
+
+    ImGui::SeparatorText("Gestures");
+    ImGui::Text(
+      "Gestures require the XR_FB_hand_tracking_aim extension; for Meta Link, "
+      "this requires developer mode.");
+    if (ImGui::Checkbox("Enable pinch to click", &Config::PinchToClick)) {
+      Config::SavePinchToClick();
+    }
+    if (ImGui::Checkbox("Enable pinch to scroll", &Config::PinchToScroll)) {
+      Config::SavePinchToScroll();
+    }
+
+    ImGui::SeparatorText("PointCTRL");
+    Gui_CalibratePointCtrl();
+    Gui_PointCtrlFCUMapping();
+
+    ImGui::SeparatorText("Workarounds");
+    {
+      auto ignoreAimPose = !Config::UseHandTrackingAimPointFB;
+      if (ImGui::Checkbox(
+            "Ignore XR_FB_hand_tracking_aim pose", &ignoreAimPose)) {
+        Config::SaveUseHandTrackingAimPointFB(!ignoreAimPose);
+      }
+    }
+    ImGui::Text(
+      "HTCC attempts to detect available features; this may not work with some "
+      "buggy drivers. You can bypass the detection below - if the features are "
+      "not actually availalbe, this may make games crash.");
+    if (ImGui::Checkbox(
+          "Always enable XR_ext_hand_tracking",
+          &Config::ForceHaveXRExtHandTracking)) {
+      Config::SaveForceHaveXRExtHandTracking();
+    }
+    if (ImGui::Checkbox(
+          "Always enable XR_FB_hand_tracking_aim",
+          &Config::ForceHaveXRFBHandTrackingAim)) {
+      Config::SaveForceHaveXRFBHandTrackingAim();
+    }
+
+    ImGui::SeparatorText("About HTCC");
+    ImGui::Text("%s", VersionString.c_str());
+
+    ImGui::End();
+
     ImGui::ShowDemoWindow();
+  }
+
+  void Gui_CalibratePointCtrl() {
+    ImGui::BeginDisabled(!mPointCtrl.IsConnected());
+    const bool clicked = ImGui::Button("Calibrate");
+    ImGui::EndDisabled();
+    ImGui::SameLine();
+    ImGui::Text("Requires PointCTRL device with HTCC firmware");
+    if (!clicked) {
+      return;
+    }
+
+    wchar_t myPath[MAX_PATH];
+    const auto myPathLen = GetModuleFileNameW(nullptr, myPath, MAX_PATH);
+    const auto calibrationExe
+      = std::filesystem::weakly_canonical(
+          std::filesystem::path(std::wstring_view {myPath, myPathLen})
+            .parent_path()
+            .parent_path()
+          / L"PointCtrlCalibration.exe")
+          .wstring();
+    ShellExecuteW(
+      mHwnd.get(),
+      L"open",
+      calibrationExe.c_str(),
+      calibrationExe.c_str(),
+      nullptr,
+      SW_NORMAL);
+  }
+
+  void Gui_PointerSource() {
+    constexpr const char* labels[] = {
+      "OpenXR hand tracking",
+      "PointCTRL",
+    };
+    auto index = static_cast<int>(Config::PointerSource);
+    if (!ImGui::BeginCombo("Hand tracking method", labels[index], 0)) {
+      return;
+    }
+
+    for (int i = 0; i < std::size(labels); ++i) {
+      const auto isSelected = (index == i);
+      if (ImGui::Selectable(labels[i], isSelected)) {
+        index = i;
+        Config::SavePointerSource(static_cast<HTCC::PointerSource>(i));
+      }
+
+      if (isSelected) {
+        ImGui::SetItemDefaultFocus();
+      }
+    }
+
+    ImGui::EndCombo();
+  }
+
+  void Gui_PointerSink() {
+    constexpr const char* labels[] = {
+      "Emulated touch screen or tablet",
+      "Emulated Oculus Touch controller",
+    };
+    auto index = static_cast<int>(Config::PointerSink);
+    if (!ImGui::BeginCombo("Preferred game input", labels[index], 0)) {
+      return;
+    }
+
+    for (int i = 0; i < std::size(labels); ++i) {
+      const auto isSelected = (index == i);
+      if (ImGui::Selectable(labels[i], isSelected)) {
+        index = i;
+        Config::SavePointerSink(static_cast<HTCC::PointerSink>(i));
+      }
+
+      if (isSelected) {
+        ImGui::SetItemDefaultFocus();
+      }
+    }
+
+    ImGui::EndCombo();
+  }
+
+  void Gui_PointCtrlFCUMapping() {
+    constexpr const char* labels[] = {
+      "Disabled",
+      "Classic",
+      "Modal",
+      "Modal with left click lock",
+      "Dedicated scroll buttons",
+    };
+    auto index = static_cast<int>(Config::PointCtrlFCUMapping);
+    if (!ImGui::BeginCombo("FCU button mapping", labels[index], 0)) {
+      return;
+    }
+
+    for (int i = 0; i < std::size(labels); ++i) {
+      if (
+        i == static_cast<int>(HTCC::PointCtrlFCUMapping::DedicatedScrollButtons)
+        && index != i) {
+        continue;
+      }
+      const auto isSelected = (index == i);
+      if (ImGui::Selectable(labels[i], isSelected)) {
+        index = i;
+        Config::SavePointCtrlFCUMapping(
+          static_cast<HTCC::PointCtrlFCUMapping>(i));
+      }
+
+      if (isSelected) {
+        ImGui::SetItemDefaultFocus();
+      }
+    }
+
+    ImGui::EndCombo();
   }
 };
 
