@@ -13,10 +13,11 @@ set_target_properties(
   OUTPUT_NAME XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking
 )
 add_version_metadata(HTCCAPILayer)
+
 target_link_libraries(
   HTCCAPILayer
   PRIVATE
-  ThirdParty::DirectXTK
+  Microsoft::DirectXTK
   HTCCLibCommon
   HTCCLibPointCtrl
 )

@@ -28,6 +28,9 @@ install(
   RENAME "LICENSE-ThirdParty-OpenXR SDK.txt"
 )
 
+SET(LOADER_DLL "native/x64/release/bin/openxr_loader.dll")
+SET(LOADER_LIB "native/x64/release/lib/openxr_loader.lib")
+
 ExternalProject_Add(
   OpenXRLoaderSource
   URL "https://github.com/KhronosGroup/OpenXR-SDK/releases/download/release-1.0.26/OpenXR.Loader.1.0.26.nupkg"
@@ -36,6 +39,9 @@ ExternalProject_Add(
   BUILD_COMMAND ""
   INSTALL_COMMAND ""
   EXCLUDE_FROM_ALL
+  BUILD_BYPRODUCTS
+  "<SOURCE_DIR>/${LOADER_DLL}"
+  "<SOURCE_DIR>/${LOADER_LIB}"
 )
 
 ExternalProject_Get_property(OpenXRLoaderSource SOURCE_DIR)
@@ -45,8 +51,8 @@ add_dependencies(OpenXRLoader OpenXRLoaderSource)
 set_target_properties(
   OpenXRLoader
   PROPERTIES
-  IMPORTED_LOCATION "${SOURCE_DIR}/native/x64/release/bin/openxr_loader.dll"
-  IMPORTED_IMPLIB "${SOURCE_DIR}/native/x64/release/lib/openxr_loader.lib"
+  IMPORTED_LOCATION "${SOURCE_DIR}/${LOADER_DLL}"
+  IMPORTED_IMPLIB "${SOURCE_DIR}/${LOADER_LIB}"
 )
 
 add_library(ThirdParty::OpenXRLoader ALIAS OpenXRLoader)

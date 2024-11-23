@@ -10,7 +10,8 @@ target_link_libraries(
   PRIVATE
   HTCCLibCommon
   HTCCLibPointCtrl
-  ThirdParty::CppWinRT
+  Microsoft::CppWinRT
+  System::WindowsApp
 )
 
 install(TARGETS PointCtrlClassic)

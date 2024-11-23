@@ -27,9 +27,10 @@ target_link_libraries(
 target_link_libraries(
   HTCCLibCommon
   PUBLIC
-  ThirdParty::CppWinRT
+  Microsoft::CppWinRT
   ThirdParty::OpenXR
-  ThirdParty::DirectXTK
+  Microsoft::DirectXTK
+  System::WindowsApp
 )
 
 add_library(

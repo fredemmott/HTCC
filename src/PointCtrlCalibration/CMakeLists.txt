@@ -17,8 +17,9 @@ target_link_libraries(
   System::DWrite
   System::Dxguid
   System::DXGI
-  ThirdParty::CppWinRT
-  ThirdParty::DirectXTK
+  System::WindowsApp
+  Microsoft::CppWinRT
+  Microsoft::DirectXTK
   ThirdParty::OpenXR
   ThirdParty::OpenXRLoader
 )

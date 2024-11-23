@@ -12,15 +12,10 @@ configure_file(
 
 include(system.cmake)
 
-include(cppwinrt.cmake)
-include(directxtk.cmake)
 include(openxr.cmake)
-include(nuget-versions.cmake)
 
-return(
-  PROPAGATE
-  CPPWINRT_VERSION
-  WINDOWSAPPSDK_VERSION
-  WINDOWS_SDK_BUILDTOOLS_VERSION
-  WINDOWS_IMPLEMENTATIONLIBRARY_VERSION
-)
+# From vcpkg
+find_package(cppwinrt CONFIG REQUIRED GLOBAL)
+find_package(directxtk CONFIG REQUIRED GLOBAL)
+find_package(imgui CONFIG REQUIRED GLOBAL)
+find_package(wil CONFIG REQUIRED GLOBAL)
