@@ -282,7 +282,7 @@ class HTCCSettingsApp {
     Gui_PointerSink();
 
     ImGui::SeparatorText("Gestures");
-    ImGui::Text(
+    ImGui::TextWrapped(
       "Gestures require the XR_FB_hand_tracking_aim extension; for Meta Link, "
       "this requires developer mode.");
     if (ImGui::Checkbox("Enable pinch to click", &Config::PinchToClick)) {
@@ -304,7 +304,7 @@ class HTCCSettingsApp {
         Config::SaveUseHandTrackingAimPointFB(!ignoreAimPose);
       }
     }
-    ImGui::Text(
+    ImGui::TextWrapped(
       "HTCC attempts to detect available features; this may not work with some "
       "buggy drivers. You can bypass the detection below - if the features are "
       "not actually availalbe, this may make games crash.");
@@ -320,7 +320,7 @@ class HTCCSettingsApp {
     }
 
     ImGui::SeparatorText("About HTCC");
-    ImGui::Text("%s", VersionString.c_str());
+    ImGui::TextWrapped("%s", VersionString.c_str());
     if (ImGui::Button("Copy")) {
       ImGui::SetClipboardText(VersionString.c_str());
     }
