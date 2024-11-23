@@ -298,8 +298,6 @@ class HTCCSettingsApp {
     }
 
     ImGui::End();
-
-    ImGui::ShowDemoWindow();
   }
 
   void Gui_CalibratePointCtrl() {
