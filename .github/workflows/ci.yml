@@ -53,7 +53,8 @@ jobs:
             --config ${{matrix.config}} `
             --parallel `
             -- `
-            /p:CL_MPCount=
+            /p:CL_MPCount= `
+          -DVCPKG_TARGET_TRIPLET=x64-windows-static
           $version="$(Get-Content version.txt)"
           Add-Content $Env:GITHUB_OUTPUT "VERSION=${version}"
       - name: Install debug symbols

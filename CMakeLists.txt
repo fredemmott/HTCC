@@ -55,15 +55,9 @@ if ("${VCPKG_TARGET_TRIPLET}" MATCHES "-static$")
   add_link_options("${COMMON_LINK_OPTIONS}")
 endif()
 
-if ("$ENV{VCPKG_ROOT}")
-  set(VCPKG_ROOT "$ENV{VCPKG_ROOT}")
-else()
-  set(VCPKG_ROOT "$ENV{VCPKG_INSTALLATION_ROOT}")
-endif()
-
 set(
   CMAKE_TOOLCHAIN_FILE
-  "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+  "${CMAKE_SOURCE_DIR}/third-party/vcpkg/scripts/buildsystems/vcpkg.cmake"
   CACHE STRING "Vcpkg toolchain file"
 )
 
