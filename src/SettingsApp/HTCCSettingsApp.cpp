@@ -57,6 +57,7 @@ class HTCCSettingsApp {
  public:
   HTCCSettingsApp() = delete;
   explicit HTCCSettingsApp(const HINSTANCE instance) {
+    gInstance = this;
     Config::LoadBaseConfig();
 
     const WNDCLASSW wc {
@@ -86,7 +87,8 @@ class HTCCSettingsApp {
         nullptr));
     }
     if (!mHwnd) {
-      throw std::runtime_error(std::format("Failed to create window: {}", GetLastError()));
+      throw std::runtime_error(
+        std::format("Failed to create window: {}", GetLastError()));
     }
     RECT clientRect {};
     GetClientRect(mHwnd.get(), &clientRect);
@@ -151,6 +153,7 @@ class HTCCSettingsApp {
     ImGui_ImplDX11_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
+    gInstance = nullptr;
   }
 
   [[nodiscard]] HWND GetHWND() const noexcept {
@@ -159,6 +162,24 @@ class HTCCSettingsApp {
 
   [[nodiscard]] int Run() noexcept {
     while (!mExitCode) {
+      if (mPendingResize) {
+        mRenderTargetView.reset();
+        const auto width = std::get<0>(*mPendingResize);
+        const auto height = std::get<1>(*mPendingResize);
+        mSwapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
+        wil::com_ptr<ID3D11Texture2D> backBuffer;
+        THROW_IF_FAILED(
+          mSwapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.put())));
+        THROW_IF_FAILED(mD3DDevice->CreateRenderTargetView(
+          backBuffer.get(), nullptr, mRenderTargetView.put()));
+
+        mWindowSize = {
+          static_cast<FLOAT>(width),
+          static_cast<FLOAT>(height),
+        };
+        mPendingResize = std::nullopt;
+      }
+
       MSG msg {};
       while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
         TranslateMessage(&msg);
@@ -188,6 +209,7 @@ class HTCCSettingsApp {
   }
 
  private:
+  static HTCCSettingsApp* gInstance;
   wil::unique_hwnd mHwnd;
   wil::com_ptr<IDXGISwapChain1> mSwapChain;
   wil::com_ptr<ID3D11Device> mD3DDevice;
@@ -201,6 +223,12 @@ class HTCCSettingsApp {
   WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept {
     if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam)) {
       return true;
+    }
+    if (uMsg == WM_SIZE) {
+      const UINT width = LOWORD(lParam);
+      const UINT height = HIWORD(lParam);
+      gInstance->mPendingResize = std::tuple {width, height};
+      return 0;
     }
     return DefWindowProcW(hwnd, uMsg, wParam, lParam);
   }
@@ -412,6 +440,8 @@ class HTCCSettingsApp {
     ImGui::EndCombo();
   }
 };
+
+HTCCSettingsApp* HTCCSettingsApp::gInstance {nullptr};
 
 int WINAPI wWinMain(
   HINSTANCE hInstance,
