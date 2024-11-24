@@ -28,7 +28,6 @@
 #define HandTrackedCockpitClicking_ENVIRONMENT_INFO \
   IT(bool, Have_XR_EXT_HandTracking, false) \
   IT(bool, Have_XR_FB_HandTracking_Aim, false) \
-  IT(bool, Have_XR_KHR_win32_convert_performance_counter_time, false) \
   IT(bool, IsPointCtrlCalibration, false)
 
 namespace HandTrackedCockpitClicking::Environment {

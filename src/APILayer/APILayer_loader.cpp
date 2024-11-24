@@ -320,82 +320,6 @@ static XrResult xrGetInstanceProcAddr(
   return XR_ERROR_FUNCTION_UNSUPPORTED;
 }
 
-static void EnumerateExtensions(OpenXRNext* oxr) {
-  uint32_t extensionCount = 0;
-
-  auto nextResult = oxr->xrEnumerateInstanceExtensionProperties(
-    nullptr, 0, &extensionCount, nullptr);
-
-  // Workaround for Meta Link PTC as of 2024-07-22:
-  //
-  // XR_ERROR_SIZE_SUFFICIENT should *never* be returned for a buffer size of 0:
-  // https://registry.khronos.org/OpenXR/specs/1.0/html/xrspec.html#buffer-size-parameters
-  const auto workAroundNonConformantImplementations
-    = Config::Quirk_Conformance_ExtensionCount
-    && (nextResult == XR_ERROR_SIZE_INSUFFICIENT) && (extensionCount > 0);
-  if (workAroundNonConformantImplementations) {
-    DebugPrint(
-      "Buggy OpenXR runtime or other API layer; ignoring incorrect "
-      "XR_ERROR_SIZE_INSUFFICIENT response from "
-      "xrEnumerateInstanceExtensionProperties(nulllptr, 0, &count, nullptr)");
-  }
-  if (nextResult != XR_SUCCESS && !workAroundNonConformantImplementations) {
-    DebugPrint("Getting extension count failed: {}", nextResult);
-    return;
-  }
-
-  if (extensionCount == 0) {
-    DebugPrint(
-      "Runtime supports no extensions, so definitely doesn't support hand "
-      "tracking. Reporting success but doing nothing.");
-    return;
-  }
-
-  std::vector<XrExtensionProperties> extensions(
-    extensionCount, XrExtensionProperties {XR_TYPE_EXTENSION_PROPERTIES});
-  nextResult = oxr->xrEnumerateInstanceExtensionProperties(
-    nullptr, extensionCount, &extensionCount, extensions.data());
-  if (nextResult != XR_SUCCESS) {
-    DebugPrint("Enumerating extensions failed: {}", nextResult);
-    return;
-  }
-
-  for (const auto& it: extensions) {
-    const std::string_view name {it.extensionName};
-    if (Config::VerboseDebug) {
-      DebugPrint("Found {}", name);
-    }
-
-    if (name == XR_EXT_HAND_TRACKING_EXTENSION_NAME) {
-      Environment::Have_XR_EXT_HandTracking = true;
-      continue;
-    }
-    if (
-      name == XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME
-      && Config::EnableFBOpenXRExtensions) {
-      Environment::Have_XR_FB_HandTracking_Aim = true;
-      continue;
-    }
-    if (name == XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME) {
-      Environment::Have_XR_KHR_win32_convert_performance_counter_time = true;
-      continue;
-    }
-  }
-
-  DebugPrint(
-    "{}: {}",
-    XR_EXT_HAND_TRACKING_EXTENSION_NAME,
-    Environment::Have_XR_EXT_HandTracking);
-  DebugPrint(
-    "{}: {}",
-    XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME,
-    Environment::Have_XR_FB_HandTracking_Aim);
-  DebugPrint(
-    "{}: {}",
-    XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME,
-    Environment::Have_XR_KHR_win32_convert_performance_counter_time);
-}
-
 static XrResult xrCreateApiLayerInstance(
   const XrInstanceCreateInfo* originalInfo,
   const struct XrApiLayerCreateInfo* layerInfo,
@@ -414,39 +338,6 @@ static XrResult xrCreateApiLayerInstance(
 
   //  TODO: check version fields etc in layerInfo
 
-  XrInstance dummyInstance {};
-  {
-    // While the OpenXR specification says that
-    // `xrEnumerateInstanceExtensionProperties()` does not require an
-    // `XrInstance`, if there is a 'next' API layer, it will not be able to
-    // retrieve the extension list from the runtime or an n+2 API layer unless
-    // an instance has been created, as it won't have the next
-    // `xrGetInstanceProcAddr()` pointer yet.
-    XrInstanceCreateInfo dummyInfo {
-      .type = XR_TYPE_INSTANCE_CREATE_INFO,
-      .applicationInfo = {
-        .applicationVersion = originalInfo->applicationInfo.applicationVersion,
-        .engineName = "FREDEMMOTT_HTCC",
-        .engineVersion = 1,
-        .apiVersion = XR_CURRENT_API_VERSION,
-      },
-    };
-    {
-      auto [it, count] = std::format_to_n(
-        dummyInfo.applicationInfo.applicationName,
-        XR_MAX_APPLICATION_NAME_SIZE - 1,
-        "FREDEMMOTT_HTCC Init: {}",
-        originalInfo->applicationInfo.applicationName);
-      *it = '\0';
-    }
-    auto dummyLayerInfo = *layerInfo;
-    dummyLayerInfo.nextInfo = dummyLayerInfo.nextInfo->next;
-    layerInfo->nextInfo->nextCreateApiLayerInstance(
-      &dummyInfo, &dummyLayerInfo, &dummyInstance);
-  }
-
-  OpenXRNext next(dummyInstance, layerInfo->nextInfo->nextGetInstanceProcAddr);
-
   XrInstanceCreateInfo info {XR_TYPE_INSTANCE_CREATE_INFO};
   if (originalInfo) {
     info = *originalInfo;
@@ -454,57 +345,90 @@ static XrResult xrCreateApiLayerInstance(
 
   std::vector<const char*> enabledExtensions;
   if (Config::Enabled) {
-    EnumerateExtensions(&next);
-    if (Environment::Have_XR_EXT_HandTracking) {
-      DebugPrint("Original extensions:");
-      for (auto i = 0; i < originalInfo->enabledExtensionCount; ++i) {
-        DebugPrint("- {}", originalInfo->enabledExtensionNames[i]);
-        enabledExtensions.push_back(originalInfo->enabledExtensionNames[i]);
-      }
-
-      enabledExtensions.push_back(XR_EXT_HAND_TRACKING_EXTENSION_NAME);
-      // We need 'real time' units to rotate the hand at a known speed for
-      // MSFS
-      if (Environment::Have_XR_KHR_win32_convert_performance_counter_time) {
-        enabledExtensions.push_back(
-          XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME);
-      }
-      // Required for enhanced pinch gestures on Quest
-      if (Environment::Have_XR_FB_HandTracking_Aim) {
-        enabledExtensions.push_back(XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME);
-      }
-
-      {
-        auto last
-          = std::unique(enabledExtensions.begin(), enabledExtensions.end());
-        enabledExtensions.erase(last, enabledExtensions.end());
-      }
-
-      DebugPrint("Requesting extensions:");
-      for (const auto& ext: enabledExtensions) {
-        DebugPrint("- {}", ext);
-      }
-
-      info.enabledExtensionCount = enabledExtensions.size();
-      info.enabledExtensionNames = enabledExtensions.data();
+    DebugPrint("Original extensions:");
+    for (auto i = 0; i < originalInfo->enabledExtensionCount; ++i) {
+      DebugPrint("- {}", originalInfo->enabledExtensionNames[i]);
+      enabledExtensions.push_back(originalInfo->enabledExtensionNames[i]);
     }
+
+    enabledExtensions.push_back(
+      XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME);
+    enabledExtensions.push_back(XR_EXT_HAND_TRACKING_EXTENSION_NAME);
+    enabledExtensions.push_back(XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME);
+
+    {
+      auto last
+        = std::unique(enabledExtensions.begin(), enabledExtensions.end());
+      enabledExtensions.erase(last, enabledExtensions.end());
+    }
+
+    DebugPrint("Requesting extensions:");
+    for (const auto& ext: enabledExtensions) {
+      DebugPrint("- {}", ext);
+    }
+
+    info.enabledExtensionCount = enabledExtensions.size();
+    info.enabledExtensionNames = enabledExtensions.data();
   }
-  next.check_xrDestroyInstance(dummyInstance);
 
   XrApiLayerCreateInfo nextLayerInfo = *layerInfo;
   nextLayerInfo.nextInfo = layerInfo->nextInfo->next;
 
-  auto nextResult = layerInfo->nextInfo->nextCreateApiLayerInstance(
-    &info, &nextLayerInfo, instance);
-  if (nextResult != XR_SUCCESS) {
-    DebugPrint("Next failed.");
-    return nextResult;
+  //// Attempt 1: all 3 extensions
+  {
+    const auto nextResult = layerInfo->nextInfo->nextCreateApiLayerInstance(
+      &info, &nextLayerInfo, instance);
+    if (XR_SUCCEEDED(nextResult)) {
+      Environment::Have_XR_EXT_HandTracking = true;
+      Environment::Have_XR_FB_HandTracking_Aim = true;
+      gNext = std::make_shared<OpenXRNext>(
+        *instance, layerInfo->nextInfo->nextGetInstanceProcAddr);
+      DebugPrint("Initialized with all extensions");
+      return nextResult;
+    }
+
+    if (nextResult != XR_ERROR_EXTENSION_NOT_PRESENT) {
+      DebugPrint("all-in xrCreateApiLayerInstance failed: {}", nextResult);
+      return nextResult;
+    }
   }
 
-  gNext = std::make_shared<OpenXRNext>(
-    *instance, layerInfo->nextInfo->nextGetInstanceProcAddr);
+  ///// Attempt 2: without XR_FB_hand_tracking_aim
+  enabledExtensions.erase(
+    std::ranges::find(
+      enabledExtensions, XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME));
+  info.enabledExtensionCount = enabledExtensions.size();
+  info.enabledExtensionNames = enabledExtensions.data();
+  {
+    const auto nextResult = layerInfo->nextInfo->nextCreateApiLayerInstance(
+      &info, &nextLayerInfo, instance);
+    if (XR_SUCCEEDED(nextResult)) {
+      Environment::Have_XR_EXT_HandTracking = true;
+      Environment::Have_XR_FB_HandTracking_Aim = false;
+      gNext = std::make_shared<OpenXRNext>(
+        *instance, layerInfo->nextInfo->nextGetInstanceProcAddr);
+      DebugPrint(
+        "Initialized without {}", XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME);
+      return nextResult;
+    }
 
-  return XR_SUCCESS;
+    if (nextResult != XR_ERROR_EXTENSION_NOT_PRESENT) {
+      DebugPrint(
+        "bare-minimum xrCreateApiLayerInstance failed: {}", nextResult);
+      return nextResult;
+    }
+  }
+
+  ///// Attempt 3: nope, no hand tracking. Just pass through.
+  const auto nextResult = layerInfo->nextInfo->nextCreateApiLayerInstance(
+    originalInfo, &nextLayerInfo, instance);
+  if (XR_SUCCEEDED(nextResult)) {
+    DebugPrint("No-op passthrough xrCreateAPILayerInstance succeeded");
+  } else {
+    DebugPrint(
+      "No-op passthrough xrCreateApiLayerInstance failed: {}", nextResult);
+  }
+  return nextResult;
 }
 
 }// namespace HandTrackedCockpitClicking::Loader

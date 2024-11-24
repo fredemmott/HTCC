@@ -355,20 +355,6 @@ class HTCCSettingsApp {
         Config::SaveUseHandTrackingAimPointFB(!ignoreAimPose);
       }
     }
-    ImGui::TextWrapped(
-      "HTCC attempts to detect available features; this may not work with some "
-      "buggy drivers. You can bypass the detection below - if the features are "
-      "not actually available, this may make games crash.");
-    if (ImGui::Checkbox(
-          "Always enable XR_ext_hand_tracking",
-          &Config::ForceHaveXRExtHandTracking)) {
-      Config::SaveForceHaveXRExtHandTracking();
-    }
-    if (ImGui::Checkbox(
-          "Always enable XR_FB_hand_tracking_aim",
-          &Config::ForceHaveXRFBHandTrackingAim)) {
-      Config::SaveForceHaveXRFBHandTrackingAim();
-    }
 
     ImGui::SeparatorText("About HTCC");
     ImGui::TextWrapped("%s", VersionString.c_str());

@@ -269,7 +269,6 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
       XR_KHR_D3D11_ENABLE_EXTENSION_NAME,
       XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME,
     };
-    Environment::Have_XR_KHR_win32_convert_performance_counter_time = true;
     XrInstanceCreateInfo createInfo {
       .type = XR_TYPE_INSTANCE_CREATE_INFO,
       .applicationInfo = {

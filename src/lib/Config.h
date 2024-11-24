@@ -156,9 +156,7 @@ enum class HandTrackingHands : DWORD {
   IT(uint8_t, GameControllerLWheelDownButton, 0) \
   IT(uint8_t, GameControllerRWheelUpButton, 0) \
   IT(uint8_t, GameControllerRWheelDownButton, 0) \
-  IT(uint32_t, PointCtrlSleepMilliseconds, 20000) \
-  IT(bool, ForceHaveXRExtHandTracking, false) \
-  IT(bool, ForceHaveXRFBHandTrackingAim, false)
+  IT(uint32_t, PointCtrlSleepMilliseconds, 20000)
 
 #define HandTrackedCockpitClicking_FLOAT_SETTINGS \
   IT(PointCtrlRadiansPerUnitX, 3.009e-5f) \

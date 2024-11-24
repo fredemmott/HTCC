@@ -92,18 +92,7 @@ VirtualControllerSink::VirtualControllerSink(
 }
 
 bool VirtualControllerSink::IsPointerSink() {
-  if (Config::PointerSink == PointerSink::VirtualVRController) {
-    if (!Environment::Have_XR_KHR_win32_convert_performance_counter_time) {
-      // This should pretty much never happen: every runtime supports this
-      // extension
-      DebugPrint(
-        "Configured to use VirtualControllerSink, but don't have {}",
-        XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME);
-      return false;
-    }
-    return true;
-  }
-  return false;
+  return Config::PointerSink == PointerSink::VirtualVRController;
 }
 
 static bool IsActionSink(ActionSink actionSink) {

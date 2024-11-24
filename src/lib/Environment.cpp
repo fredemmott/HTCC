@@ -29,14 +29,6 @@
 namespace HandTrackedCockpitClicking::Environment {
 
 void Load() {
-  if (Config::ForceHaveXRExtHandTracking) {
-    DebugPrint("Force-enabling XR_EXT_hand_tracking due to config");
-    Have_XR_EXT_HandTracking = true;
-  }
-  if (Config::ForceHaveXRFBHandTrackingAim) {
-    DebugPrint("Force-enabling XR_FB_hand_tracking_aim due to config");
-    Have_XR_FB_HandTracking_Aim = true;
-  }
 }
 
 #define IT(native_type, name, default) native_type name {default};
