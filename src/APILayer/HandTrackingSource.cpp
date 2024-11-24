@@ -369,6 +369,9 @@ void HandTrackingSource::InitHandTracker(Hand* hand) {
   if (hand->mTracker) {
     return;
   }
+  if (hand->mTrackerError) {
+    return;
+  }
 
   if (
     Config::HandTrackingHands == HandTrackingHands::Left
@@ -387,11 +390,13 @@ void HandTrackingSource::InitHandTracker(Hand* hand) {
     .hand = hand->mHand,
     .handJointSet = XR_HAND_JOINT_SET_DEFAULT_EXT,
   };
-  if (!mOpenXR->check_xrCreateHandTrackerEXT(
-        mSession, &createInfo, &hand->mTracker)) {
+  const auto result = mOpenXR->xrCreateHandTrackerEXT(
+        mSession, &createInfo, &hand->mTracker);
+  if (!XR_SUCCEEDED(result)) {
+    hand->mTrackerError = result;
     DebugPrint(
-      "Failed to initialize hand tracker for hand {}",
-      static_cast<int>(hand->mHand));
+      "Failed to initialize hand tracker for hand {} - {}",
+      static_cast<int>(hand->mHand), result);
     return;
   }
 

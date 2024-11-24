@@ -58,6 +58,7 @@ class HandTrackingSource final : public InputSource {
     XrHandEXT mHand;
     InputState mState {mHand};
     XrHandTrackerEXT mTracker {};
+    std::optional<XrResult> mTrackerError;
     bool mSleeping {true};
     XrTime mLastKeepAliveAt {};
     XrTime mWakeConditionsSince {};
