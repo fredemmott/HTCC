@@ -109,6 +109,10 @@ class HTCCSettingsApp {
     }
     {
       BOOL darkMode { true};
+      // Support building with the Windows 10 SDK
+      #ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+      #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+      #endif
       DwmSetWindowAttribute(mHwnd.get(), DWMWA_USE_IMMERSIVE_DARK_MODE, &darkMode, sizeof(darkMode));
     }
     RECT clientRect {};
