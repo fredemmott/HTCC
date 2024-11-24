@@ -280,6 +280,9 @@ class HTCCSettingsApp {
       gInstance->mPendingResize = std::tuple {width, height};
       return 0;
     }
+    if (uMsg == WM_CLOSE) {
+      gInstance->mExitCode = 0;
+    }
     return DefWindowProcW(hwnd, uMsg, wParam, lParam);
   }
 
