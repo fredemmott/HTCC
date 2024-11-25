@@ -77,7 +77,7 @@ APILayer::APILayer(
   }
 
   if (
-    Environment::Have_XR_EXT_HandTracking
+    Environment::Have_XR_EXT_hand_tracking
     && (Config::PointerSource == PointerSource::OpenXRHandTracking)) {
     mHandTracking = std::make_unique<HandTrackingSource>(
       next, instance, session, mViewSpace, mLocalSpace);

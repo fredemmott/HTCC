@@ -112,7 +112,7 @@ static void PopulateInteractions(
 
 static bool UseHandTrackingAimPointFB() {
   return Config::UseHandTrackingAimPointFB
-    && Environment::Have_XR_FB_HandTracking_Aim;
+    && Environment::Have_XR_FB_hand_tracking_aim;
 }
 
 std::tuple<InputState, InputState> HandTrackingSource::Update(
@@ -190,7 +190,7 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
   };
 
   XrHandTrackingAimStateFB aimFB {XR_TYPE_HAND_TRACKING_AIM_STATE_FB};
-  if (Environment::Have_XR_FB_HandTracking_Aim) {
+  if (Environment::Have_XR_FB_hand_tracking_aim) {
     joints.next = &aimFB;
   }
 

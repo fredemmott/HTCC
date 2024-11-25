@@ -295,6 +295,11 @@ static XrResult xrGetInstanceProcAddr(
 
 #define IT(x) \
   if (name == #x) { \
+    if ( \
+      name == "xrCreateHandTrackerEXT" \
+      && !Environment::App_Enabled_XR_EXT_hand_tracking) { \
+      return XR_ERROR_FUNCTION_UNSUPPORTED; \
+    } \
     *function = reinterpret_cast<PFN_xrVoidFunction>(&x); \
     return XR_SUCCESS; \
   }
@@ -365,6 +370,9 @@ static XrResult xrCreateApiLayerInstance(
     DebugPrint("Requesting extensions:");
     for (const auto& ext: enabledExtensions) {
       DebugPrint("- {}", ext);
+      if (std::string_view { ext } == XR_EXT_HAND_TRACKING_EXTENSION_NAME) {
+        Environment::App_Enabled_XR_EXT_hand_tracking = true;
+      }
     }
 
     info.enabledExtensionCount = enabledExtensions.size();
@@ -380,8 +388,8 @@ static XrResult xrCreateApiLayerInstance(
       &info, &nextLayerInfo, instance);
     if (XR_SUCCEEDED(nextResult)) {
       Environment::Have_XR_KHR_win32_convert_performance_counter_time = true;
-      Environment::Have_XR_EXT_HandTracking = true;
-      Environment::Have_XR_FB_HandTracking_Aim = true;
+      Environment::Have_XR_EXT_hand_tracking = true;
+      Environment::Have_XR_FB_hand_tracking_aim = true;
       gNext = std::make_shared<OpenXRNext>(
         *instance, layerInfo->nextInfo->nextGetInstanceProcAddr);
       DebugPrint("Initialized with all extensions");
@@ -405,7 +413,7 @@ static XrResult xrCreateApiLayerInstance(
       &info, &nextLayerInfo, instance);
     if (XR_SUCCEEDED(nextResult)) {
       Environment::Have_XR_KHR_win32_convert_performance_counter_time = true;
-      Environment::Have_XR_EXT_HandTracking = true;
+      Environment::Have_XR_EXT_hand_tracking = true;
       gNext = std::make_shared<OpenXRNext>(
         *instance, layerInfo->nextInfo->nextGetInstanceProcAddr);
       DebugPrint(
@@ -415,7 +423,9 @@ static XrResult xrCreateApiLayerInstance(
 
     if (nextResult != XR_ERROR_EXTENSION_NOT_PRESENT) {
       DebugPrint(
-        "xrCreateInstance without {} failed: {}", XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME, nextResult);
+        "xrCreateInstance without {} failed: {}",
+        XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME,
+        nextResult);
       return nextResult;
     }
   }
@@ -436,14 +446,15 @@ static XrResult xrCreateApiLayerInstance(
       Environment::Have_XR_KHR_win32_convert_performance_counter_time = true;
       gNext = std::make_shared<OpenXRNext>(
         *instance, layerInfo->nextInfo->nextGetInstanceProcAddr);
-      DebugPrint(
-        "Initialized without {}", XR_EXT_HAND_TRACKING_EXTENSION_NAME);
+      DebugPrint("Initialized without {}", XR_EXT_HAND_TRACKING_EXTENSION_NAME);
       return nextResult;
     }
 
     if (nextResult != XR_ERROR_EXTENSION_NOT_PRESENT) {
       DebugPrint(
-        "xrCreateInstance without {} failed: {}", XR_EXT_HAND_TRACKING_EXTENSION_NAME, nextResult);
+        "xrCreateInstance without {} failed: {}",
+        XR_EXT_HAND_TRACKING_EXTENSION_NAME,
+        nextResult);
       return nextResult;
     }
   }
