@@ -55,7 +55,6 @@ APILayer::APILayer(
     return;
   }
 
-
   auto oxr = next.get();
 
   XrReferenceSpaceCreateInfo referenceSpace {
@@ -77,7 +76,9 @@ APILayer::APILayer(
     return;
   }
 
-  if (Environment::Have_XR_EXT_HandTracking) {
+  if (
+    Environment::Have_XR_EXT_HandTracking
+    && (Config::PointerSource == PointerSource::OpenXRHandTracking)) {
     mHandTracking = std::make_unique<HandTrackingSource>(
       next, instance, session, mViewSpace, mLocalSpace);
   }
