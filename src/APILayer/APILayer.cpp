@@ -210,7 +210,6 @@ XrResult APILayer::xrLocateSpace(
 }
 
 XrResult APILayer::xrAttachSessionActionSets(XrSession session, const XrSessionActionSetsAttachInfo* attachInfo) {
-  DebugPrint("In APILayer::xrAttachSessionActionSets");
   const auto result = mOpenXR->xrAttachSessionActionSets(session, attachInfo);
   if (XR_FAILED(result)) {
     return result;
@@ -218,9 +217,7 @@ XrResult APILayer::xrAttachSessionActionSets(XrSession session, const XrSessionA
   for (uint32_t i = 0; i < attachInfo->countActionSets; ++i) {
     const auto actionSet = attachInfo->actionSets[i];
     if (mActionSetActions.contains(actionSet)) {
-      DebugPrint("Have action set");
       for (auto&& action: mActionSetActions.at(actionSet)) {
-        DebugPrint("Attaching action {}", reinterpret_cast<uint64_t>(action));
         mAttachedActions.emplace(action);
       }
     }
@@ -262,7 +259,6 @@ XrResult APILayer::xrCreateAction(
   XrActionSet actionSet,
   const XrActionCreateInfo* createInfo,
   XrAction* action) {
-  DebugPrint("In xrCreateAction");
   const auto result = mVirtualController ?
     mVirtualController->xrCreateAction(actionSet, createInfo, action) :
   mOpenXR->xrCreateAction(actionSet, createInfo, action);
@@ -271,10 +267,8 @@ XrResult APILayer::xrCreateAction(
   }
 
   if (mActionSetActions.contains(actionSet)) {
-    DebugPrint("Appending action");
     mActionSetActions.at(actionSet).emplace(*action);
   } else {
-    DebugPrint("Initialization to action");
     mActionSetActions[actionSet] = { *action };
   }
 
