@@ -27,6 +27,7 @@
 
 #define HandTrackedCockpitClicking_ENVIRONMENT_INFO \
   IT(bool, App_Enabled_XR_EXT_hand_tracking, false) \
+  IT(bool, App_Enabled_XR_KHR_win32_convert_performance_counter_time, false) \
   IT(bool, Have_XR_KHR_win32_convert_performance_counter_time, false) \
   IT(bool, Have_XR_EXT_hand_tracking, false) \
   IT(bool, Have_XR_FB_hand_tracking_aim, false) \

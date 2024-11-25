@@ -48,18 +48,18 @@
   IT(xrSyncActions) \
   IT(xrGetCurrentInteractionProfile) \
   IT(xrPollEvent) \
-  IT(xrCreateHandTrackerEXT)
+  IT_EXT(XR_EXT_hand_tracking, xrCreateHandTrackerEXT)
 #define NEXT_OPENXR_FUNCS \
   INTERCEPTED_OPENXR_FUNCS \
   IT(xrCreateReferenceSpace) \
   IT(xrDestroySpace) \
   IT(xrLocateViews) \
   IT(xrPathToString) \
-  IT(xrDestroyHandTrackerEXT) \
-  IT(xrLocateHandJointsEXT) \
   IT(xrGetInstanceProperties) \
-  IT(xrConvertTimeToWin32PerformanceCounterKHR) \
-  IT(xrConvertWin32PerformanceCounterToTimeKHR)
+  IT_EXT(XR_KHR_win32_convert_performance_counter_time, xrConvertTimeToWin32PerformanceCounterKHR) \
+  IT_EXT(XR_KHR_win32_convert_performance_counter_time, xrConvertWin32PerformanceCounterToTimeKHR) \
+  IT_EXT(XR_EXT_hand_tracking, xrDestroyHandTrackerEXT) \
+  IT_EXT(XR_EXT_hand_tracking, xrLocateHandJointsEXT)
 
 namespace HandTrackedCockpitClicking {
 
@@ -67,6 +67,7 @@ class OpenXRNext final {
  public:
   OpenXRNext(XrInstance, PFN_xrGetInstanceProcAddr);
 
+#define IT_EXT(ext, func) IT(func)
 #define IT(func) \
   template <class... Args> \
   auto raw_##func(Args&&... args) { \
@@ -96,13 +97,16 @@ class OpenXRNext final {
   IT(xrGetInstanceProcAddr)
   NEXT_OPENXR_FUNCS
 #undef IT
+#undef IT_EXT
 
  private:
   XrInstance mInstance;
+#define IT_EXT(ext, func) IT(func)
 #define IT(func) PFN_##func m_##func {nullptr};
   IT(xrGetInstanceProcAddr)
   NEXT_OPENXR_FUNCS
 #undef IT
+#undef IT_EXT
 };
 
 }// namespace HandTrackedCockpitClicking

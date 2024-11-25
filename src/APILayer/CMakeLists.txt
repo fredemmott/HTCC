@@ -12,6 +12,11 @@ set_target_properties(
   PROPERTIES
   OUTPUT_NAME XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking
 )
+target_compile_definitions(
+  HTCCAPILayer
+  PUBLIC
+  XR_USE_PLATFORM_WIN32=1
+)
 add_version_metadata(HTCCAPILayer)
 
 target_link_libraries(

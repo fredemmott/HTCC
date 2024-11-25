@@ -316,19 +316,26 @@ static XrResult xrGetInstanceProcAddr(
 
 #define IT(x) \
   if (name == #x) { \
-    if ( \
-      name == "xrCreateHandTrackerEXT" \
-      && !Environment::App_Enabled_XR_EXT_hand_tracking) { \
-      DebugPrint( \
-        "Attempting to get pointer for {}, but extension is not enabled", \
-        name); \
-      return XR_ERROR_FUNCTION_UNSUPPORTED; \
-    } \
     *function = reinterpret_cast<PFN_xrVoidFunction>(&x); \
     return XR_SUCCESS; \
   }
+#define IT_EXT(ext, fun) \
+  if (name == #fun && !Environment::App_Enabled_##ext) { \
+    return XR_ERROR_FUNCTION_UNSUPPORTED; \
+  } \
+  IT(fun)
   INTERCEPTED_OPENXR_FUNCS
 #undef IT
+#undef IT_EXT
+
+#define IT(fun)
+#define IT_EXT(ext, fun) \
+  if (name == #fun && !Environment::App_Enabled_##ext) { \
+    return XR_ERROR_FUNCTION_UNSUPPORTED; \
+  }
+  NEXT_OPENXR_FUNCS;
+#undef IT
+#undef IT_EXT
 
   if (gNext) {
     const auto result
@@ -374,6 +381,9 @@ static XrResult xrCreateApiLayerInstance(
       const std::string_view ext {info.enabledExtensionNames[i]};
       if (ext == XR_EXT_HAND_TRACKING_EXTENSION_NAME) {
         Environment::App_Enabled_XR_EXT_hand_tracking = true;
+      }
+      if (ext == XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME) {
+        Environment::App_Enabled_XR_KHR_win32_convert_performance_counter_time = true;
       }
     }
   }
