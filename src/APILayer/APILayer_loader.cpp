@@ -45,14 +45,32 @@ static_assert(OpenXRLayerName.size() <= XR_MAX_API_LAYER_NAME_SIZE);
 static std::shared_ptr<OpenXRNext> gNext;
 static APILayer* gInstance = nullptr;
 
+// Report to higher layers and apps that OpenXR Hand Tracking is unavailable;
+// HTCC should be the only thing using it.
 static XrResult xrGetSystemProperties(
   XrInstance instance,
   XrSystemId systemId,
   XrSystemProperties* properties) {
-  if (gInstance) {
-    return gInstance->xrGetSystemProperties(instance, systemId, properties);
+  // Not passing to `gInstance` as we only create the APILayer object once
+  // we have a session, but xrGetSystemProperties() can be called before a
+  // session is created
+
+  const auto result = gNext->xrGetSystemProperties(instance, systemId, properties);
+  if (!XR_SUCCEEDED(result)) {
+    return result;
   }
-  return gNext->xrGetSystemProperties(instance, systemId, properties);
+
+  auto next = reinterpret_cast<XrBaseOutStructure*>(properties->next);
+  while (next) {
+    if (next->type == XR_TYPE_SYSTEM_HAND_TRACKING_PROPERTIES_EXT) {
+      auto htp = reinterpret_cast<XrSystemHandTrackingPropertiesEXT*>(next);
+      DebugPrint("Reporting that the system does not support hand tracking");
+      htp->supportsHandTracking = XR_FALSE;
+    }
+    next = reinterpret_cast<XrBaseOutStructure*>(next->next);
+  }
+
+  return result;
 }
 
 static XrResult xrCreateHandTrackerEXT(

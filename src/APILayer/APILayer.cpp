@@ -205,30 +205,6 @@ XrResult APILayer::xrCreateActionSpace(
   return mOpenXR->xrCreateActionSpace(session, createInfo, space);
 }
 
-// Report to higher layers and apps that OpenXR Hand Tracking is unavailable;
-// HTCC should be the only thing using it.
-XrResult APILayer::xrGetSystemProperties(
-  XrInstance instance,
-  XrSystemId systemId,
-  XrSystemProperties* properties) {
-  const auto nextResult
-    = mOpenXR->xrGetSystemProperties(instance, systemId, properties);
-  if (!XR_SUCCEEDED(nextResult)) {
-    return nextResult;
-  }
-
-  auto next = reinterpret_cast<XrBaseOutStructure*>(properties->next);
-  while (next) {
-    if (next->type == XR_TYPE_SYSTEM_HAND_TRACKING_PROPERTIES_EXT) {
-      auto htp = reinterpret_cast<XrSystemHandTrackingPropertiesEXT*>(next);
-      htp->supportsHandTracking = XR_FALSE;
-    }
-    next = reinterpret_cast<XrBaseOutStructure*>(next->next);
-  }
-
-  return nextResult;
-}
-
 XrResult APILayer::xrCreateHandTrackerEXT(
   XrSession session,
   const XrHandTrackerCreateInfoEXT* createInfo,
