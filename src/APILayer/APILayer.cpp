@@ -50,6 +50,12 @@ APILayer::APILayer(
   const std::shared_ptr<OpenXRNext>& next)
   : mOpenXR(next), mInstance(instance) {
   DebugPrint("{}()", __FUNCTION__);
+
+  if (!Environment::Have_XR_KHR_win32_convert_performance_counter_time) {
+    return;
+  }
+
+
   auto oxr = next.get();
 
   XrReferenceSpaceCreateInfo referenceSpace {

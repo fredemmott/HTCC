@@ -379,6 +379,7 @@ static XrResult xrCreateApiLayerInstance(
     const auto nextResult = layerInfo->nextInfo->nextCreateApiLayerInstance(
       &info, &nextLayerInfo, instance);
     if (XR_SUCCEEDED(nextResult)) {
+      Environment::Have_XR_KHR_win32_convert_performance_counter_time = true;
       Environment::Have_XR_EXT_HandTracking = true;
       Environment::Have_XR_FB_HandTracking_Aim = true;
       gNext = std::make_shared<OpenXRNext>(
@@ -403,6 +404,7 @@ static XrResult xrCreateApiLayerInstance(
     const auto nextResult = layerInfo->nextInfo->nextCreateApiLayerInstance(
       &info, &nextLayerInfo, instance);
     if (XR_SUCCEEDED(nextResult)) {
+      Environment::Have_XR_KHR_win32_convert_performance_counter_time = true;
       Environment::Have_XR_EXT_HandTracking = true;
       gNext = std::make_shared<OpenXRNext>(
         *instance, layerInfo->nextInfo->nextGetInstanceProcAddr);
@@ -413,12 +415,40 @@ static XrResult xrCreateApiLayerInstance(
 
     if (nextResult != XR_ERROR_EXTENSION_NOT_PRESENT) {
       DebugPrint(
-        "bare-minimum xrCreateApiLayerInstance failed: {}", nextResult);
+        "xrCreateInstance without {} failed: {}", XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME, nextResult);
       return nextResult;
     }
   }
 
-  ///// Attempt 3: nope, no hand tracking. Just pass through.
+  ///// Attempt 3: without XR_EXT_hand_tracking
+  // This is useful when using HTCC as a PointCtrl driver for MSFS
+  //
+  // We still need XR_KHR_win32_convert_performance_counter_time
+  enabledExtensions.erase(std::ranges::find_if(enabledExtensions, [](auto it) {
+    return std::string_view {it} == XR_EXT_HAND_TRACKING_EXTENSION_NAME;
+  }));
+  info.enabledExtensionCount = enabledExtensions.size();
+  info.enabledExtensionNames = enabledExtensions.data();
+  {
+    const auto nextResult = layerInfo->nextInfo->nextCreateApiLayerInstance(
+      &info, &nextLayerInfo, instance);
+    if (XR_SUCCEEDED(nextResult)) {
+      Environment::Have_XR_KHR_win32_convert_performance_counter_time = true;
+      gNext = std::make_shared<OpenXRNext>(
+        *instance, layerInfo->nextInfo->nextGetInstanceProcAddr);
+      DebugPrint(
+        "Initialized without {}", XR_EXT_HAND_TRACKING_EXTENSION_NAME);
+      return nextResult;
+    }
+
+    if (nextResult != XR_ERROR_EXTENSION_NOT_PRESENT) {
+      DebugPrint(
+        "xrCreateInstance without {} failed: {}", XR_EXT_HAND_TRACKING_EXTENSION_NAME, nextResult);
+      return nextResult;
+    }
+  }
+
+  ///// Attempt 4: nope, nothing. Just pass through.
   const auto nextResult = layerInfo->nextInfo->nextCreateApiLayerInstance(
     originalInfo, &nextLayerInfo, instance);
   if (XR_SUCCEEDED(nextResult)) {
