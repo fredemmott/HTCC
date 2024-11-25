@@ -394,9 +394,9 @@ static XrResult xrCreateApiLayerInstance(
   }
 
   ///// Attempt 2: without XR_FB_hand_tracking_aim
-  enabledExtensions.erase(
-    std::ranges::find(
-      enabledExtensions, XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME));
+  enabledExtensions.erase(std::ranges::find_if(enabledExtensions, [](auto it) {
+    return std::string_view {it} == XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME;
+  }));
   info.enabledExtensionCount = enabledExtensions.size();
   info.enabledExtensionNames = enabledExtensions.data();
   {
@@ -404,7 +404,6 @@ static XrResult xrCreateApiLayerInstance(
       &info, &nextLayerInfo, instance);
     if (XR_SUCCEEDED(nextResult)) {
       Environment::Have_XR_EXT_HandTracking = true;
-      Environment::Have_XR_FB_HandTracking_Aim = false;
       gNext = std::make_shared<OpenXRNext>(
         *instance, layerInfo->nextInfo->nextGetInstanceProcAddr);
       DebugPrint(
@@ -424,6 +423,8 @@ static XrResult xrCreateApiLayerInstance(
     originalInfo, &nextLayerInfo, instance);
   if (XR_SUCCEEDED(nextResult)) {
     DebugPrint("No-op passthrough xrCreateAPILayerInstance succeeded");
+    gNext = std::make_shared<OpenXRNext>(
+      *instance, layerInfo->nextInfo->nextGetInstanceProcAddr);
   } else {
     DebugPrint(
       "No-op passthrough xrCreateApiLayerInstance failed: {}", nextResult);
