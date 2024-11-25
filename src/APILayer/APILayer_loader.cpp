@@ -45,185 +45,19 @@ static_assert(OpenXRLayerName.size() <= XR_MAX_API_LAYER_NAME_SIZE);
 static std::shared_ptr<OpenXRNext> gNext;
 static APILayer* gInstance = nullptr;
 
-// Report to higher layers and apps that OpenXR Hand Tracking is unavailable;
-// HTCC should be the only thing using it.
-static XrResult xrGetSystemProperties(
-  XrInstance instance,
-  XrSystemId systemId,
-  XrSystemProperties* properties) {
-  // Not passing to `gInstance` as we only create the APILayer object once
-  // we have a session, but xrGetSystemProperties() can be called before a
-  // session is created
+template <class F, auto Next, auto Layer>
+struct XRFuncDelegator;
 
-  const auto result = gNext->xrGetSystemProperties(instance, systemId, properties);
-  if (XR_FAILED(result)) {
-    return result;
-  }
-  if (!Config::Enabled) {
-    return result;
-  }
-
-  auto next = reinterpret_cast<XrBaseOutStructure*>(properties->next);
-  while (next) {
-    if (next->type == XR_TYPE_SYSTEM_HAND_TRACKING_PROPERTIES_EXT) {
-      auto htp = reinterpret_cast<XrSystemHandTrackingPropertiesEXT*>(next);
-      DebugPrint("Reporting that the system does not support hand tracking");
-      htp->supportsHandTracking = XR_FALSE;
+template <class TRet, class... TArgs, auto Next, auto Layer>
+struct XRFuncDelegator<TRet (*)(TArgs...), Next, Layer> {
+  static TRet Invoke(TArgs... args) noexcept {
+    if (Config::Enabled && gInstance) {
+      return std::invoke(Layer, gInstance, args...);
     }
-    next = reinterpret_cast<XrBaseOutStructure*>(next->next);
+    auto& next = gNext.get()->*Next;
+    return std::invoke(next, args...);
   }
-
-  return result;
-}
-
-static XrResult xrCreateHandTrackerEXT(
-  XrSession session,
-  const XrHandTrackerCreateInfoEXT* createInfo,
-  XrHandTrackerEXT* handTracker) {
-  if (gInstance) {
-    return gInstance->xrCreateHandTrackerEXT(session, createInfo, handTracker);
-  }
-  return gNext->xrCreateHandTrackerEXT(session, createInfo, handTracker);
-}
-
-static XrResult xrWaitFrame(
-  XrSession session,
-  const XrFrameWaitInfo* info,
-  XrFrameState* state) {
-  if (gInstance) {
-    return gInstance->xrWaitFrame(session, info, state);
-  }
-  return gNext->xrWaitFrame(session, info, state);
-}
-
-static XrResult xrSuggestInteractionProfileBindings(
-  XrInstance instance,
-  const XrInteractionProfileSuggestedBinding* suggestedBindings) {
-  if (gInstance) {
-    return gInstance->xrSuggestInteractionProfileBindings(
-      instance, suggestedBindings);
-  }
-  return gNext->xrSuggestInteractionProfileBindings(
-    instance, suggestedBindings);
-}
-
-static XrResult xrGetActionStateBoolean(
-  XrSession session,
-  const XrActionStateGetInfo* getInfo,
-  XrActionStateBoolean* state) {
-  if (gInstance) {
-    return gInstance->xrGetActionStateBoolean(session, getInfo, state);
-  }
-  return gNext->xrGetActionStateBoolean(session, getInfo, state);
-}
-
-static XrResult xrGetActionStateFloat(
-  XrSession session,
-  const XrActionStateGetInfo* getInfo,
-  XrActionStateFloat* state) {
-  if (gInstance) {
-    return gInstance->xrGetActionStateFloat(session, getInfo, state);
-  }
-  return gNext->xrGetActionStateFloat(session, getInfo, state);
-}
-
-static XrResult xrGetActionStatePose(
-  XrSession session,
-  const XrActionStateGetInfo* getInfo,
-  XrActionStatePose* state) {
-  if (gInstance) {
-    return gInstance->xrGetActionStatePose(session, getInfo, state);
-  }
-  return gNext->xrGetActionStatePose(session, getInfo, state);
-}
-
-static XrResult xrGetCurrentInteractionProfile(
-  XrSession session,
-  XrPath topLevelUserPath,
-  XrInteractionProfileState* interactionProfile) {
-  if (gInstance) {
-    return gInstance->xrGetCurrentInteractionProfile(
-      session, topLevelUserPath, interactionProfile);
-  }
-  return gNext->xrGetCurrentInteractionProfile(
-    session, topLevelUserPath, interactionProfile);
-}
-
-static XrResult xrLocateSpace(
-  XrSpace space,
-  XrSpace baseSpace,
-  XrTime time,
-  XrSpaceLocation* location) {
-  if (gInstance) {
-    return gInstance->xrLocateSpace(space, baseSpace, time, location);
-  }
-  return gNext->xrLocateSpace(space, baseSpace, time, location);
-}
-
-static XrResult xrSyncActions(
-  XrSession session,
-  const XrActionsSyncInfo* syncInfo) {
-  if (gInstance) {
-    return gInstance->xrSyncActions(session, syncInfo);
-  }
-  return gNext->xrSyncActions(session, syncInfo);
-}
-
-static XrResult xrPollEvent(XrInstance instance, XrEventDataBuffer* eventData) {
-  if (gInstance) {
-    return gInstance->xrPollEvent(instance, eventData);
-  }
-  return gNext->xrPollEvent(instance, eventData);
-}
-
-static XrResult xrCreateAction(
-  XrActionSet actionSet,
-  const XrActionCreateInfo* createInfo,
-  XrAction* action) {
-  if (gInstance) {
-    return gInstance->xrCreateAction(actionSet, createInfo, action);
-  }
-  return gNext->xrCreateAction(actionSet, createInfo, action);
-}
-
-static XrResult xrCreateActionSpace(
-  XrSession session,
-  const XrActionSpaceCreateInfo* createInfo,
-  XrSpace* space) {
-  if (gInstance) {
-    return gInstance->xrCreateActionSpace(session, createInfo, space);
-  }
-  return gNext->xrCreateActionSpace(session, createInfo, space);
-}
-
-static XrResult xrCreateSession(
-  XrInstance instance,
-  const XrSessionCreateInfo* createInfo,
-  XrSession* session) {
-  static uint32_t sCount = 0;
-  DebugPrint("{}(): #{}", __FUNCTION__, sCount++);
-  auto nextResult = gNext->xrCreateSession(instance, createInfo, session);
-  if (XR_FAILED(nextResult)) {
-    DebugPrint("Failed to create OpenXR session: {}", nextResult);
-    return nextResult;
-  }
-
-  if (!Config::Enabled) {
-    DebugPrint("Not enabled, doing nothing");
-    return nextResult;
-  }
-
-  DebugPrint("Initializing API layer");
-  gInstance = new APILayer(instance, *session, gNext);
-
-  return nextResult;
-}
-
-static XrResult xrDestroySession(XrSession session) {
-  delete gInstance;
-  gInstance = nullptr;
-  return gNext->xrDestroySession(session);
-}
+};
 
 static XrResult xrDestroyInstance(XrInstance instance) {
   delete gInstance;
@@ -248,14 +82,14 @@ static XrResult xrEnumerateInstanceExtensionProperties(
 
   // As we don't implement any extensions, just delegate to the runtime or next
   // layer.
-  if (gNext && gNext->have_xrEnumerateInstanceExtensionProperties()) {
+  if (gNext) {
     // We *could* strip the hand tracking extensions here, but we're not
     // - applications wouldn't see this, as the loader just uses the manifest
     // files instead
     // - we can just make the extension functions report failure
     // - probably best to have consistent behavior for applications and API
     // layers
-    return gNext->raw_xrEnumerateInstanceExtensionProperties(
+    return gNext->xrEnumerateInstanceExtensionProperties(
       layerName, propertyCapacityInput, propertyCountOutput, properties);
   }
 
@@ -319,6 +153,15 @@ static XrResult xrGetInstanceProcAddr(
     *function = reinterpret_cast<PFN_xrVoidFunction>(&x); \
     return XR_SUCCESS; \
   }
+  SPECIAL_INTERCEPTED_OPENXR_FUNCS
+#undef IT
+
+#define IT(x) \
+  if (name == #x) { \
+    *function = reinterpret_cast<PFN_xrVoidFunction>( \
+      &XRFuncDelegator<PFN_##x, &OpenXRNext::x, &APILayer::x>::Invoke); \
+    return XR_SUCCESS; \
+  }
 #define IT_EXT(ext, fun) \
   if (name == #fun && !Environment::App_Enabled_##ext) { \
     return XR_ERROR_FUNCTION_UNSUPPORTED; \
@@ -339,7 +182,7 @@ static XrResult xrGetInstanceProcAddr(
 
   if (gNext) {
     const auto result
-      = gNext->raw_xrGetInstanceProcAddr(instance, name_cstr, function);
+      = gNext->xrGetInstanceProcAddr(instance, name_cstr, function);
     if (result != XR_SUCCESS && Config::VerboseDebug >= 1) {
       DebugPrint(
         "xrGetInstanceProcAddr for instance {:#016x} failed: {}",
@@ -383,7 +226,8 @@ static XrResult xrCreateApiLayerInstance(
         Environment::App_Enabled_XR_EXT_hand_tracking = true;
       }
       if (ext == XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME) {
-        Environment::App_Enabled_XR_KHR_win32_convert_performance_counter_time = true;
+        Environment::App_Enabled_XR_KHR_win32_convert_performance_counter_time
+          = true;
       }
     }
   }

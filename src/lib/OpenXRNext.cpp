@@ -25,20 +25,15 @@
 
 namespace HandTrackedCockpitClicking {
 
-OpenXRNext::OpenXRNext(XrInstance instance, PFN_xrGetInstanceProcAddr getNext) {
-  mInstance = instance;
-  m_xrGetInstanceProcAddr = getNext;
+OpenXRNext::OpenXRNext(XrInstance instance, PFN_xrGetInstanceProcAddr getNext)
+  :
 #define IT_EXT(ext, func) IT(func)
-#define IT(func) \
-  if( \
-    getNext( \
-      instance, #func, reinterpret_cast<PFN_xrVoidFunction*>(&this->m_##func)) \
-    != XR_SUCCESS) { \
-    m_##func = nullptr; \
-  }
-  NEXT_OPENXR_FUNCS
-#undef IT
+#define IT(func) func(instance, getNext),
+NEXT_OPENXR_FUNCS
 #undef IT_EXT
+#undef IT
+xrGetInstanceProcAddr(getNext)
+{
 }
 
 }// namespace HandTrackedCockpitClicking

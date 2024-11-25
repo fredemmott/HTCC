@@ -26,6 +26,7 @@
 #include <openxr/openxr.h>
 
 #include <memory>
+#include <unordered_set>
 
 #include "FrameInfo.h"
 #include "InputState.h"
@@ -42,8 +43,20 @@ struct FrameInfo;
 class APILayer final {
  public:
   APILayer() = delete;
-  APILayer(XrInstance, XrSession, const std::shared_ptr<OpenXRNext>&);
+  APILayer(XrInstance, const std::shared_ptr<OpenXRNext>&);
   virtual ~APILayer();
+
+XrResult xrGetSystemProperties(
+  XrInstance instance,
+  XrSystemId systemId,
+  XrSystemProperties* properties);
+
+  XrResult xrCreateSession(
+    XrInstance instance,
+    const XrSessionCreateInfo* createInfo,
+    XrSession* session);
+
+  XrResult xrDestroySession(XrSession session);
 
   XrResult xrCreateHandTrackerEXT(
     XrSession session,
@@ -95,6 +108,9 @@ class APILayer final {
     XrTime time,
     XrSpaceLocation* location);
 
+  XrResult xrAttachSessionActionSets(
+    XrSession,
+    const XrSessionActionSetsAttachInfo*);
   XrResult xrSyncActions(XrSession session, const XrActionsSyncInfo* syncInfo);
 
   XrResult xrPollEvent(XrInstance instance, XrEventDataBuffer* eventData);
@@ -118,6 +134,10 @@ class APILayer final {
   XrInstance mInstance {};
   XrSpace mViewSpace {};
   XrSpace mLocalSpace {};
+
+  std::unordered_map<XrActionSet, std::unordered_set<XrAction>>
+    mActionSetActions;
+  std::unordered_set<XrAction> mAttachedActions;
 
   std::unique_ptr<HandTrackingSource> mHandTracking;
   std::unique_ptr<PointCtrlSource> mPointCtrl;

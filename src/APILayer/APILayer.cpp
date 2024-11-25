@@ -46,16 +46,49 @@ namespace HandTrackedCockpitClicking {
 
 APILayer::APILayer(
   XrInstance instance,
-  XrSession session,
   const std::shared_ptr<OpenXRNext>& next)
   : mOpenXR(next), mInstance(instance) {
   DebugPrint("{}()", __FUNCTION__);
 
-  if (!Environment::Have_XR_KHR_win32_convert_performance_counter_time) {
-    return;
+}
+
+// Report to higher layers and apps that OpenXR Hand Tracking is unavailable;
+// HTCC should be the only thing using it.
+XrResult APILayer::xrGetSystemProperties(
+  XrInstance instance,
+  XrSystemId systemId,
+  XrSystemProperties* properties) {
+  const auto result
+    = mOpenXR->xrGetSystemProperties(instance, systemId, properties);
+  if (XR_FAILED(result)) {
+    return result;
   }
 
-  auto oxr = next.get();
+  auto next = reinterpret_cast<XrBaseOutStructure*>(properties->next);
+  while (next) {
+    if (next->type == XR_TYPE_SYSTEM_HAND_TRACKING_PROPERTIES_EXT) {
+      auto htp = reinterpret_cast<XrSystemHandTrackingPropertiesEXT*>(next);
+      DebugPrint("Reporting that the system does not support hand tracking");
+      htp->supportsHandTracking = XR_FALSE;
+    }
+    next = reinterpret_cast<XrBaseOutStructure*>(next->next);
+  }
+
+  return result;
+}
+
+XrResult APILayer::xrCreateSession(XrInstance instance, const XrSessionCreateInfo* createInfo, XrSession* session) {
+  static uint32_t sCount = 0;
+  DebugPrint("{}(): #{}", __FUNCTION__, sCount);
+
+  const auto nextResult = mOpenXR->xrCreateSession(instance, createInfo, session);
+  if (XR_FAILED(nextResult)) {
+    DebugPrint("Failed to create OpenXR session: {}", nextResult);
+    return nextResult;
+  }
+  if (!Environment::Have_XR_KHR_win32_convert_performance_counter_time) {
+    return nextResult;
+  }
 
   XrReferenceSpaceCreateInfo referenceSpace {
     .type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
@@ -64,23 +97,23 @@ APILayer::APILayer(
     .poseInReferenceSpace = XR_POSEF_IDENTITY,
   };
 
-  if (!oxr->check_xrCreateReferenceSpace(
-        session, &referenceSpace, &mViewSpace)) {
+  if (!mOpenXR->check_xrCreateReferenceSpace(
+        *session, &referenceSpace, &mViewSpace)) {
     DebugPrint("Failed to create view space");
-    return;
+    return nextResult;
   }
   referenceSpace.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL;
-  if (!oxr->check_xrCreateReferenceSpace(
-        session, &referenceSpace, &mLocalSpace)) {
+  if (!mOpenXR->check_xrCreateReferenceSpace(
+        *session, &referenceSpace, &mLocalSpace)) {
     DebugPrint("Failed to create world space");
-    return;
+    return nextResult;
   }
 
   if (
     Environment::Have_XR_EXT_hand_tracking
     && (Config::PointerSource == PointerSource::OpenXRHandTracking)) {
     mHandTracking = std::make_unique<HandTrackingSource>(
-      next, instance, session, mViewSpace, mLocalSpace);
+      mOpenXR, instance, *session, mViewSpace, mLocalSpace);
   }
   mPointCtrl = std::make_unique<PointCtrlSource>();
 
@@ -88,10 +121,25 @@ APILayer::APILayer(
     VirtualControllerSink::IsActionSink()
     || VirtualControllerSink::IsPointerSink()) {
     mVirtualController = std::make_unique<VirtualControllerSink>(
-      next, instance, session, mViewSpace);
+      mOpenXR, instance, *session, mViewSpace);
   }
 
   DebugPrint("Fully initialized.");
+  return nextResult;
+}
+
+XrResult APILayer::xrDestroySession(XrSession session) {
+  if (mViewSpace) {
+    mOpenXR->xrDestroySpace(mViewSpace);
+    mViewSpace = {};
+  }
+  if (mLocalSpace) {
+    mOpenXR->xrDestroySpace(mLocalSpace);
+    mLocalSpace = {};
+  }
+  mHandTracking.reset();
+  mVirtualController.reset();
+  return mOpenXR->xrDestroySession(session);
 }
 
 APILayer::~APILayer() {
@@ -107,6 +155,12 @@ XrResult APILayer::xrSuggestInteractionProfileBindings(
   XrInstance instance,
   const XrInteractionProfileSuggestedBinding* suggestedBindings) {
   if (mVirtualController) {
+    for (uint32_t i = 0; i < suggestedBindings->countSuggestedBindings; ++i) {
+      const auto& [action, binding] = suggestedBindings->suggestedBindings[i];
+      if (mAttachedActions.contains(action)) {
+        return XR_ERROR_ACTIONSETS_ALREADY_ATTACHED;
+      }
+    }
     return mVirtualController->xrSuggestInteractionProfileBindings(
       instance, suggestedBindings);
   }
@@ -155,6 +209,25 @@ XrResult APILayer::xrLocateSpace(
   return mOpenXR->xrLocateSpace(space, baseSpace, time, location);
 }
 
+XrResult APILayer::xrAttachSessionActionSets(XrSession session, const XrSessionActionSetsAttachInfo* attachInfo) {
+  DebugPrint("In APILayer::xrAttachSessionActionSets");
+  const auto result = mOpenXR->xrAttachSessionActionSets(session, attachInfo);
+  if (XR_FAILED(result)) {
+    return result;
+  }
+  for (uint32_t i = 0; i < attachInfo->countActionSets; ++i) {
+    const auto actionSet = attachInfo->actionSets[i];
+    if (mActionSetActions.contains(actionSet)) {
+      DebugPrint("Have action set");
+      for (auto&& action: mActionSetActions.at(actionSet)) {
+        DebugPrint("Attaching action {}", reinterpret_cast<uint64_t>(action));
+        mAttachedActions.emplace(action);
+      }
+    }
+  }
+  return result;
+}
+
 XrResult APILayer::xrSyncActions(
   XrSession session,
   const XrActionsSyncInfo* syncInfo) {
@@ -188,11 +261,24 @@ XrResult APILayer::xrGetCurrentInteractionProfile(
 XrResult APILayer::xrCreateAction(
   XrActionSet actionSet,
   const XrActionCreateInfo* createInfo,
-  XrAction* space) {
-  if (mVirtualController) {
-    return mVirtualController->xrCreateAction(actionSet, createInfo, space);
+  XrAction* action) {
+  DebugPrint("In xrCreateAction");
+  const auto result = mVirtualController ?
+    mVirtualController->xrCreateAction(actionSet, createInfo, action) :
+  mOpenXR->xrCreateAction(actionSet, createInfo, action);
+  if (XR_FAILED(result)) {
+    return result;
   }
-  return mOpenXR->xrCreateAction(actionSet, createInfo, space);
+
+  if (mActionSetActions.contains(actionSet)) {
+    DebugPrint("Appending action");
+    mActionSetActions.at(actionSet).emplace(*action);
+  } else {
+    DebugPrint("Initialization to action");
+    mActionSetActions[actionSet] = { *action };
+  }
+
+  return result;
 }
 
 XrResult APILayer::xrCreateActionSpace(
