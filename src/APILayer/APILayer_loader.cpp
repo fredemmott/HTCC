@@ -298,6 +298,9 @@ static XrResult xrGetInstanceProcAddr(
     if ( \
       name == "xrCreateHandTrackerEXT" \
       && !Environment::App_Enabled_XR_EXT_hand_tracking) { \
+      DebugPrint( \
+        "Attempting to get pointer for {}, but extension is not enabled", \
+        name); \
       return XR_ERROR_FUNCTION_UNSUPPORTED; \
     } \
     *function = reinterpret_cast<PFN_xrVoidFunction>(&x); \
@@ -346,41 +349,49 @@ static XrResult xrCreateApiLayerInstance(
   XrInstanceCreateInfo info {XR_TYPE_INSTANCE_CREATE_INFO};
   if (originalInfo) {
     info = *originalInfo;
-  }
-
-  std::vector<const char*> enabledExtensions;
-  if (Config::Enabled) {
-    DebugPrint("Original extensions:");
-    for (auto i = 0; i < originalInfo->enabledExtensionCount; ++i) {
-      DebugPrint("- {}", originalInfo->enabledExtensionNames[i]);
-      enabledExtensions.push_back(originalInfo->enabledExtensionNames[i]);
-    }
-
-    enabledExtensions.push_back(
-      XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME);
-    enabledExtensions.push_back(XR_EXT_HAND_TRACKING_EXTENSION_NAME);
-    enabledExtensions.push_back(XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME);
-
-    {
-      auto last
-        = std::unique(enabledExtensions.begin(), enabledExtensions.end());
-      enabledExtensions.erase(last, enabledExtensions.end());
-    }
-
-    DebugPrint("Requesting extensions:");
-    for (const auto& ext: enabledExtensions) {
-      DebugPrint("- {}", ext);
-      if (std::string_view { ext } == XR_EXT_HAND_TRACKING_EXTENSION_NAME) {
+    for (uint32_t i = 0; i < info.enabledExtensionCount; ++i) {
+      const std::string_view ext {info.enabledExtensionNames[i]};
+      if (ext == XR_EXT_HAND_TRACKING_EXTENSION_NAME) {
         Environment::App_Enabled_XR_EXT_hand_tracking = true;
       }
     }
-
-    info.enabledExtensionCount = enabledExtensions.size();
-    info.enabledExtensionNames = enabledExtensions.data();
   }
-
   XrApiLayerCreateInfo nextLayerInfo = *layerInfo;
   nextLayerInfo.nextInfo = layerInfo->nextInfo->next;
+
+  if (!Config::Enabled) {
+    const auto result = layerInfo->nextInfo->nextCreateApiLayerInstance(
+      &info, &nextLayerInfo, instance);
+    if (XR_SUCCEEDED(result)) {
+      DebugPrint("Created passthru instance as disabled by config");
+      gNext = std::make_shared<OpenXRNext>(
+        *instance, layerInfo->nextInfo->nextGetInstanceProcAddr);
+    }
+    return result;
+  }
+
+  std::vector<const char*> enabledExtensions;
+  for (auto i = 0; i < originalInfo->enabledExtensionCount; ++i) {
+    enabledExtensions.push_back(originalInfo->enabledExtensionNames[i]);
+  }
+
+  enabledExtensions.push_back(
+    XR_KHR_WIN32_CONVERT_PERFORMANCE_COUNTER_TIME_EXTENSION_NAME);
+  enabledExtensions.push_back(XR_EXT_HAND_TRACKING_EXTENSION_NAME);
+  enabledExtensions.push_back(XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME);
+
+  {
+    auto last = std::unique(enabledExtensions.begin(), enabledExtensions.end());
+    enabledExtensions.erase(last, enabledExtensions.end());
+  }
+
+  DebugPrint("Requesting extensions:");
+  for (const auto& ext: enabledExtensions) {
+    DebugPrint("- {}", ext);
+  }
+
+  info.enabledExtensionCount = enabledExtensions.size();
+  info.enabledExtensionNames = enabledExtensions.data();
 
   //// Attempt 1: all 3 extensions
   {
