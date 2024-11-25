@@ -56,7 +56,10 @@ static XrResult xrGetSystemProperties(
   // session is created
 
   const auto result = gNext->xrGetSystemProperties(instance, systemId, properties);
-  if (!XR_SUCCEEDED(result)) {
+  if (XR_FAILED(result)) {
+    return result;
+  }
+  if (!Config::Enabled) {
     return result;
   }
 
@@ -200,20 +203,20 @@ static XrResult xrCreateSession(
   static uint32_t sCount = 0;
   DebugPrint("{}(): #{}", __FUNCTION__, sCount++);
   auto nextResult = gNext->xrCreateSession(instance, createInfo, session);
-  if (nextResult != XR_SUCCESS) {
+  if (XR_FAILED(nextResult)) {
     DebugPrint("Failed to create OpenXR session: {}", nextResult);
     return nextResult;
   }
 
   if (!Config::Enabled) {
     DebugPrint("Not enabled, doing nothing");
-    return XR_SUCCESS;
+    return nextResult;
   }
 
   DebugPrint("Initializing API layer");
   gInstance = new APILayer(instance, *session, gNext);
 
-  return XR_SUCCESS;
+  return nextResult;
 }
 
 static XrResult xrDestroySession(XrSession session) {
