@@ -22,7 +22,8 @@ If you choose to use Virtual Desktop instead of Link/AirLink:
 
 - you must use VDXR
 - turn on 'send tracking data' so that your PC - and HTCC - receive the hand tracking data
-- turn *off* hand tracking in Virtual Desktop, otherwise its' own controller emulation will be used instead. It is possible to mix both, but complicated, and makes it much harder to diagnose issues
+- leave hand tracking in Virtual Desktop turned *on*
+- if you have a Quest Pro, as of 2024-11-26, Virtual Desktop can not enable hand tracking unless face and body tracking are also enabled on your headset
 
 ## Sleep/wake
 
