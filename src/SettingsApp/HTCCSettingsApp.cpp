@@ -120,8 +120,10 @@ class HTCCSettingsApp {
 
     UINT d3dFlags = D3D11_CREATE_DEVICE_SINGLETHREADED;
     UINT dxgiFlags = 0;
+#ifndef NDEBUG
     d3dFlags |= D3D11_CREATE_DEVICE_DEBUG;
     dxgiFlags |= DXGI_CREATE_FACTORY_DEBUG;
+#endif
 
     THROW_IF_FAILED(D3D11CreateDevice(
       nullptr,
