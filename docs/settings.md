@@ -350,6 +350,8 @@ STRING: OpenXR path to the interaction profile of the emulated controllers.
 
 ### Quirk_Conformance_ExtensionCount
 
+*Removed for v1.3.5 and above*
+
 DWORD:
 - 1: enabled (default)
 - 0: disabled
