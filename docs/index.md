@@ -33,17 +33,22 @@ If you have a PointCTRL:
 
 ## Hardware Compatibility
 
-| Hardware | Compatible? | Notes |
-|--------------|-------------------|----|
-| Quest 2      | ✅ | Requires Oculus Developer Mode or Virtual Desktop |
-| Quest Pro    | ✅ | Requires Oculus Developer Mode or Virtual Desktop |
-| Quest 3      | ✅ | Requires Oculus Developer Mode or Virtual Desktop |
-| PointCTRL    | ✅ | Requires custom firmware |
-| Ultraleap    | ✅ | Includes Pimax hand tracking modules |
-| All others   | ❌ | Includes HP Reverb G2, Varjo Aero |
+The following hand trackers are supported:
+
+| Tracker                    | Compatible? | Notes                                             |
+|----------------------------|-------------|---------------------------------------------------|
+| Quest 2                    | ✅          | Requires Oculus Developer Mode or Virtual Desktop |
+| Quest Pro                  | ✅          | Requires Oculus Developer Mode or Virtual Desktop |
+| Quest 3                    | ✅          | Requires Oculus Developer Mode or Virtual Desktop |
+| PointCTRL                  | ✅          | Requires custom firmware                          |
+| Ultraleap                  | ✅          | Includes Pimax hand tracking modules              |
+| Other OpenXR hand trackers | 🧪          | untested, but *should* work                       |
+| All others                 | ❌          | Includes HP Reverb G2, Varjo Aero                 |
 
 - **The HP Reverb G2 does not have the required hardware or driver support**
 - **The Varjo Aero does not have the required hardware support**
+- Unlisted hand trackers *may* work if they support `XR_EXT_hand_tracking`
+- All headsets (including the G2 and Aero) can be used with HTCC if you have additional hardware that is compatible, such as an Ultraleap or PointCtrl.
 
 PointCTRL can be used by themselves, or in combination with any other device; for example, you can point with Quest hand tracking, but clickwith the PointCTRL FCUs.
 
