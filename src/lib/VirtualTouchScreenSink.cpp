@@ -31,7 +31,7 @@
 namespace HandTrackedCockpitClicking {
 
 VirtualTouchScreenSink::VirtualTouchScreenSink(
-  Calibration calibration,
+  std::optional<Calibration> calibration,
   DWORD targetProcessID)
   : mCalibration(calibration), mTargetProcessID(targetProcessID) {
   DebugPrint(
@@ -48,7 +48,7 @@ VirtualTouchScreenSink::VirtualTouchScreenSink(
   XrTime nextDisplayTime,
   XrSpace viewSpace)
   : VirtualTouchScreenSink(
-    CalibrationFromOpenXR(oxr, session, nextDisplayTime, viewSpace).value(),
+    CalibrationFromOpenXR(oxr, session, nextDisplayTime, viewSpace),
     GetCurrentProcessId()) {
 }
 
@@ -271,11 +271,11 @@ bool VirtualTouchScreenSink::RotationToCartesian(
   // Flipped because screen X is left-to-right, which is a rotation around the Y
   // axis
 
-  const auto screenX = mCalibration.mWindowInputFovOrigin0To1.x
-    + (rotation.y / mCalibration.mWindowInputFov.x);
+  const auto screenX = mCalibration->mWindowInputFovOrigin0To1.x
+    + (rotation.y / mCalibration->mWindowInputFov.x);
   // OpenXR has Y origin in bottom left, screeen has it in top left
-  const auto screenY = mCalibration.mWindowInputFovOrigin0To1.y
-    - (rotation.x / mCalibration.mWindowInputFov.y);
+  const auto screenY = mCalibration->mWindowInputFovOrigin0To1.y
+    - (rotation.x / mCalibration->mWindowInputFov.y);
 
   if (screenX < 0 || screenX > 1 || screenY < 0 || screenY > 1) {
     return false;
@@ -315,7 +315,7 @@ void VirtualTouchScreenSink::Update(const InputState& hand) {
   const auto now = std::chrono::steady_clock::now();
   const auto& rotation = hand.mDirection;
   XrVector2f xy {};
-  if (IsPointerSink() && rotation && RotationToCartesian(*rotation, &xy)) {
+  if (IsPointerSink() && mCalibration && rotation && RotationToCartesian(*rotation, &xy)) {
     if (now - mLastWindowCheck > std::chrono::seconds(1)) {
       UpdateMainWindow();
     }

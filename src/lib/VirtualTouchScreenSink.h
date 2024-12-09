@@ -38,7 +38,7 @@ class VirtualTouchScreenSink final {
     XrVector2f mWindowInputFovOrigin0To1 {};
   };
 
-  VirtualTouchScreenSink(Calibration, DWORD targetProcessID);
+  VirtualTouchScreenSink(std::optional<Calibration>, DWORD targetProcessID);
   VirtualTouchScreenSink(
     const std::shared_ptr<OpenXRNext>& oxr,
     XrSession session,
@@ -74,7 +74,7 @@ class VirtualTouchScreenSink final {
   RECT mWindowRect {};
   XrVector2f mScreenSize;
 
-  Calibration mCalibration {};
+  std::optional<Calibration> mCalibration {};
 
   bool mLeftClick {false};
   bool mRightClick {false};
