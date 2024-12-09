@@ -42,6 +42,7 @@ class VirtualTouchScreenSink final {
   VirtualTouchScreenSink(
     const std::shared_ptr<OpenXRNext>& oxr,
     XrSession session,
+    XrViewConfigurationType viewConfigurationType,
     XrTime nextDisplayTime,
     XrSpace viewSpace);
 
@@ -55,6 +56,7 @@ class VirtualTouchScreenSink final {
   static std::optional<Calibration> CalibrationFromOpenXR(
     const std::shared_ptr<OpenXRNext>& oxr,
     XrSession session,
+    XrViewConfigurationType viewConfigurationType,
     XrTime nextDisplayTime,
     XrSpace viewSpace);
 

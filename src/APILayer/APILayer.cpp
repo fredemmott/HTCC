@@ -44,12 +44,9 @@ using namespace DirectX::SimpleMath;
 
 namespace HandTrackedCockpitClicking {
 
-APILayer::APILayer(
-  XrInstance instance,
-  const std::shared_ptr<OpenXRNext>& next)
+APILayer::APILayer(XrInstance instance, const std::shared_ptr<OpenXRNext>& next)
   : mOpenXR(next), mInstance(instance) {
   DebugPrint("{}()", __FUNCTION__);
-
 }
 
 // Report to higher layers and apps that OpenXR Hand Tracking is unavailable;
@@ -77,11 +74,33 @@ XrResult APILayer::xrGetSystemProperties(
   return result;
 }
 
-XrResult APILayer::xrCreateSession(XrInstance instance, const XrSessionCreateInfo* createInfo, XrSession* session) {
+XrResult APILayer::xrBeginSession(
+  XrSession session,
+  const XrSessionBeginInfo* beginInfo) {
+  const auto result = mOpenXR->xrBeginSession(session, beginInfo);
+  if (XR_FAILED(result)) [[unlikely]] {
+    return result;
+  }
+
+  switch (beginInfo->primaryViewConfigurationType) {
+    case XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO:
+    case XR_VIEW_CONFIGURATION_TYPE_PRIMARY_QUAD_VARJO:
+      this->mPrimaryViewConfigurationType
+        = beginInfo->primaryViewConfigurationType;
+  };
+
+  return result;
+}
+
+XrResult APILayer::xrCreateSession(
+  XrInstance instance,
+  const XrSessionCreateInfo* createInfo,
+  XrSession* session) {
   static uint32_t sCount = 0;
   DebugPrint("{}(): #{}", __FUNCTION__, sCount);
 
-  const auto nextResult = mOpenXR->xrCreateSession(instance, createInfo, session);
+  const auto nextResult
+    = mOpenXR->xrCreateSession(instance, createInfo, session);
   if (XR_FAILED(nextResult)) {
     DebugPrint("Failed to create OpenXR session: {}", nextResult);
     return nextResult;
@@ -209,7 +228,9 @@ XrResult APILayer::xrLocateSpace(
   return mOpenXR->xrLocateSpace(space, baseSpace, time, location);
 }
 
-XrResult APILayer::xrAttachSessionActionSets(XrSession session, const XrSessionActionSetsAttachInfo* attachInfo) {
+XrResult APILayer::xrAttachSessionActionSets(
+  XrSession session,
+  const XrSessionActionSetsAttachInfo* attachInfo) {
   const auto result = mOpenXR->xrAttachSessionActionSets(session, attachInfo);
   if (XR_FAILED(result)) {
     return result;
@@ -259,9 +280,9 @@ XrResult APILayer::xrCreateAction(
   XrActionSet actionSet,
   const XrActionCreateInfo* createInfo,
   XrAction* action) {
-  const auto result = mVirtualController ?
-    mVirtualController->xrCreateAction(actionSet, createInfo, action) :
-  mOpenXR->xrCreateAction(actionSet, createInfo, action);
+  const auto result = mVirtualController
+    ? mVirtualController->xrCreateAction(actionSet, createInfo, action)
+    : mOpenXR->xrCreateAction(actionSet, createInfo, action);
   if (XR_FAILED(result)) {
     return result;
   }
@@ -269,7 +290,7 @@ XrResult APILayer::xrCreateAction(
   if (mActionSetActions.contains(actionSet)) {
     mActionSetActions.at(actionSet).emplace(*action);
   } else {
-    mActionSetActions[actionSet] = { *action };
+    mActionSetActions[actionSet] = {*action};
   }
 
   return result;
@@ -310,9 +331,14 @@ XrResult APILayer::xrWaitFrame(
 
   if (
     (!mVirtualTouchScreen)
-    && (VirtualTouchScreenSink::IsActionSink() || VirtualTouchScreenSink::IsPointerSink())) {
+    && (VirtualTouchScreenSink::IsActionSink() || VirtualTouchScreenSink::IsPointerSink())
+    && mPrimaryViewConfigurationType.has_value()) {
     mVirtualTouchScreen = std::make_unique<VirtualTouchScreenSink>(
-      mOpenXR, session, state->predictedDisplayTime, mViewSpace);
+      mOpenXR,
+      session,
+      mPrimaryViewConfigurationType.value(),
+      state->predictedDisplayTime,
+      mViewSpace);
   }
 
   InputState leftHand {XR_HAND_LEFT_EXT};

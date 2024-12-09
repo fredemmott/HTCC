@@ -45,22 +45,29 @@ VirtualTouchScreenSink::VirtualTouchScreenSink(
 VirtualTouchScreenSink::VirtualTouchScreenSink(
   const std::shared_ptr<OpenXRNext>& oxr,
   XrSession session,
+  XrViewConfigurationType viewConfigurationType,
   XrTime nextDisplayTime,
   XrSpace viewSpace)
   : VirtualTouchScreenSink(
-    CalibrationFromOpenXR(oxr, session, nextDisplayTime, viewSpace),
-    GetCurrentProcessId()) {
+      CalibrationFromOpenXR(
+        oxr,
+        session,
+        viewConfigurationType,
+        nextDisplayTime,
+        viewSpace),
+      GetCurrentProcessId()) {
 }
 
 std::optional<VirtualTouchScreenSink::Calibration>
 VirtualTouchScreenSink::CalibrationFromOpenXR(
   const std::shared_ptr<OpenXRNext>& oxr,
   XrSession session,
+  XrViewConfigurationType viewConfigurationType,
   XrTime nextDisplayTime,
   XrSpace viewSpace) {
   XrViewLocateInfo viewLocateInfo {
     .type = XR_TYPE_VIEW_LOCATE_INFO,
-    .viewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO,
+    .viewConfigurationType = viewConfigurationType,
     .displayTime = nextDisplayTime,
     .space = viewSpace,
   };
@@ -315,7 +322,9 @@ void VirtualTouchScreenSink::Update(const InputState& hand) {
   const auto now = std::chrono::steady_clock::now();
   const auto& rotation = hand.mDirection;
   XrVector2f xy {};
-  if (IsPointerSink() && mCalibration && rotation && RotationToCartesian(*rotation, &xy)) {
+  if (
+    IsPointerSink() && mCalibration && rotation
+    && RotationToCartesian(*rotation, &xy)) {
     if (now - mLastWindowCheck > std::chrono::seconds(1)) {
       UpdateMainWindow();
     }

@@ -56,6 +56,10 @@ XrResult xrGetSystemProperties(
     const XrSessionCreateInfo* createInfo,
     XrSession* session);
 
+  XrResult xrBeginSession(
+    XrSession session,
+    const XrSessionBeginInfo* beginInfo);
+
   XrResult xrDestroySession(XrSession session);
 
   XrResult xrCreateHandTrackerEXT(
@@ -134,6 +138,8 @@ XrResult xrGetSystemProperties(
   XrInstance mInstance {};
   XrSpace mViewSpace {};
   XrSpace mLocalSpace {};
+
+  std::optional<XrViewConfigurationType> mPrimaryViewConfigurationType;
 
   std::unordered_map<XrActionSet, std::unordered_set<XrAction>>
     mActionSetActions;

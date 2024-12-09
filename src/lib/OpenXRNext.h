@@ -34,6 +34,7 @@
   IT(xrGetSystemProperties) \
   IT(xrCreateSession) \
   IT(xrDestroySession) \
+  IT(xrBeginSession) \
   IT(xrLocateSpace) \
   IT(xrWaitFrame) \
   IT(xrSuggestInteractionProfileBindings) \
