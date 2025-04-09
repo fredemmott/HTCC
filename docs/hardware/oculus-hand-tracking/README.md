@@ -35,7 +35,7 @@ HTCC reduces the changes of accidental clicks by:
 
 'Wake' hand tracking by waving your hand close to the center of your view. Tracking will 'sleep' for that hand after a few seconds of little movement.
 
-The limits can be tweaked [in the registry](../settings.md) if needed.
+The limits can be tweaked [in the registry](../../settings.md) if needed.
 
 ## FAQ
 
