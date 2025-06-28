@@ -17,5 +17,5 @@ include(openxr.cmake)
 # From vcpkg
 find_package(cppwinrt CONFIG REQUIRED GLOBAL)
 find_package(directxtk CONFIG REQUIRED GLOBAL)
-find_package(imgui CONFIG REQUIRED GLOBAL)
+find_package(fredemmott-gui CONFIG REQUIRED GLOBAL)
 find_package(wil CONFIG REQUIRED GLOBAL)

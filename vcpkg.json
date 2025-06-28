@@ -1,15 +1,17 @@
 {
+  "name": "htcc",
+  "version-string": "master",
   "dependencies": [
     "cppwinrt",
     "directxtk",
     "wil",
     {
-      "name": "imgui",
+      "name": "fredemmott-gui",
+      "default-features": false,
       "features": [
-        "dx11-binding",
-        "win32-binding"
+        "direct2d"
       ]
     }
   ],
-  "builtin-baseline": "b2cb0da531c2f1f740045bfe7c4dac59f0b2b69c"
+  "builtin-baseline": "ef7dbf94b9198bc58f45951adcf1f041fcbc5ea0"
 }

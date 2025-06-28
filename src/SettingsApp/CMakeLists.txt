@@ -17,7 +17,7 @@ target_link_libraries(
   System::D3D11
   System::Shell32
   System::User32
-  imgui::imgui
+  fredemmott-gui::fredemmott-gui
 )
 target_link_options(HTCCSettings PRIVATE "/MANIFESTUAC:level='requireAdministrator'")
 sign_target(HTCCSettings)

@@ -1,0 +1,32 @@
+{
+  "name": "fredemmott-gui",
+  "version-string": "main",
+  "builtin-baseline": "ef7dbf94b9198bc58f45951adcf1f041fcbc5ea0",
+  "supports": "windows & static",
+  "dependencies": [
+    "wil",
+    "fmt",
+    "tinyxml",
+    {
+      "name": "yoga",
+      "version>=": "3.2.1"
+    },
+    "vcpkg-cmake"
+  ],
+  "features": {
+    "skia": {
+      "description": "Enable support for Skia",
+      "dependencies": [
+        {
+          "name": "skia",
+          "features": [
+            "direct3d"
+          ]
+        }
+      ]
+    },
+    "direct2d": {
+      "description": "Enable support for Direct2D+DirectWrite+D3D11"
+    }
+  }
+}
