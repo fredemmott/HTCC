@@ -2,7 +2,6 @@
   "name": "htcc",
   "version-string": "master",
   "dependencies": [
-    "cppwinrt",
     "directxtk",
     "wil",
     {

@@ -10,7 +10,6 @@ target_link_libraries(
   PRIVATE
   HTCCLibCommon
   HTCCLibPointCtrl
-  Microsoft::CppWinRT
   System::WindowsApp
 )
 
