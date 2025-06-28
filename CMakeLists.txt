@@ -14,9 +14,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_compile_options(
-
   # Standard C++ exception behavior
   "/EHsc"
+  # UTF-8 sources
+  "/utf-8"
 )
 
 # Require that targets exist
