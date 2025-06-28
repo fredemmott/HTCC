@@ -10,23 +10,29 @@ on:
       - '.github/workflows/pages.yml'
 jobs:
   build:
-    name: Build (${{matrix.config}})
-    runs-on: windows-2022
+    name: ${{matrix.preset}}
+    runs-on: windows-latest
     strategy:
       matrix:
-        config: [RelWithDebInfo, Debug]
+        preset:
+          - Debug
+          - Debug - clang-cl
+          - Release
+    env:
+      VCPKG_DEFAULT_BINARY_CACHE: ${{github.workspace}}/.vcpkg-binary-cache
     steps:
-      - name: Fetch code-signing key
-        id: fetch-key
-        env:
-          CODE_SIGNING_PFX_BASE64: ${{ secrets.CODE_SIGNING_KEY_PFX_BASE64 }}
+      - name: Set up visual studio environment
+        shell: pwsh
         run: |
-          if ("${Env:CODE_SIGNING_PFX_BASE64}" -ne "") {
-            $pfxPath="${{runner.temp}}/MyCert.pfx"
-            [System.Convert]::FromBase64String($Env:CODE_SIGNING_PFX_BASE64) | Set-Content $pfxPath -AsByteStream
-            Add-Content $Env:GITHUB_OUTPUT "HAVE_KEY=true"
-            Add-Content $Env:GITHUB_OUTPUT "PATH=$pfxPath"
-          }
+          $VSRoot = $(
+            vswhere `
+              -latest `
+              -products * `
+              -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+              -property installationPath)
+          cmd /c "`"${VSRoot}/VC/Auxiliary/Build/vcvarsall.bat`" x64&set" `
+            | Where-Object { $_ -like '*=*' } `
+            | Out-File -Encoding utf8 -Append $Env:GITHUB_ENV
       - uses: actions/checkout@v4
         with:
           path: source
@@ -34,28 +40,30 @@ jobs:
           submodules: true
       - name: Make build directory
         run: cmake -E make_directory build
+      - name: Setup vcpkg binary cache
+        uses: actions/cache@v4
+        with:
+          key: ${{matrix.preset}}-${{hashFiles('vcpkg.json')}}
+          path: ${{env.VCPKG_DEFAULT_BINARY_CACHE}}
       - name: Configure
         working-directory: build
         shell: pwsh
         run: |
+          cmake -E make_directory "${{env.VCPKG_DEFAULT_BINARY_CACHE}}"
           $args = @(
             "-DGITHUB_REF_TYPE=${{github.ref_type}}",
-            "-DGITHUB_REF_NAME=${{github.ref_name}}",
-            "-DVCPKG_TARGET_TRIPLET=x64-windows-static"
+            "-DGITHUB_REF_NAME=${{github.ref_name}}"
           )
-          if ("${{steps.fetch-key.outputs.HAVE_KEY}}" -eq "true") {
-            $args += "-DSIGNTOOL_KEY_ARGS=/f;${{steps.fetch-key.outputs.PATH}}"
-          }
-          cmake ${{github.workspace}}/source @args
+          cmake `
+            ${{github.workspace}}/source `
+            --preset "${{matrix.preset}}" `
+            @args
       - name: Build
         id: build
         working-directory: build
         run: |
           cmake --build . `
-            --config ${{matrix.config}} `
-            --parallel `
-            -- `
-            /p:CL_MPCount=
+            --parallel
           $version="$(Get-Content version.txt)"
           Add-Content $Env:GITHUB_OUTPUT "VERSION=${version}"
       - name: Install debug symbols
@@ -64,7 +72,6 @@ jobs:
         run: |
           $prefix="${{runner.temp}}/symbols-inst"
           cmake --install . `
-            --config ${{matrix.config}} `
             --prefix $prefix `
             --component DebugSymbols
           Add-Content $Env:GITHUB_OUTPUT "PATH=$prefix"
@@ -76,53 +83,7 @@ jobs:
             -DestinationPath $zip
           Add-Content $Env:GITHUB_OUTPUT "ZIP_PATH=$zip"
           echo "::endgroup::"
-      - name: Attach debug symbols to build
-        if: ${{matrix.config != 'Debug' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: HandTrackedCockpitClicking-GHA-${{github.run_number}}-DebugSymbols
-          path: ${{steps.symbols.outputs.PATH}}/*.pdb
-      - name: Create MSI
-        id: installer
-        working-directory: build
-        run: |
-          # Create MSI
-          echo "::group::Build 'package' target"
-          cmake --build . `
-            --config ${{matrix.config}} `
-            --target package
-          echo "::endgroup::"
-          echo "::group::WiX debug log"
-          Get-Content _CPack_Packages/win64/WIX/wix.log
-          echo "::endgroup::"
-          $version="${{steps.build.outputs.VERSION}}"
-          $installer="Hand Tracked Cockpit Clicking v${version}.msi"
-          $installerPath=(Get-ChildItem "${installer}").FullName
-          echo "File name: ${installer}"
-          echo "File path: ${installerPath}"
-          Add-Content $Env:GITHUB_OUTPUT "NAME=${installer}"
-          Add-Content $Env:GITHUB_OUTPUT "PATH=${installerPath}"
-      - name: Sign MSI
-        working-directory: build
-        if: ${{steps.fetch-key.outputs.HAVE_KEY}}
-        run: |
-          # Sign MSI
-          # Known path for the GitHub Actions windows 2022 runner, may need updating
-          & 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x86\signtool.exe' `
-            sign `
-            /d "HTCC Installer" `
-            /t http://timestamp.digicert.com `
-            /fd SHA256 `
-            /f "${{steps.fetch-key.outputs.PATH}}" `
-            "${{steps.installer.outputs.PATH}}"
-      - name: Attach installer to build
-        if: ${{matrix.config != 'Debug' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{steps.installer.outputs.NAME}}
-          path: ${{steps.installer.outputs.PATH}}
       - name: Generate release notes
-        if: ${{matrix.config != 'Debug' }}
         id: release-notes
         run: |
           $out = "${{runner.temp}}/release_notes.md"
@@ -131,7 +92,7 @@ jobs:
             Set-Content -Path $out -Encoding UTF8
           Add-Content $Env:GITHUB_OUTPUT "PATH=$out"
       - name: Create draft release
-        if: github.ref_type == 'tag' && matrix.config != 'Debug'
+        if: github.ref_type == 'tag' && matrix.preset == 'Release'
         id: create-release
         uses: actions/create-release@v1
         env:
@@ -141,23 +102,3 @@ jobs:
           tag_name: ${{github.ref_name}}
           draft: true
           body_path: ${{steps.release-notes.outputs.PATH}}
-      - name: Attach MSI to release
-        if: github.ref_type == 'tag' && matrix.config != 'Debug'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: ${{steps.installer.outputs.PATH}}
-          asset_name: HTCC-${{github.ref_name}}.msi
-          asset_content_type: application/msi
-      - name: Attach debug symbols to release
-        if: github.ref_type == 'tag' && matrix.config != 'Debug'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{steps.create-release.outputs.upload_url}}
-          asset_path: ${{steps.symbols.outputs.ZIP_PATH}}
-          asset_name: HTCC-${{github.ref_name}}-DebugSymbols.zip
-          asset_content_type: application/zip
