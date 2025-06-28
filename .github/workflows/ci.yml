@@ -43,7 +43,7 @@ jobs:
       - name: Setup vcpkg binary cache
         uses: actions/cache@v4
         with:
-          key: ${{matrix.preset}}-${{hashFiles('vcpkg.json')}}
+          key: ${{matrix.preset}}-${{hashFiles('source/vcpkg.json')}}
           path: ${{env.VCPKG_DEFAULT_BINARY_CACHE}}
       - name: Configure
         working-directory: build
