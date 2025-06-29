@@ -1,8 +1,8 @@
 vcpkg_from_github(
   OUT_SOURCE_PATH SOURCE_PATH
   REPO fredemmott/fui
-  REF a4c7fd43a384346b29548fafc2494a205f29bef9
-  SHA512 c8f9f5b47e13df1692c5b4466a84132a761b800be308dbbe7c289cc8ef314e8f83a81a6d03b22cbab61dec16c1e431bff78a7cdb02e742adddc364ae03a3a8a7
+  REF e70f6a8d23e2cc17287a4438f0e8caec59816074
+  SHA512 d3bba7b3938e10fa4c280e446d170f5cd764431698ca37a83ac4e70cd453b17382a1fc90fa0867403f55db40ce3989652b424101d7439e61966c53f03dec5d2a
   HEAD_REF main
 )
 
@@ -29,3 +29,4 @@ vcpkg_cmake_install()
 # Uncomment the line below if necessary to install the license file for the port
 # as a file named `copyright` to the directory `${CURRENT_PACKAGES_DIR}/share/${PORT}`
 # vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")
+# bump
