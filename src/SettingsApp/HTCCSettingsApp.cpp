@@ -310,23 +310,17 @@ int WINAPI wWinMain(
   [[maybe_unused]] HINSTANCE hPrevInstance,
   [[maybe_unused]] LPWSTR lpCmdLine,
   const int nCmdShow) {
-  CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-  SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
-  Config::LoadBaseConfig();
-
-  const auto window
-    = fui::Win32Window::CreateAny(hInstance, nCmdShow, {"HTCC Settings"});
-  gWindowHandle = window->GetNativeHandle().mValue;
-
-  while (true) {
-    window->WaitFrame();
-    if (const auto ok = window->BeginFrame(); !ok) {
-      return ok.error();
+  return fui::Win32Window::WinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow,
+    [](fui::Window&) { FrameTick(); },
+    {"HTCC Settings"},
+    {
+      .mHooks = {
+        .mBeforeMainLoop = [](fui::Window& window) {
+          Config::LoadBaseConfig();
+          gWindowHandle = window.GetNativeHandle();
+        },
+      }
     }
-
-    FrameTick();
-
-    window->EndFrame();
-  }
+    );
 }
