@@ -12,6 +12,7 @@
 #include <winuser.h>
 
 #include <FredEmmott/GUI.hpp>
+#include <FredEmmott/GUI/StaticTheme/Common.hpp>
 #include <filesystem>
 #include <format>
 #include <optional>
@@ -287,7 +288,11 @@ static void AboutGUI() {
 }
 
 static void FrameTick() {
+  using namespace FredEmmott::GUI::StaticTheme::Common;
   fuii::BeginVScrollView();
+  fuii::Style({
+    .mBackgroundColor = LayerOnAcrylicFillColorDefaultBrush,
+  });
   fuii::BeginVStackPanel();
   fuii::Style({
     .mGap = 12,
@@ -310,17 +315,18 @@ int WINAPI wWinMain(
   [[maybe_unused]] HINSTANCE hPrevInstance,
   [[maybe_unused]] LPWSTR lpCmdLine,
   const int nCmdShow) {
-
-  return fui::Win32Window::WinMain(hInstance, hPrevInstance, lpCmdLine, nCmdShow,
+  return fui::Win32Window::WinMain(
+    hInstance,
+    hPrevInstance,
+    lpCmdLine,
+    nCmdShow,
     [](fui::Window&) { FrameTick(); },
     {"HTCC Settings"},
-    {
-      .mHooks = {
-        .mBeforeMainLoop = [](fui::Window& window) {
-          Config::LoadBaseConfig();
-          gWindowHandle = window.GetNativeHandle();
-        },
-      }
-    }
-    );
+    {.mHooks = {
+       .mBeforeMainLoop =
+         [](fui::Window& window) {
+           Config::LoadBaseConfig();
+           gWindowHandle = window.GetNativeHandle();
+         },
+     }});
 }
