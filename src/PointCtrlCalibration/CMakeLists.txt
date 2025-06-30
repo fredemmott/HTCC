@@ -3,7 +3,6 @@ add_executable(
   WIN32
   PointCtrlCalibration.cpp
 )
-sign_target(PointCtrlCalibration)
 add_version_metadata(PointCtrlCalibration)
 
 target_link_libraries(

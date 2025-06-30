@@ -6,7 +6,6 @@ add_library(
   HandTrackingSource.cpp
   VirtualControllerSink.cpp
 )
-sign_target(HTCCAPILayer)
 set_target_properties(
   HTCCAPILayer
   PROPERTIES

@@ -20,7 +20,6 @@ target_link_libraries(
   fredemmott-gui::fredemmott-gui
 )
 target_link_options(HTCCSettings PRIVATE "/MANIFESTUAC:level='requireAdministrator'")
-sign_target(HTCCSettings)
 
 set(VERSION_CPP_FILE "${CMAKE_CURRENT_BINARY_DIR}/version.cpp")
 add_custom_command(

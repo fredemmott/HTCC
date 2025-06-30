@@ -2,7 +2,6 @@ add_executable(
   PointCtrlClassic
   PointCtrlClassic.cpp
 )
-sign_target(PointCtrlClassic)
 add_version_metadata(PointCtrlClassic)
 
 target_link_libraries(
