@@ -4,7 +4,10 @@
 
 #include <directxtk/SimpleMath.h>
 
+#include <array>
+#include <chrono>
 #include <cmath>
+#include <thread>
 
 #include "Config.h"
 #include "Environment.h"
@@ -369,13 +372,14 @@ void HandTrackingSource::InitHandTracker(Hand* hand) {
     .hand = hand->mHand,
     .handJointSet = XR_HAND_JOINT_SET_DEFAULT_EXT,
   };
-  const auto result = mOpenXR->xrCreateHandTrackerEXT(
-        mSession, &createInfo, &hand->mTracker);
+  const auto result
+    = mOpenXR->xrCreateHandTrackerEXT(mSession, &createInfo, &hand->mTracker);
   if (!XR_SUCCEEDED(result)) {
     hand->mTrackerError = result;
     DebugPrint(
       "Failed to initialize hand tracker for hand {} - {}",
-      static_cast<int>(hand->mHand), result);
+      static_cast<int>(hand->mHand),
+      result);
     return;
   }
 

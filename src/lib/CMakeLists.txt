@@ -2,11 +2,13 @@ add_library(
   HTCCLibCommon
   STATIC
   Config.cpp
+  CheckHResult.cpp CheckHResult.hpp
   DebugPrint.cpp
   Environment.cpp
   FrameInfo.cpp
   OpenXRNext.cpp
   VirtualTouchScreenSink.cpp
+  Utf8.cpp Utf8.h
 )
 target_precompile_headers(
   HTCCLibCommon

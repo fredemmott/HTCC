@@ -10,13 +10,14 @@
 #include <dwrite.h>
 #include <openxr/openxr.h>
 #include <openxr/openxr_platform.h>
-#include <winrt/base.h>
 
+#include <array>
 #include <chrono>
 #include <iostream>
 #include <numbers>
 #include <thread>
 
+#include "CheckHResult.hpp"
 #include "Config.h"
 #include "DebugPrint.h"
 #include "Environment.h"
@@ -47,19 +48,19 @@ enum class CalibrationState {
   Test,
 };
 
-static winrt::com_ptr<IDXGIAdapter1> GetDXGIAdapter(LUID luid) {
-  winrt::com_ptr<IDXGIFactory1> dxgi;
-  winrt::check_hresult(CreateDXGIFactory1(IID_PPV_ARGS(dxgi.put())));
+static wil::com_ptr<IDXGIAdapter1> GetDXGIAdapter(LUID luid) {
+  wil::com_ptr<IDXGIFactory1> dxgi;
+  CheckHResult(CreateDXGIFactory1(IID_PPV_ARGS(dxgi.put())));
 
   UINT i = 0;
-  winrt::com_ptr<IDXGIAdapter1> it;
+  wil::com_ptr<IDXGIAdapter1> it;
   while (dxgi->EnumAdapters1(i++, it.put()) == S_OK) {
     DXGI_ADAPTER_DESC1 desc {};
-    winrt::check_hresult(it->GetDesc1(&desc));
+    CheckHResult(it->GetDesc1(&desc));
     if (memcmp(&luid, &desc.AdapterLuid, sizeof(LUID)) == 0) {
       return it;
     }
-    it = {nullptr};
+    it.reset();
   }
 
   return {nullptr};
@@ -86,10 +87,10 @@ void check_xr(XrResult result) {
 }
 
 struct DrawingResources {
-  winrt::com_ptr<ID3D11Texture2D> mTexture;
-  winrt::com_ptr<ID2D1RenderTarget> mRT;
-  winrt::com_ptr<ID2D1SolidColorBrush> mBrush;
-  winrt::com_ptr<IDWriteTextFormat> mTextFormat;
+  wil::com_ptr<ID3D11Texture2D> mTexture;
+  wil::com_ptr<ID2D1RenderTarget> mRT;
+  wil::com_ptr<ID2D1SolidColorBrush> mBrush;
+  wil::com_ptr<IDWriteTextFormat> mTextFormat;
 };
 
 static DrawingResources sDrawingResources;
@@ -100,7 +101,7 @@ void InitDrawingResources(ID3D11DeviceContext* context) {
     return;
   }
 
-  winrt::com_ptr<ID3D11Device> device;
+  wil::com_ptr<ID3D11Device> device;
   context->GetDevice(device.put());
   D3D11_TEXTURE2D_DESC desc {
     .Width = TextureWidth,
@@ -111,15 +112,13 @@ void InitDrawingResources(ID3D11DeviceContext* context) {
     .SampleDesc = {1, 0},
     .BindFlags = D3D11_BIND_RENDER_TARGET,
   };
-  winrt::check_hresult(
-    device->CreateTexture2D(&desc, nullptr, res.mTexture.put()));
-  auto surface = res.mTexture.as<IDXGISurface>();
+  CheckHResult(device->CreateTexture2D(&desc, nullptr, res.mTexture.put()));
+  const auto surface = res.mTexture.query<IDXGISurface>();
 
-  winrt::com_ptr<ID2D1Factory> d2d;
-  winrt::check_hresult(
-    D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, d2d.put()));
+  wil::com_ptr<ID2D1Factory> d2d;
+  CheckHResult(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, d2d.put()));
 
-  winrt::check_hresult(d2d->CreateDxgiSurfaceRenderTarget(
+  CheckHResult(d2d->CreateDxgiSurfaceRenderTarget(
     surface.get(),
     D2D1::RenderTargetProperties(
       D2D1_RENDER_TARGET_TYPE_HARDWARE,
@@ -130,16 +129,16 @@ void InitDrawingResources(ID3D11DeviceContext* context) {
   // Don't use cleartype as subpixels won't line up in headset
   res.mRT->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
 
-  winrt::check_hresult(res.mRT->CreateSolidColorBrush(
+  CheckHResult(res.mRT->CreateSolidColorBrush(
     D2D1::ColorF(D2D1::ColorF::Black, 1.0f), res.mBrush.put()));
 
-  winrt::com_ptr<IDWriteFactory> dwrite;
-  winrt::check_hresult(DWriteCreateFactory(
+  wil::com_ptr<IDWriteFactory> dwrite;
+  CheckHResult(DWriteCreateFactory(
     DWRITE_FACTORY_TYPE_ISOLATED,
     __uuidof(dwrite),
     reinterpret_cast<IUnknown**>(dwrite.put())));
 
-  winrt::check_hresult(dwrite->CreateTextFormat(
+  CheckHResult(dwrite->CreateTextFormat(
     L"Calibri",
     nullptr,
     DWRITE_FONT_WEIGHT_NORMAL,
@@ -234,12 +233,12 @@ void DrawLayer(
     },
     brush);
 
-  winrt::check_hresult(rt->EndDraw());
+  CheckHResult(rt->EndDraw());
   context->CopyResource(texture, res.mTexture.get());
 }
 
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
-  winrt::init_apartment(winrt::apartment_type::single_threaded);
+  CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
   Environment::IsPointCtrlCalibration = true;
 
   XrInstance instance {};
@@ -289,8 +288,8 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     }
   }
 
-  winrt::com_ptr<ID3D11Device> device;
-  winrt::com_ptr<ID3D11DeviceContext> context;
+  wil::com_ptr<ID3D11Device> device;
+  wil::com_ptr<ID3D11DeviceContext> context;
   {
     XrGraphicsRequirementsD3D11KHR d3dRequirements {
       XR_TYPE_GRAPHICS_REQUIREMENTS_D3D11_KHR};
@@ -305,7 +304,7 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     flags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-    winrt::check_hresult(D3D11CreateDevice(
+    CheckHResult(D3D11CreateDevice(
       adapter.get(),
       D3D_DRIVER_TYPE_UNKNOWN,
       0,

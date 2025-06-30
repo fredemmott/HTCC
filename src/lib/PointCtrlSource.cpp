@@ -6,6 +6,7 @@
 
 #include <numbers>
 
+#include "CheckHResult.hpp"
 #include "Config.h"
 #include "DebugPrint.h"
 #include "Environment.h"
@@ -42,7 +43,7 @@ PointCtrlSource::PointCtrlSource(HANDLE eventNotification)
     "PointerSource: {}; ActionSource: {}",
     IsPointerSource(),
     Config::PointCtrlFCUMapping != PointCtrlFCUMapping::Disabled);
-  winrt::check_hresult(DirectInput8Create(
+  CheckHResult(DirectInput8Create(
     reinterpret_cast<HINSTANCE>(&__ImageBase),
     DIRECTINPUT_VERSION,
     IID_IDirectInput8W,
@@ -74,7 +75,7 @@ void PointCtrlSource::ConnectDevice() {
     return;
   }
 
-  winrt::check_hresult(mDI->EnumDevices(
+  CheckHResult(mDI->EnumDevices(
     DI8DEVCLASS_GAMECTRL,
     &PointCtrlSource::EnumDevicesCallbackStatic,
     this,
@@ -88,9 +89,8 @@ BOOL PointCtrlSource::EnumDevicesCallbackStatic(
 }
 
 BOOL PointCtrlSource::EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi) {
-  winrt::com_ptr<IDirectInputDevice8W> dev;
-  winrt::check_hresult(
-    mDI->CreateDevice(lpddi->guidInstance, dev.put(), nullptr));
+  wil::com_ptr<IDirectInputDevice8W> dev;
+  CheckHResult(mDI->CreateDevice(lpddi->guidInstance, dev.put(), nullptr));
 
   DIPROPDWORD buf;
   buf.diph.dwSize = sizeof(DIPROPDWORD);
@@ -98,7 +98,7 @@ BOOL PointCtrlSource::EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi) {
   buf.diph.dwObj = 0;
   buf.diph.dwHow = DIPH_DEVICE;
 
-  winrt::check_hresult(dev->GetProperty(DIPROP_VIDPID, &buf.diph));
+  CheckHResult(dev->GetProperty(DIPROP_VIDPID, &buf.diph));
 
   const auto vid = LOWORD(buf.dwData);
   const auto pid = HIWORD(buf.dwData);
@@ -110,11 +110,11 @@ BOOL PointCtrlSource::EnumDevicesCallback(LPCDIDEVICEINSTANCE lpddi) {
   DebugPrint(L"Found PointCtrlDevice '{}'", lpddi->tszInstanceName);
 
   if (mEventHandle) {
-    winrt::check_hresult(dev->SetEventNotification(mEventHandle));
+    CheckHResult(dev->SetEventNotification(mEventHandle));
   }
 
-  winrt::check_hresult(dev->SetDataFormat(&c_dfDIJoystick2));
-  winrt::check_hresult(dev->Acquire());
+  CheckHResult(dev->SetDataFormat(&c_dfDIJoystick2));
+  CheckHResult(dev->Acquire());
   mDevice = std::move(dev);
   return DIENUM_STOP;
 }

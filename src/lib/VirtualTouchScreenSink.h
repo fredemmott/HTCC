@@ -4,6 +4,8 @@
 
 #include <openxr/openxr.h>
 
+#include <chrono>
+
 #include "Config.h"
 #include "InputState.h"
 #include "OpenXRNext.h"

@@ -11,7 +11,6 @@
 // clang-format off
 #include <Windows.h>
 #include <Unknwn.h>
-#include <winrt/base.h>
 // clang-format on
 
 #include <format>

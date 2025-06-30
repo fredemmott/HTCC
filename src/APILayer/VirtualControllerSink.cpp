@@ -6,6 +6,8 @@
 #include <directxtk/SimpleMath.h>
 #include <openxr/openxr_platform.h>
 
+#include <algorithm>
+#include <chrono>
 #include <limits>
 #include <numbers>
 

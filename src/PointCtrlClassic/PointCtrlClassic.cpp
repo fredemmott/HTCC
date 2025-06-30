@@ -4,10 +4,7 @@
 // clang-format off
 #define _WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-
 #include <Unknwn.h>
-#include <winrt/base.h>
-// clang-format on
 
 #include <Psapi.h>
 #include <TlHelp32.h>
@@ -27,7 +24,7 @@ using namespace HandTrackedCockpitClicking;
 namespace Config = HandTrackedCockpitClicking::Config;
 
 static DWORD FindDCSProcessID() {
-  winrt::file_handle snapshot {
+  const wil::unique_tool_help_snapshot snapshot {
     CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL)};
 
   PROCESSENTRY32 pe {sizeof(PROCESSENTRY32)};
@@ -37,7 +34,7 @@ static DWORD FindDCSProcessID() {
 
   do {
     const auto pid = pe.th32ProcessID;
-    winrt::handle process {
+    wil::unique_process_handle process {
       OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid)};
     if (!process) {
       continue;
@@ -59,7 +56,8 @@ static DWORD FindDCSProcessID() {
 }
 
 int main() {
-  winrt::init_apartment(winrt::apartment_type::single_threaded);
+  CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+
   Config::LoadForExecutableFileName(L"DCS.exe");
   Config::PointerSource = PointerSource::PointCtrl;
   Config::PointerSink = PointerSink::VirtualTouchScreen;
@@ -75,7 +73,7 @@ int main() {
     return 1;
   }
 
-  winrt::handle pointCtrlEvent {CreateEventW(nullptr, FALSE, FALSE, nullptr)};
+  wil::unique_event pointCtrlEvent {CreateEventW(nullptr, FALSE, FALSE, nullptr)};
   PointCtrlSource pointCtrl(pointCtrlEvent.get());
   if (!pointCtrl.IsConnected()) {
     std::cout << "Connect your PointCTRL, or press Ctrl+C to exit" << std::endl;

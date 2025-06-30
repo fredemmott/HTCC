@@ -4,6 +4,7 @@
 
 #include <dinput.h>
 #include <openxr/openxr.h>
+#include <wil/com.h>
 
 #include <cinttypes>
 #include <thread>
@@ -87,8 +88,8 @@ class PointCtrlSource final : public InputSource {
   Hand mLeftHand {XR_HAND_LEFT_EXT, {XR_HAND_LEFT_EXT}};
   Hand mRightHand {XR_HAND_RIGHT_EXT, {XR_HAND_RIGHT_EXT}};
 
-  winrt::com_ptr<IDirectInput8W> mDI;
-  winrt::com_ptr<IDirectInputDevice8W> mDevice;
+  wil::com_ptr<IDirectInput8W> mDI;
+  wil::com_ptr<IDirectInputDevice8W> mDevice;
   HANDLE mEventHandle {};
 
   RawValues mRaw {};

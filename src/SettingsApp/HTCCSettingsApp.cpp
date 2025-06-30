@@ -8,7 +8,6 @@
 #include <wil/com.h>
 #include <wil/registry.h>
 #include <wil/resource.h>
-#include <winrt/base.h>
 #include <winuser.h>
 
 #include <FredEmmott/GUI.hpp>
@@ -19,6 +18,7 @@
 
 #include "../lib/Config.h"
 #include "../lib/PointCtrlSource.h"
+#include "CheckHResult.hpp"
 #include "version.h"
 
 namespace HTCC = HandTrackedCockpitClicking;
@@ -56,7 +56,7 @@ auto GetKnownFolderPath() {
   static std::once_flag sOnce;
   std::call_once(sOnce, [&path = sPath]() {
     wil::unique_cotaskmem_string buf;
-    THROW_IF_FAILED(
+    HTCC::CheckHResult(
       SHGetKnownFolderPath(TFolderID, KF_FLAG_DEFAULT, nullptr, buf.put()));
     path = {std::wstring_view {buf.get()}};
     if (std::filesystem::exists(path)) {
@@ -269,7 +269,7 @@ static void AboutGUI() {
 
   if (fuii::Button("Copy")) {
     if (OpenClipboard(gWindowHandle)) {
-      const auto wide = winrt::to_hstring(VersionString);
+      const auto wide = HTCC::Utf8::ToWide(VersionString);
       wil::unique_hglobal buf(
         GlobalAlloc(0, (wide.size() + 1) * sizeof(wchar_t)));
       memcpy(buf.get(), wide.data(), (wide.size() + 1) * sizeof(wchar_t));

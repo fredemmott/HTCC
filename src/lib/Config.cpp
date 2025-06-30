@@ -85,7 +85,7 @@ static bool LoadString(
     &dataSize);
 
   if (dataResult == ERROR_SUCCESS) {
-    value = winrt::to_string(buffer.data());
+    value = Utf8::FromWide(buffer.data());
     return true;
   }
   return false;
@@ -108,7 +108,7 @@ static void Load(const std::wstring& subKey) {
     HandTrackedCockpitClicking_FLOAT_SETTINGS
 #undef IT
 #define IT(name, defaultValue) LoadString(subKey, Config::name, L#name);
-      HandTrackedCockpitClicking_STRING_SETTINGS
+    HandTrackedCockpitClicking_STRING_SETTINGS
 #undef IT
 }
 
@@ -145,8 +145,8 @@ static void SaveDWord(const wchar_t* valueName, T value) {
   }
 }
 
-static void SaveString(const wchar_t* valueName, std::string_view value) {
-  const std::wstring buffer {winrt::to_hstring(value)};
+static void SaveString(const wchar_t* valueName, const std::string_view value) {
+  const auto buffer = Utf8::ToWide(value);
   const auto result = RegSetKeyValueW(
     HKEY_LOCAL_MACHINE,
     BaseSubKey.c_str(),
@@ -184,7 +184,7 @@ HandTrackedCockpitClicking_DWORD_SETTINGS
     Config::name = value; \
     SaveString(L#name, Config::name); \
   }
-    HandTrackedCockpitClicking_STRING_SETTINGS
+  HandTrackedCockpitClicking_STRING_SETTINGS
 #undef IT
 
 }// namespace HandTrackedCockpitClicking::Config

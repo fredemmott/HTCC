@@ -4,6 +4,7 @@
 
 #include <TraceLoggingActivity.h>
 #include <TraceLoggingProvider.h>
+#include <Utf8.h>
 
 #include <format>
 #include <version>
@@ -24,7 +25,7 @@ void DebugPrint(std::wformat_string<Args...> fmt, Args&&... args) {
 template <class... Args>
 void DebugPrint(std::format_string<Args...> fmt, Args&&... args) {
   detail::DebugPrintString(
-    winrt::to_hstring(std::format(fmt, std::forward<Args>(args)...)));
+    Utf8::ToWide(std::format(fmt, std::forward<Args>(args)...)));
 }
 
 }// namespace HandTrackedCockpitClicking
