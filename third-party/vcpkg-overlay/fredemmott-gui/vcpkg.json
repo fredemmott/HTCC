@@ -2,7 +2,8 @@
   "name": "fredemmott-gui",
   "version-string": "main",
   "builtin-baseline": "ef7dbf94b9198bc58f45951adcf1f041fcbc5ea0",
-  "supports": "windows & static",
+  "supports": "windows",
+  "license": "MIT",
   "dependencies": [
     "wil",
     "fmt",
@@ -19,11 +20,15 @@
       "dependencies": [
         {
           "name": "skia",
+          "default-features": false,
           "features": [
-            "direct3d"
+            "direct3d",
+            "harfbuzz",
+            "icu"
           ]
         }
-      ]
+      ],
+      "supports": "static"
     },
     "direct2d": {
       "description": "Enable support for Direct2D+DirectWrite+D3D11"

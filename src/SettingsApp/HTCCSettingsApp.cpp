@@ -320,11 +320,11 @@ int WINAPI wWinMain(
     hPrevInstance,
     lpCmdLine,
     nCmdShow,
-    [](fui::Window&) { FrameTick(); },
+    [](fui::Win32Window&) { FrameTick(); },
     {"HTCC Settings"},
     {.mHooks = {
        .mBeforeMainLoop =
-         [](fui::Window& window) {
+         [](fui::Win32Window& window) {
            Config::LoadBaseConfig();
            gWindowHandle = window.GetNativeHandle();
          },
