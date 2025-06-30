@@ -25,8 +25,4 @@ vcpkg_cmake_configure(
 
 vcpkg_cmake_install()
 
-# TODO:
-# Uncomment the line below if necessary to install the license file for the port
-# as a file named `copyright` to the directory `${CURRENT_PACKAGES_DIR}/share/${PORT}`
-# vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")
-# bump
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")
