@@ -43,21 +43,7 @@ add_custom_command(
 )
 target_sources(HTCCSettings PRIVATE "${VERSION_CPP_FILE}")
 
-install(
-  DIRECTORY
-
-  # Trailing / copies the contents instead of the directory itself,
-  # i.e. avoids installing `bin/Debug/`
-  "$<TARGET_FILE_DIR:HTCCSettings>/"
-  DESTINATION "SettingsApp"
-  PATTERN "*.pdb" EXCLUDE
-  PATTERN "*.lib" EXCLUDE
-  # WinUI3 includes these localizations, but they are not supported by WiX v3,
-  # so including them breaks building the installer on github actions
-  PATTERN "gd-gb/*" EXCLUDE
-  PATTERN "mi-NZ/*" EXCLUDE
-  PATTERN "ug-CN/*" EXCLUDE
-)
+install(TARGETS HTCCSettings)
 install(
   FILES
   "$<TARGET_PDB_FILE:HTCCSettings>"
