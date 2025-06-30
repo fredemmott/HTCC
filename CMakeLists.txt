@@ -54,7 +54,7 @@ if ("${VCPKG_TARGET_TRIPLET}" MATCHES "-static$")
     "/NODEFAULTLIB:libucrt$<$<CONFIG:Debug>:d>.lib" # remove the static UCRT
   )
   add_link_options("${COMMON_LINK_OPTIONS}")
-endif()
+endif ()
 
 set(
   CMAKE_TOOLCHAIN_FILE
@@ -62,11 +62,11 @@ set(
   CACHE STRING "Vcpkg toolchain file"
 )
 
-if(DEFINED ENV{GITHUB_RUN_NUMBER})
+if (DEFINED ENV{GITHUB_RUN_NUMBER})
   set(VERSION_BUILD $ENV{GITHUB_RUN_NUMBER})
-else()
+else ()
   set(VERSION_BUILD 0)
-endif()
+endif ()
 
 project(
   XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking
@@ -77,11 +77,11 @@ message(STATUS "${CMAKE_PROJECT_NAME} v${CMAKE_PROJECT_VERSION}")
 # Handy for CI
 file(WRITE "${CMAKE_BINARY_DIR}/version.txt" "${CMAKE_PROJECT_VERSION}")
 
-if(MSVC AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if (MSVC AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CLANG_CL 1 CACHE BOOL "Whether we're using clang-cl")
-else()
+else ()
   set(CLANG_CL 0)
-endif()
+endif ()
 
 message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Simulated compiler: ${CMAKE_CXX_SIMULATE_ID}")
@@ -90,7 +90,7 @@ message(STATUS "CLANG_CL: ${CLANG_CL}")
 
 set(COMMON_COMPILE_OPTIONS "/DUNICODE" "/D_UNICODE")
 
-if(MSVC AND NOT CLANG_CL)
+if (MSVC AND NOT CLANG_CL)
   list(
     APPEND COMMON_COMPILE_OPTIONS
 
@@ -103,7 +103,7 @@ if(MSVC AND NOT CLANG_CL)
     # Include content and marker in error messages
     "/diagnostics:caret"
   )
-endif()
+endif ()
 
 add_compile_options(${COMMON_COMPILE_OPTIONS})
 
@@ -119,6 +119,11 @@ add_subdirectory("scripts")
 install(
   FILES
   "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
+  RENAME LICENSE.txt
+  TYPE DOC
+)
+install(
+  FILES
   "${CMAKE_CURRENT_SOURCE_DIR}/README.md"
   TYPE DOC
 )
@@ -126,5 +131,28 @@ install(
   DIRECTORY docs/
   TYPE DOC
 )
+
+# Take a look in vcpkg_installed/TRIPLET/share/ for this
+set(
+  TRANSITIVE_DEPENDENCIES
+  directxmath
+  directxtk
+  fredemmott-gui
+  wil
+  yoga
+  # Excluded:
+  # - pkgconfig: build only
+  # - tinyxml: used internally by fredemmott-gui's codegen step; not redistributed
+  # - fmt: ditto
+  # - vcpkg-cmake: build only
+)
+foreach (DEP IN LISTS TRANSITIVE_DEPENDENCIES)
+  install(
+    FILES
+    "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/${DEP}/copyright"
+    RENAME "LICENSE-ThirdParty-${DEP}.txt"
+    TYPE DOC
+  )
+endforeach ()
 
 add_subdirectory(installer)
