@@ -154,5 +154,3 @@ foreach (DEP IN LISTS TRANSITIVE_DEPENDENCIES)
     TYPE DOC
   )
 endforeach ()
-
-add_subdirectory(installer)
