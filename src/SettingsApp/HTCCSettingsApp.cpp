@@ -1,4 +1,4 @@
-// Copyright 2024 Fred Emmott <fred@fredemmott.com>
+// Copyright (c) 2024-present Frederick Emmott
 // SPDX-License-Identifier: MIT
 
 #include <Windows.h>
