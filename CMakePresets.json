@@ -10,6 +10,7 @@
       "hidden": true,
       "generator": "Ninja",
       "cacheVariables":{
+        "CMAKE_CXX_FLAGS": "-D_WIN32_WINNT=_WIN32_WINNT_WIN10 -DNTDDI_VERSION=NTDDI_WIN10",
         "VCPKG_TARGET_TRIPLET": "x64-windows-static"
       }
     },
