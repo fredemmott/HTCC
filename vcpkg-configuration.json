@@ -1,5 +1,12 @@
 {
-  "overlay-ports": [
-    "third-party/vcpkg-overlay"
+  "registries": [
+    {
+      "kind": "git",
+      "repository": "https://github.com/fredemmott/vcpkg-registry",
+      "baseline": "a1d4d8dedc532568c87b765a014de6ec068e3371",
+      "packages": [
+        "fredemmott-gui"
+      ]
+    }
   ]
 }
