@@ -1,0 +1,4 @@
+fredemmott-gui provides CMake targets:
+
+    find_package(fredemmott-gui CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE fredemmott-gui::fredemmott-gui)
