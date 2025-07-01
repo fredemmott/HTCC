@@ -69,7 +69,7 @@ else ()
 endif ()
 
 project(
-  XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking
+  HTCC
   VERSION 1.3.5.${VERSION_BUILD}
   LANGUAGES CXX C)
 message(STATUS "${CMAKE_PROJECT_NAME} v${CMAKE_PROJECT_VERSION}")
