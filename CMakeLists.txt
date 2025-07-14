@@ -73,6 +73,7 @@ project(
   VERSION 1.3.5.${VERSION_BUILD}
   LANGUAGES CXX C)
 include(cmake/output-paths.cmake)
+include(cmake/smol-binaries.cmake)
 message(STATUS "${CMAKE_PROJECT_NAME} v${CMAKE_PROJECT_VERSION}")
 
 # Handy for CI
