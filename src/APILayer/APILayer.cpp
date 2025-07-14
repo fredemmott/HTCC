@@ -4,7 +4,7 @@
 #include "APILayer.h"
 
 #include <directxtk/SimpleMath.h>
-#include <loader_interfaces.h>
+#include <openxr/openxr.h>
 
 #include <memory>
 #include <string>

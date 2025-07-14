@@ -5,6 +5,8 @@ add_executable(
 )
 add_version_metadata(PointCtrlCalibration)
 
+find_package(OpenXR CONFIG REQUIRED)
+
 target_link_libraries(
   PointCtrlCalibration
   PRIVATE
@@ -18,30 +20,8 @@ target_link_libraries(
   System::DXGI
   System::WindowsApp
   Microsoft::DirectXTK
-  ThirdParty::OpenXR
-  ThirdParty::OpenXRLoader
+  OpenXR::headers
+  OpenXR::openxr_loader
 )
 
 target_link_options(PointCtrlCalibration PRIVATE "/MANIFESTUAC:level='requireAdministrator'")
-
-add_custom_command(
-  TARGET PointCtrlCalibration POST_BUILD
-  COMMAND "${CMAKE_COMMAND}" -E copy
-  "$<TARGET_RUNTIME_DLLS:PointCtrlCalibration>"
-  "$<TARGET_FILE_DIR:PointCtrlCalibration>"
-)
-
-install(TARGETS PointCtrlCalibration)
-
-install(
-  FILES
-  "$<TARGET_RUNTIME_DLLS:PointCtrlCalibration>"
-  DESTINATION "."
-)
-
-install(
-  FILES
-  "$<TARGET_PDB_FILE:PointCtrlCalibration>"
-  COMPONENT DebugSymbols
-  DESTINATION "."
-)

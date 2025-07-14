@@ -1,3 +1,4 @@
+find_package(OpenXR CONFIG REQUIRED)
 add_library(
   HTCCAPILayer
   MODULE
@@ -24,6 +25,7 @@ target_link_libraries(
   Microsoft::DirectXTK
   HTCCLibCommon
   HTCCLibPointCtrl
+  OpenXR::headers
 )
 install(
   TARGETS
