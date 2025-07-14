@@ -72,6 +72,7 @@ project(
   HTCC
   VERSION 1.3.5.${VERSION_BUILD}
   LANGUAGES CXX C)
+include(cmake/output-paths.cmake)
 message(STATUS "${CMAKE_PROJECT_NAME} v${CMAKE_PROJECT_VERSION}")
 
 # Handy for CI
@@ -120,14 +121,14 @@ install(
   RENAME LICENSE.txt
   TYPE DOC
 )
-install(
-  FILES
-  "${CMAKE_CURRENT_SOURCE_DIR}/README.md"
-  TYPE DOC
-)
-install(
-  DIRECTORY docs/
-  TYPE DOC
+add_custom_target(
+  copy-license
+  ALL
+  COMMAND "${CMAKE_COMMAND}" -E make_directory "${LICENSE_OUTPUT_DIRECTORY}"
+  COMMAND
+  "${CMAKE_COMMAND}" -E copy_if_different
+  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
+  "${LICENSE_OUTPUT_DIRECTORY}/LICENSE.txt"
 )
 
 # Take a look in vcpkg_installed/TRIPLET/share/ for this
@@ -145,10 +146,13 @@ set(
   # - vcpkg-cmake: build only
 )
 foreach (DEP IN LISTS TRANSITIVE_DEPENDENCIES)
-  install(
-    FILES
+  add_custom_target(
+    "copy-${DEP}-license"
+    ALL
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${LICENSE_OUTPUT_DIRECTORY}"
+    COMMAND
+    "${CMAKE_COMMAND}" -E copy_if_different
     "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/${DEP}/copyright"
-    RENAME "LICENSE-ThirdParty-${DEP}.txt"
-    TYPE DOC
+    "${LICENSE_OUTPUT_DIRECTORY}/LICENSE-ThirdParty-${DEP}.txt"
   )
 endforeach ()
