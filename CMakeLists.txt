@@ -38,16 +38,19 @@ set(
   CACHE STRING "Vcpkg toolchain file"
 )
 
-if (DEFINED ENV{GITHUB_RUN_NUMBER})
-  set(VERSION_BUILD $ENV{GITHUB_RUN_NUMBER})
-else ()
-  set(VERSION_BUILD 0)
-endif ()
-
+set(VERSION_TWEAK 0 CACHE STRING "Final component of build number")
 project(
   HTCC
-  VERSION 1.3.5.${VERSION_BUILD}
+  VERSION 1.3.5.${VERSION_TWEAK}
   LANGUAGES CXX C)
+
+if (NOT VERSION_TWEAK_LABEL)
+  set(VERSION_TWEAK_LABEL "local")
+endif ()
+option(IS_TAGGED_BUILD "Whether or not we're building a tagged version" OFF)
+option(IS_STABLE_BUILD "Whether or not we're building a tagged version" OFF)
+set(VERSION_SEMVER "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_MINOR}+${VERSION_TWEAK_LABEL}.${PROJECT_VERSION_TWEAK}")
+
 include(cmake/output-paths.cmake)
 include(cmake/smol-binaries.cmake)
 message(STATUS "${CMAKE_PROJECT_NAME} v${CMAKE_PROJECT_VERSION}")

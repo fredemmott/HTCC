@@ -1,6 +1,6 @@
 #include <verrsrc.h>
 
-#define VER_FILEVERSION             @VERSION_MAJOR@,@VERSION_MINOR@,@VERSION_PATCH@,@VERSION_BUILD@
+#define VER_FILEVERSION             @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,@PROJECT_VERSION_TWEAK@
 #define VER_FILEVERSION_STR         "@VERSION_SEMVER@"
 
 #define VER_PRODUCTVERSION          VER_FILEVERSION
@@ -21,8 +21,8 @@ BEGIN
             VALUE "FileDescription",  "@FILE_DESCRIPTION@\0"
             VALUE "FileVersion",      VER_FILEVERSION_STR
             VALUE "LegalCopyright",   "\xa9 Frederick Emmott\0"
-            VALUE "OriginalFilename", "@ORIGINAL_FILENAME@\0"
-            VALUE "ProductName",      "@PRODUCT_NAME@\0"
+            VALUE "OriginalFilename", "$<TARGET_FILE_NAME:@TARGET@>\0"
+            VALUE "ProductName",      "HTCC\0"
             VALUE "ProductVersion",   VER_PRODUCTVERSION_STR
         END
     END

@@ -34,24 +34,14 @@ static HWND gWindowHandle {};
 using namespace std::string_view_literals;
 
 const auto VersionString = std::format(
-  "HTCC {}\n"
-  "Build: v{}.{}.{}.{}-{}-{}-{}",
+  "HTCC {} ({}-{})",
   Version::ReleaseName,
-  Version::Major,
-  Version::Minor,
-  Version::Patch,
-  Version::Build,
-  Version::IsGitHubActionsBuild ? std::format("GHA-{}", Version::Build)
-                                : "local",
-  Version::BuildMode,
-#ifdef _WIN32
 #ifdef _WIN64
-  "Win64"
+  "Win64",
 #else
-  "Win32"
+  "Win32",
 #endif
-#endif
-);
+  Version::BuildMode);
 
 template <const GUID& TFolderID>
 auto GetKnownFolderPath() {
@@ -333,7 +323,7 @@ static void AboutGUI() {
 
   const auto card = BeginCard().Scoped().Styled(
     Style().Gap(8).FlexDirection(YGFlexDirectionColumn));
-  TextBlock(VersionString).Body();
+  Label(VersionString).Body();
   LicensesGUI();
 }
 

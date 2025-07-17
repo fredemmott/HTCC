@@ -1,0 +1,13 @@
+// Copyright (c) 2022-present Frederick Emmott
+// SPDX-License-Identifier: MIT
+#pragma once
+
+#include <string_view>
+
+namespace HTCCSettings::Version {
+
+constexpr std::string_view ReleaseName {"v@VERSION_SEMVER@"};
+constexpr std::string_view BuildMode {"$<CONFIG>"};
+constexpr bool IsDebugBuild { $<IF:$<CONFIG:Debug>,true,false> };
+
+}// namespace HTCCSettings::Version
