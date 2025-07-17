@@ -73,9 +73,7 @@ static std::wstring GetAPILayerPath() {
   wchar_t buf[MAX_PATH];
   const auto bufLen = GetModuleFileNameW(nullptr, buf, MAX_PATH);
   return std::filesystem::weakly_canonical(
-           std::filesystem::path(std::wstring_view {buf, bufLen})
-             .parent_path()
-             .parent_path()
+           std::filesystem::path(std::wstring_view {buf, bufLen}).parent_path()
            / "APILayer.json")
     .wstring();
 }
