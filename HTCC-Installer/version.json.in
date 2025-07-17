@@ -1,0 +1,12 @@
+{
+  "components": {
+    "a": @CMAKE_PROJECT_VERSION_MAJOR@,
+    "b": @CMAKE_PROJECT_VERSION_MINOR@,
+    "c": @CMAKE_PROJECT_VERSION_PATCH@,
+    "d": @CMAKE_PROJECT_VERSION_TWEAK@
+  },
+  "readable": "@VERSION_SEMVER@",
+  "stable": @IS_STABLE_RELEASE_JSON@,
+  "tagged": @IS_TAGGED_BUILD_JSON@,
+  "tweakLabel": "@VERSION_TWEAK_LABEL@"
+}

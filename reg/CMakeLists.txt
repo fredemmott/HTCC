@@ -1,34 +1,16 @@
-# Convert the .reg files to the Windows Installer's source format
-find_program(
-  HEAT_EXE
-  heat.exe
-  DOC "Path to heat.exe from the WiX toolset"
-  PATHS
-  "${WIX_ROOT_DIR}/bin"
-  "$ENV{WIX}/bin"
-  "$ENV{WIX_ROOT_DIR}/bin"
-)
-
-if("${HEAT_EXE}" STREQUAL "HEAT_EXE-NOTFOUND")
-  message(WARNING "Couldn't find heat.exe from the WiX toolset; building an MSI will fail")
-  return()
-endif()
-
-macro(add_reg_wxs TARGET SOURCE)
-  set(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${SOURCE}.wxs")
-  add_custom_target(
-    "${TARGET}"
-    ALL
+foreach (GAME IN ITEMS DCS MSFS)
+  add_custom_command(
+    OUTPUT "${OUTPUT_ROOT}/installer/${GAME}.reg"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${GAME}.reg"
     COMMAND
-    "${HEAT_EXE}"
-    reg "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE}"
-    -cg "${TARGET}" # ComponentGroup
-    -gg # Generate GUIDs
-    -out "${OUTPUT}"
-    SOURCES "${SOURCE}"
+    "${CMAKE_COMMAND}" -E copy_if_different
+    "${CMAKE_CURRENT_SOURCE_DIR}/${GAME}.reg"
+    "${OUTPUT_ROOT}/installer/${GAME}.reg"
   )
-  set("${TARGET}_PATH" "${OUTPUT}" PARENT_SCOPE)
-endmacro()
-
-add_reg_wxs(DCSRegWXS DCS.reg)
-add_reg_wxs(MSFSRegWXS MSFS.reg)
+  add_custom_target(
+    "settings-${GAME}"
+    ALL
+    DEPENDS
+    "${OUTPUT_ROOT}/installer/${GAME}.reg"
+  )
+endforeach ()
