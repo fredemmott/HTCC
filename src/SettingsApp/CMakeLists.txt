@@ -42,6 +42,27 @@ add_custom_command(
 )
 target_sources(HTCCSettings PRIVATE "${VERSION_CPP_FILE}")
 
+find_package(compressed-embed CONFIG REQUIRED)
+include(CompressedEmbed)
+add_compressed_embed_library(
+  licenses
+  CLASSNAME Licenses
+  OUTPUT_CPP "${CMAKE_CURRENT_BINARY_DIR}/Licenses.cpp"
+  OUTPUT_HPP "${CMAKE_CURRENT_BINARY_DIR}/include/Licenses.hpp"
+  NAMESPACE "HandTrackedCockpitClicking"
+  INPUTS
+  Self "${PROJECT_SOURCE_DIR}/LICENSE"
+  CompressedEmbed "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/compressed-embed/copyright"
+  DirectXMath "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/directxmath/copyright"
+  DirectXTK "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/directxtk/copyright"
+  FUI "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/fredemmott-gui/copyright"
+  OpenXR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/openxr-loader/copyright"
+  WIL "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/wil/copyright"
+  Yoga "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/yoga/copyright"
+)
+target_include_directories(licenses PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/include")
+target_link_libraries(HTCCSettings PRIVATE licenses)
+
 install(TARGETS HTCCSettings)
 install(
   FILES

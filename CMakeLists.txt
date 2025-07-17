@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.25...3.31 FATAL_ERROR)
 
 # No specific need for this version, but let's set *something* so
 # the lower bound is known and enforced
@@ -91,45 +91,3 @@ add_subdirectory("third-party")
 add_subdirectory("src")
 add_subdirectory("reg")
 add_subdirectory("scripts")
-
-install(
-  FILES
-  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
-  RENAME LICENSE.txt
-  TYPE DOC
-)
-add_custom_target(
-  copy-license
-  ALL
-  COMMAND "${CMAKE_COMMAND}" -E make_directory "${LICENSE_OUTPUT_DIRECTORY}"
-  COMMAND
-  "${CMAKE_COMMAND}" -E copy_if_different
-  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
-  "${LICENSE_OUTPUT_DIRECTORY}/LICENSE.txt"
-)
-
-# Take a look in vcpkg_installed/TRIPLET/share/ for this
-set(
-  TRANSITIVE_DEPENDENCIES
-  directxmath
-  directxtk
-  fredemmott-gui
-  wil
-  yoga
-  # Excluded:
-  # - pkgconfig: build only
-  # - tinyxml: used internally by fredemmott-gui's codegen step; not redistributed
-  # - fmt: ditto
-  # - vcpkg-cmake: build only
-)
-foreach (DEP IN LISTS TRANSITIVE_DEPENDENCIES)
-  add_custom_target(
-    "copy-${DEP}-license"
-    ALL
-    COMMAND "${CMAKE_COMMAND}" -E make_directory "${LICENSE_OUTPUT_DIRECTORY}"
-    COMMAND
-    "${CMAKE_COMMAND}" -E copy_if_different
-    "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/share/${DEP}/copyright"
-    "${LICENSE_OUTPUT_DIRECTORY}/LICENSE-ThirdParty-${DEP}.txt"
-  )
-endforeach ()

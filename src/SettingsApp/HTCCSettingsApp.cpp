@@ -15,10 +15,12 @@
 #include <filesystem>
 #include <format>
 #include <optional>
+#include <string_view>
 
 #include "../lib/Config.h"
 #include "../lib/PointCtrlSource.h"
 #include "CheckHResult.hpp"
+#include "Licenses.hpp"
 #include "version.h"
 
 using namespace FredEmmott::GUI;
@@ -29,9 +31,10 @@ namespace Version = HTCCSettings::Version;
 
 static HWND gWindowHandle {};
 
+using namespace std::string_view_literals;
+
 const auto VersionString = std::format(
-  "HTCC {}\n\n"
-  "Copyright © 2022-present Frederick Emmott.\n\n"
+  "HTCC {}\n"
   "Build: v{}.{}.{}.{}-{}-{}-{}",
   Version::ReleaseName,
   Version::Major,
@@ -256,31 +259,84 @@ static void PointCtrlGUI() {
   EndEnabled();
 }
 
+static void LicensesDialogContent() {
+  static const HandTrackedCockpitClicking::Licenses licenses;
+  struct Product {
+    std::string_view mName;
+    std::string_view mLicense;
+  };
+  static const auto products = std::array {
+    Product {
+      "Hand Tracked Cockpit Clicking (HTCC)", licenses.SelfAsStringView()},
+    Product {"Compressed-Embed", licenses.CompressedEmbedAsStringView()},
+    Product {"DirectXMath", licenses.DirectXMathAsStringView()},
+    Product {"DirectXTK", licenses.DirectXTKAsStringView()},
+    Product {"FredEmmott::GUI", licenses.FUIAsStringView()},
+    Product {"OpenXR SDK", licenses.OpenXRAsStringView()},
+    Product {"Windows Implementation Library", licenses.WILAsStringView()},
+    Product {"Yoga", licenses.YogaAsStringView()},
+  };
+
+  const auto layout = BeginVStackPanel().Styled(Style().Gap(12)).Scoped();
+  {
+    const auto card = BeginCard().Scoped();
+    TextBlock(
+      "HTCC, Copyright © 2022-present Frederick Emmott\n\n"
+      "This software contains third-party components which are separately "
+      "licensed.\n\n"
+      "Select a component below for details.");
+  }
+
+  static std::size_t selectedIndex {};
+  ComboBox(&selectedIndex, products, &Product::mName)
+    .Styled(Style().AlignSelf(YGAlignStretch));
+
+  const auto card = BeginCard().Scoped().Styled(Style().Padding(0));
+  const auto scroll
+    = BeginVScrollView().Styled(Style().Width(800).Height(600)).Scoped();
+  TextBlock(products[selectedIndex].mLicense).Styled(Style().Margin(8));
+}
+
+static void LicensesGUI() {
+  static bool sShowingLicenses = false;
+  if (HyperlinkButton("Show copyright notices")) {
+    sShowingLicenses = true;
+  }
+  if (const auto dialog = BeginContentDialog(&sShowingLicenses).Scoped()) {
+    ContentDialogTitle("Copyright notices");
+    LicensesDialogContent();
+    const auto buttons = BeginContentDialogButtons().Scoped();
+    ContentDialogCloseButton("Close");
+  }
+}
+
 static void AboutGUI() {
-  BeginHStackPanel().Styled(Style().Gap(8));
+  {
+    const auto header = BeginHStackPanel().Styled(Style().Gap(8)).Scoped();
 
-  FontIcon("\ue74c", FontIconSize::Subtitle);
+    FontIcon("\ue74c", FontIconSize::Subtitle);
 
-  Label("About HTCC").Subtitle().Styled(Style().FlexGrow(1));
+    Label("About HTCC").Subtitle().Styled(Style().FlexGrow(1));
 
-  if (Button("Copy")) {
-    if (OpenClipboard(gWindowHandle)) {
-      const auto wide = HTCC::Utf8::ToWide(VersionString);
-      wil::unique_hglobal buf(
-        GlobalAlloc(0, (wide.size() + 1) * sizeof(wchar_t)));
-      memcpy(buf.get(), wide.data(), (wide.size() + 1) * sizeof(wchar_t));
-      EmptyClipboard();
-      if (SetClipboardData(CF_UNICODETEXT, buf.get())) {
-        buf.release();// owned by windows
+    if (Button("Copy")) {
+      if (OpenClipboard(gWindowHandle)) {
+        const auto wide = HTCC::Utf8::ToWide(VersionString);
+        wil::unique_hglobal buf(
+          GlobalAlloc(0, (wide.size() + 1) * sizeof(wchar_t)));
+        memcpy(buf.get(), wide.data(), (wide.size() + 1) * sizeof(wchar_t));
+        EmptyClipboard();
+        if (SetClipboardData(CF_UNICODETEXT, buf.get())) {
+          buf.release();// owned by windows
+        }
+        CloseClipboard();
       }
-      CloseClipboard();
     }
   }
-  EndHStackPanel();
 
-  BeginCard();
-  TextBlock(VersionString);
-  EndCard();
+  const auto card = BeginCard().Scoped().Styled(
+    Style().Gap(8).FlexDirection(YGFlexDirectionColumn));
+  TextBlock(VersionString).Body();
+  LicensesGUI();
 }
 
 static void FrameTick() {
