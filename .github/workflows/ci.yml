@@ -52,7 +52,7 @@ jobs:
           cmake -E make_directory "${{env.VCPKG_DEFAULT_BINARY_CACHE}}"
           $args = @()
           if ("${{github.ref_type}}" -eq "tag") {
-            $args += "-DIS_TAGGED_BUILD=ON
+            $args += "-DIS_TAGGED_BUILD=ON"
           }
           cmake `
             ${{github.workspace}}/source `
