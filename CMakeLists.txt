@@ -49,7 +49,7 @@ if (NOT VERSION_TWEAK_LABEL)
 endif ()
 option(IS_TAGGED_BUILD "Whether or not we're building a tagged version" OFF)
 option(IS_STABLE_BUILD "Whether or not we're building a tagged version" OFF)
-set(VERSION_SEMVER "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_MINOR}+${VERSION_TWEAK_LABEL}.${PROJECT_VERSION_TWEAK}")
+set(VERSION_SEMVER "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}+${VERSION_TWEAK_LABEL}.${PROJECT_VERSION_TWEAK}")
 
 include(cmake/output-paths.cmake)
 include(cmake/smol-binaries.cmake)
