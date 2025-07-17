@@ -50,13 +50,15 @@ jobs:
         shell: pwsh
         run: |
           cmake -E make_directory "${{env.VCPKG_DEFAULT_BINARY_CACHE}}"
-          $args = @(
-            "-DGITHUB_REF_TYPE=${{github.ref_type}}",
-            "-DGITHUB_REF_NAME=${{github.ref_name}}"
-          )
+          $args = @()
+          if ("${{github.ref_type}}" -eq "tag") {
+            $args += "-DIS_TAGGED_BUILD=ON
+          }
           cmake `
             ${{github.workspace}}/source `
             --preset "${{matrix.preset}}" `
+            -DVERSION_TWEAK=${{github.run_number}} `
+            -DVERSION_TWEAK_LABEL=gha `
             @args
       - name: Build
         id: build
