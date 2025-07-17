@@ -182,16 +182,16 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
     return;
   }
 
-  if (UseHandTrackingAimPointFB()) {
-    if (HasFlags(aimFB.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
-      state.mPositionUpdatedAt = frameInfo.mNow;
-      state.mPose = {aimFB.aimPose};
-    }
+  if (
+    UseHandTrackingAimPointFB()
+    && HasFlags(aimFB.status, XR_HAND_TRACKING_AIM_VALID_BIT_FB)) {
+    state.mPositionUpdatedAt = frameInfo.mNow;
+    state.mPose = {aimFB.aimPose};
   } else if (joints.isActive) {
-    const auto joint = jointLocations[Config::HandTrackingAimJoint];
-    if (
-      HasFlags(joint.locationFlags, XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)
-      && HasFlags(joint.locationFlags, XR_SPACE_LOCATION_POSITION_VALID_BIT)) {
+    if (const auto joint = jointLocations[Config::HandTrackingAimJoint];
+        HasFlags(joint.locationFlags, XR_SPACE_LOCATION_ORIENTATION_VALID_BIT)
+        && HasFlags(
+          joint.locationFlags, XR_SPACE_LOCATION_POSITION_VALID_BIT)) {
       state.mPositionUpdatedAt = frameInfo.mNow;
       state.mPose = {joint.pose};
     }
