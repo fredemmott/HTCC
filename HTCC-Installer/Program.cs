@@ -1,15 +1,14 @@
 ﻿using System.CommandLine;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.Marshalling;
+using System.Security.AccessControl;
 using WixSharp;
 using WixSharp.CommonTasks;
-using WixSharp.Controls;
-using File = WixSharp.File;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Win32;
 using WixToolset.Dtf.WindowsInstaller;
+using RegistryHive = WixSharp.RegistryHive;
 
 [assembly: InternalsVisibleTo(assemblyName: "HTCC-Installer.aot")] // assembly name + '.aot suffix
 
@@ -162,7 +161,7 @@ ManagedProject CreateProject(DirectoryInfo inputRoot)
     project.AddRegValue(new RegValue(RegistryHive.LocalMachine, @"SOFTWARE\Fred Emmott\HandTrackedCockpitClicking",
         "InstallDir",
         "[INSTALLDIR]"));
-   
+
     // CPack switched from per-machine to per-user MSIs; mark this MSI as an upgrade to either, not just
     // per machine
     project.AddActions(
@@ -177,6 +176,11 @@ ManagedProject CreateProject(DirectoryInfo inputRoot)
             Condition = Condition.Always,
             Sequence = Sequence.InstallUISequence,
             SequenceNumber = 5,
+        },
+        new ElevatedManagedAction(MyActions.ReorderUltraleapLayer)
+        {
+            When = When.After,
+            Step = Step.WriteRegistryValues,
         }
     );
     return project;
@@ -193,8 +197,8 @@ void AddGameConfigurations(DirectoryInfo inputRoot, ManagedProject managedProjec
 
 void RegisterApiLayer(DirectoryInfo directoryInfo, ManagedProject managedProject)
 {
-    const string apiLayersKey = @"SOFTWARE\Khronos\OpenXR\1\ApiLayers\Implicit";
-    managedProject.AddRegValue(new RegValue(RegistryHive.LocalMachine, apiLayersKey, "[INSTALLDIR]APILayer.json", 0));
+    managedProject.AddRegValue(new RegValue(RegistryHive.LocalMachine, Constants.ApiLayersKey,
+        "[INSTALLDIR]APILayer.json", 0));
 }
 
 void CreateShortcuts(DirectoryInfo directoryInfo, ManagedProject managedProject)
@@ -223,13 +227,14 @@ class JsonVersionInfo
     public bool Tagged { get; set; }
 }
 
-[JsonSourceGenerationOptions(PropertyNameCaseInsensitive = true, PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSourceGenerationOptions(PropertyNameCaseInsensitive = true,
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 [JsonSerializable(typeof(JsonVersionInfo))]
 internal partial class JsonVersionInfoContext : JsonSerializerContext
 {
 }
 
-class MyActions
+internal class MyActions
 {
     //  TODO: replace with `project.EnableUpgradingFromPerUserToPerMachine();`
     // https://github.com/oleg-shilo/wixsharp/issues/1818
@@ -246,7 +251,55 @@ class MyActions
             session.SetProperty("MIGRATE", it);
             session.SetProperty("UPGRADINGPRODUCTCODE", it);
         }
-        
+
         return ActionResult.Success;
     }
+
+    [CustomAction]
+    public static ActionResult ReorderUltraleapLayer(Session session)
+    {
+        try
+        {
+            ReorderUltraleapLayer();
+            return ActionResult.Success;
+        }
+        catch (Exception e)
+        {
+            session.Log($"Exception reordering Ultraleap layer: {e.Message}");
+            return ActionResult.Failure;
+        }
+    }
+
+    private static void ReorderUltraleapLayer()
+    {
+        var key = Registry.LocalMachine.OpenSubKey(Constants.ApiLayersKey,
+            RegistryKeyPermissionCheck.ReadWriteSubTree,
+            RegistryRights.QueryValues | RegistryRights.SetValue);
+
+
+        if (key == null)
+        {
+            return;
+        }
+
+        foreach (var valueName in key.GetValueNames())
+        {
+            if (!valueName.EndsWith("\\UltraleapHandTracking.json"))
+            {
+                continue;
+            }
+
+            var value = key.GetValue(valueName)!;
+            // Delete and recreate to put it at the end
+            key.DeleteValue(valueName);
+            key.SetValue(valueName, value);
+        }
+
+        key.Close();
+    }
+}
+
+internal class Constants
+{
+    public const string ApiLayersKey = @"SOFTWARE\Khronos\OpenXR\1\ApiLayers\Implicit";
 }
