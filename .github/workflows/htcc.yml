@@ -46,6 +46,7 @@ jobs:
           key: ${{matrix.preset}}-${{hashFiles('source/vcpkg.json', 'source/vcpkg-configuration.json')}}
           path: ${{env.VCPKG_DEFAULT_BINARY_CACHE}}
       - name: Configure
+        id: configure
         working-directory: build
         shell: pwsh
         run: |
@@ -57,12 +58,16 @@ jobs:
           if (-not "${{matrix.preset}}" -contains "clang") {
             $args += "-DSOURCELINK=https://raw.githubusercontent.com/fredemmott/HTCC/${{github.sha}}"
           }
+          
+          $OutputRoot = "${{runner.temp}}/OUTPUT_ROOT"
           cmake `
             ${{github.workspace}}/source `
             --preset "${{matrix.preset}}" `
             -DVERSION_TWEAK=${{github.run_number}} `
             -DVERSION_TWEAK_LABEL=gha `
+            "-DOUTPUT_ROOT=${OutputRoot}" `
             @args
+          Add-Content $Env:GITHUB_OUTPUT "output-root=${OutputRoot}"
       - name: Build
         id: build
         working-directory: build
@@ -72,25 +77,31 @@ jobs:
           $version="$(Get-Content version.txt)"
           Add-Content $Env:GITHUB_OUTPUT "version=${version}"
       - name: Build installer-generator
-        if: matrix.preset == 'Release'
         working-directory: source/HTCC-Installer
         shell: pwsh
         run: |
           dotnet publish `
             --configuration Release `
-            --output "${{github.workspace}}/build/out/RelWithDebInfo/wixsharp" `
+            --output "${{steps.configure.outputs.output-root}}/wixsharp" `
             HTCC-Installer.csproj
       - name: Build installer
         id: installer
-        if: matrix.preset == 'Release'
         shell: pwsh
-        working-directory: build/out/RelWithDebInfo
+        working-directory: ${{steps.configure.outputs.output-root}}
         run: |
+          # Pin specifically to WiX 5.0.2 to avoid any potential EULA changes
+          # https://github.com/wixtoolset/issues/issues/8974#issuecomment-2716432149
+          dotnet tool install --global wix --version '5.0.2'
+          wix extension add -g WixToolset.UI.wixext/5.0.2
+          wix extension list -g
+          
           wixsharp/HTCC-Installer.exe `
             "$(Get-Location)" `
           --stamp-file "${{github.workspace}}/installer.stamp"
-          $InstallerPath = Get-Content ${{github.workspace}}/installer.stamp
+          
+          $InstallerPath = Get-Content "${{github.workspace}}/installer.stamp"
           $InstallerName = (Get-Item $InstallerPath).Name
+          
           Add-Content $env:GITHUB_OUTPUT "installer-path=${InstallerPath}"
           Add-Content $env:GITHUB_OUTPUT "installer-name=${InstallerName}"
       - uses: actions/upload-artifact@v4
@@ -98,13 +109,14 @@ jobs:
         with:
           name: HTCC-v${{steps.build.outputs.version}}-bundle
           path: |
-            build/out/RelWithDebInfo/**/*
-            !build/out/RelWithDebInfo/**/*.pdb
+            ${{steps.configure.outputs.output-root}}/**/*
+            !${{steps.configure.outputs.output-root}}/**/*.pdb
+            !${{steps.configure.outputs.output-root}}/**/*.msi
       - uses: actions/upload-artifact@v4
         if: matrix.preset == 'Release'
         with:
           name: HTCC-v${{steps.build.outputs.VERSION}}-DebugSymbols
-          path: build/out/RelWithDebInfo/**/*.pdb
+          path: ${{steps.configure.outputs.output-root}}/**/*.pdb
       - uses: actions/upload-artifact@v4
         if: matrix.preset == 'Release'
         with:
