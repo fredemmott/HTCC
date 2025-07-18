@@ -72,26 +72,24 @@ jobs:
           $version="$(Get-Content version.txt)"
           Add-Content $Env:GITHUB_OUTPUT "version=${version}"
       - name: Build installer-generator
-        working-directory: HTCC-Installer
+        if: matrix.preset == 'Release'
+        working-directory: source/HTCC-Installer
         shell: pwsh
         run: |
           dotnet publish `
             --configuration Release `
-            --output "${{runner.temp}}/installer" `
+            --output "${{github.workspace}}/build/out/RelWithDebInfo/wixsharp" `
             HTCC-Installer.csproj
-      - uses: actions/upload-artifact@v4
-        if: matrix.preset == 'Release'
-        with:
-          name: HTCC-v${{steps.build.outputs.version}}-installer-generator
-          path: ${{github.workspace}}/build/out/RelWithDebInfo/installer-generator
       - name: Build installer
         id: installer
         shell: pwsh
         working-directory: build/out/RelWithDebInfo
         run: |
-          installer-generator/HTCC-Installer.exe `
+          wixsharp/HTCC-Installer.exe `
             "$(Get-Location)" `
           --stamp-file "${{github.workspace}}/installer.stamp"
+          $InstallerPath = Get-Content ${{github.workspace}}/installer.stamp
+          $InstallerName = (Get-Item $InstallerPath).Name
           Add-Content $env:GITHUB_OUTPUT "installer-path=${InstallerPath}"
           Add-Content $env:GITHUB_OUTPUT "installer-name=${InstallerName}"
       - uses: actions/upload-artifact@v4
