@@ -15,6 +15,28 @@ function(add_version_metadata TARGET)
   )
 endfunction()
 
+set(SOURCELINK "" CACHE STRING "URL to retrieve the source")
+if (SOURCELINK)
+  message(STATUS "Using SOURCELINK: ${SOURCELINK}")
+  cmake_path(
+    NATIVE_PATH
+    CMAKE_SOURCE_DIR
+    NORMALIZE
+    NATIVE_SOURCE
+  )
+  string(REPLACE "\\" "\\\\" NATIVE_SOURCE "${NATIVE_SOURCE}")
+  file(
+    WRITE
+    "${CMAKE_CURRENT_BINARY_DIR}/sourcelink.json"
+    "{ \"documents\": { \"${NATIVE_SOURCE}\\\\*\": \"${SOURCELINK}/*\" } }"
+  )
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    add_link_options("/SOURCELINK:${CMAKE_CURRENT_BINARY_DIR}/sourcelink.json")
+  else ()
+    message(WARNING "SOURCELINK was specified, but not using MSVC")
+  endif ()
+endif ()
+
 add_subdirectory(APILayer)
 add_subdirectory(lib)
 add_subdirectory(PointCtrlCalibration)

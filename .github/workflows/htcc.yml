@@ -54,6 +54,9 @@ jobs:
           if ("${{github.ref_type}}" -eq "tag") {
             $args += "-DIS_TAGGED_BUILD=ON"
           }
+          if (-not "${{matrix.preset}}" -contains "clang") {
+            $args += "-DSOURCELINK=https://raw.githubusercontent.com/fredemmott/HTCC/${{github.sha}}"
+          }
           cmake `
             ${{github.workspace}}/source `
             --preset "${{matrix.preset}}" `
