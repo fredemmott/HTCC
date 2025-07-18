@@ -85,3 +85,19 @@ jobs:
         with:
           name: HTCC-v${{steps.build.outputs.VERSION}}-DebugSymbols
           path: build/out/RelWithDebInfo/**/*.pdb
+  installer-generator:
+    name: Installer Generator
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build
+      working-directory: HTCC-Installer
+      shell: pwsh
+      run: |
+        dotnet publish `
+          --configuration Release `
+          --output "${{runner.temp}}/installer"
+    - uses: actions/upload-artifact@v4
+      with:
+        name: htcc-installer-generator
+        path: ${{runner.temp}}/installer
