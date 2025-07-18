@@ -116,7 +116,7 @@ jobs:
         if: matrix.preset == 'Release'
         with:
           name: HTCC-v${{steps.build.outputs.VERSION}}-DebugSymbols
-          path: ${{steps.configure.outputs.output-root}}/**/*.pdb
+          path: ${{steps.configure.outputs.output-root}}/bin/*.pdb
       - uses: actions/upload-artifact@v4
         if: matrix.preset == 'Release'
         with:
