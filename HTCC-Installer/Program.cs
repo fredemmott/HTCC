@@ -151,6 +151,7 @@ ManagedProject CreateProject(DirectoryInfo inputRoot)
 
     project.GUID = Guid.Parse("2f0cd440-8d59-4572-aabe-a7b4e7ffcdcd");
     project.Platform = Platform.x64;
+    project.AfterInstall += InstallUpdater;
 
     project.SourceBaseDir = inputRoot.FullName;
 
@@ -208,6 +209,24 @@ void CreateShortcuts(DirectoryInfo directoryInfo, ManagedProject managedProject)
     file.AddShortcuts(
         new FileShortcut("HTCC Settings", "%Desktop%"),
         new FileShortcut("HTCC Settings", "%ProgramMenuFolder%"));
+}
+
+void InstallUpdater(SetupEventArgs e)
+{
+    if (!e.IsElevated)
+    {
+        e.Session.Log("Not installing updater, not elevated.");
+        return;
+    }
+
+    var path = e.InstallDir + "/fredemmott_HTCC_Updater.exe";
+    if (!System.IO.File.Exists(path))
+    {
+        e.Session.Log($"Not installing updater, `{path}` does not exist.");
+        return;
+    }
+
+    Process.Start(path, "--install --silent --no-scheduled-task");
 }
 
 class JsonVersionComponents
@@ -297,6 +316,7 @@ internal class MyActions
 
         key.Close();
     }
+
 }
 
 internal class Constants

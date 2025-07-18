@@ -38,3 +38,28 @@ file(
   OUTPUT "${OUT_DIR}/version.txt"
   CONTENT "${VERSION_SEMVER}"
 )
+
+file(
+  DOWNLOAD
+  "https://github.com/fredemmott/autoupdates/releases/download/vicius-v1.8.876%2Bfredemmott.2/Updater-Release.exe"
+  "${CMAKE_CURRENT_BINARY_DIR}/updater.exe"
+  EXPECTED_HASH "SHA256=d0cadc82c17ca8d39987837e9d89b7cb3079437353ecf081e579abc14ecce317"
+)
+set(UPDATER_EXE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/fredemmott_HTCC_Updater.exe")
+add_custom_command(
+  OUTPUT "${UPDATER_EXE}"
+  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/updater.exe"
+  COMMAND
+  "${CMAKE_COMMAND}" -E copy_if_different
+  "${CMAKE_CURRENT_BINARY_DIR}/updater.exe" "${UPDATER_EXE}"
+)
+add_custom_target(updater ALL DEPENDS "${UPDATER_EXE}")
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/updater.json.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/updater.json.configured"
+)
+file(
+  GENERATE
+  OUTPUT "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/fredemmott_HTCC_Updater.json"
+  INPUT "${CMAKE_CURRENT_BINARY_DIR}/updater.json.configured"
+)

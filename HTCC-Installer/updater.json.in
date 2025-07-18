@@ -1,0 +1,5 @@
+{
+  "instance": {
+    "serverUrlTemplate": "https://autoupdates.fredemmott.com/{}/$<IF:$<BOOL:${IS_STABLE_BUILD}>,live,test>.json"
+  }
+}
