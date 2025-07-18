@@ -70,35 +70,44 @@ jobs:
           cmake --build . `
             --parallel
           $version="$(Get-Content version.txt)"
-          Add-Content $Env:GITHUB_OUTPUT "VERSION=${version}"
-      - name: Upload binaries
-        uses: actions/upload-artifact@v4
+          Add-Content $Env:GITHUB_OUTPUT "version=${version}"
+      - name: Build installer-generator
+        working-directory: HTCC-Installer
+        shell: pwsh
+        run: |
+          dotnet publish `
+            --configuration Release `
+            --output "${{runner.temp}}/installer" `
+            HTCC-Installer.csproj
+      - uses: actions/upload-artifact@v4
         if: matrix.preset == 'Release'
         with:
-          name: HTCC-v${{steps.build.outputs.VERSION}}
+          name: HTCC-v${{steps.build.outputs.version}}-installer-generator
+          path: ${{github.workspace}}/build/out/RelWithDebInfo/installer-generator
+      - name: Build installer
+        id: installer
+        shell: pwsh
+        working-directory: build/out/RelWithDebInfo
+        run: |
+          installer-generator/HTCC-Installer.exe `
+            "$(Get-Location)" `
+          --stamp-file "${{github.workspace}}/installer.stamp"
+          Add-Content $env:GITHUB_OUTPUT "installer-path=${InstallerPath}"
+          Add-Content $env:GITHUB_OUTPUT "installer-name=${InstallerName}"
+      - uses: actions/upload-artifact@v4
+        if: matrix.preset == 'Release'
+        with:
+          name: HTCC-v${{steps.build.outputs.version}}-bundle
           path: |
             build/out/RelWithDebInfo/**/*
             !build/out/RelWithDebInfo/**/*.pdb
-      - name: Upload debug symbols
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         if: matrix.preset == 'Release'
         with:
           name: HTCC-v${{steps.build.outputs.VERSION}}-DebugSymbols
           path: build/out/RelWithDebInfo/**/*.pdb
-  installer-generator:
-    name: Installer Generator
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Build
-      working-directory: HTCC-Installer
-      shell: pwsh
-      run: |
-        dotnet publish `
-          --configuration Release `
-          --output "${{runner.temp}}/installer" `
-          HTCC-Installer.csproj
-    - uses: actions/upload-artifact@v4
-      with:
-        name: htcc-installer-generator
-        path: ${{runner.temp}}/installer
+      - uses: actions/upload-artifact@v4
+        if: matrix.preset == 'Release'
+        with:
+          name: ${{steps.installer.outputs.installer-name}}
+          path: ${{steps.installer.outputs.installer-path}}
