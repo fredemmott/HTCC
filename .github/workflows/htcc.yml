@@ -82,6 +82,7 @@ jobs:
             HTCC-Installer.csproj
       - name: Build installer
         id: installer
+        if: matrix.preset == 'Release'
         shell: pwsh
         working-directory: build/out/RelWithDebInfo
         run: |
