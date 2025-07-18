@@ -20,6 +20,7 @@ target_link_libraries(
   fredemmott-gui::fredemmott-gui
 )
 target_link_options(HTCCSettings PRIVATE "/MANIFESTUAC:level='requireAdministrator'")
+add_version_metadata(HTCCSettings)
 
 set(VERSION_HEADER_FILE "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/include/version.h")
 configure_file(version.h.in "${CMAKE_CURRENT_BINARY_DIR}/version.h.configured")
@@ -55,11 +56,3 @@ add_compressed_embed_library(
 )
 target_include_directories(licenses PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/include")
 target_link_libraries(HTCCSettings PRIVATE licenses)
-
-install(TARGETS HTCCSettings)
-install(
-  FILES
-  "$<TARGET_PDB_FILE:HTCCSettings>"
-  DESTINATION "."
-  COMPONENT DebugSymbols
-)
