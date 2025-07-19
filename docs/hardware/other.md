@@ -1,8 +1,9 @@
 ---
 parent: Device Setup
+nav_order: 999
 ---
 
-# Other headsets
+# Other Headsets
 
 ## The original Pimax Crystal with the Pimax Hand Tracking module
 
