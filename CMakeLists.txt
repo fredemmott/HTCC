@@ -51,8 +51,9 @@ option(IS_TAGGED_BUILD "Whether or not we're building a tagged version" OFF)
 option(IS_STABLE_BUILD "Whether or not we're building a tagged version" OFF)
 set(VERSION_SEMVER "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}+${VERSION_TWEAK_LABEL}.${PROJECT_VERSION_TWEAK}")
 
-include(cmake/output-paths.cmake)
-include(cmake/smol-binaries.cmake)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+include(output-paths)
+include(smol-binaries)
 message(STATUS "${CMAKE_PROJECT_NAME} v${CMAKE_PROJECT_VERSION}")
 
 # Handy for CI
