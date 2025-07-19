@@ -55,7 +55,10 @@ jobs:
           if ("${{github.ref_type}}" -eq "tag") {
             $args += "-DIS_TAGGED_BUILD=ON"
           }
-          if (-not "${{matrix.preset}}" -contains "clang") {
+          if ("${{matrix.preset}}" -contains "clang") {
+            echo "NOT adding SOURCELINK - not supported by clang's linker"
+          } else {
+            echo "Telling CMake to enable SOURCELINK"
             $args += "-DSOURCELINK=https://raw.githubusercontent.com/fredemmott/HTCC/${{github.sha}}"
           }
           
