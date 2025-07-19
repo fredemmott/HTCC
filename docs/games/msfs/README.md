@@ -2,9 +2,10 @@
 parent: Game Setup
 ---
 
-# MSFS
+# MSFS 2020
 
-No special setup needed; just be sure to follow the setup instructions for your hardware before installing Hand Tracked Cockpit Clicking:
+No special setup needed; just be sure to follow the setup instructions for your hardware before installing Hand Tracked
+Cockpit Clicking:
 
 - [Oculus Hand Tracking](../oculus-hand-tracking/README.md)
 - [PointCTRL](../../hardware/pointctrl/README.md)
