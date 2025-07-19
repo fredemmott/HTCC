@@ -9,6 +9,7 @@ target_include_directories(
   PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}"
 )
+find_package(OpenXR CONFIG REQUIRED)
 target_link_libraries(
   HTCCSettings
   PRIVATE
@@ -18,6 +19,8 @@ target_link_libraries(
   System::Shell32
   System::User32
   fredemmott-gui::fredemmott-gui
+  OpenXR::headers
+  OpenXR::openxr_loader
 )
 target_link_options(HTCCSettings PRIVATE "/MANIFESTUAC:level='requireAdministrator'")
 add_version_metadata(HTCCSettings)

@@ -3,6 +3,7 @@
 
 #include <Windows.h>
 #include <dwmapi.h>
+#include <openxr/openxr.h>
 #include <shellapi.h>
 #include <shlobj_core.h>
 #include <wil/com.h>
@@ -151,6 +152,23 @@ static void UnsupportedSettingsGUI() {
   EndCard();
 }
 
+static void StatusRow(const bool value, const std::string_view label) {
+  const auto row = BeginHStackPanel(ID {label}).Scoped();
+
+  static const auto BaseStyle = Style().Width(8).AlignSelf(YGAlignCenter);
+  static const auto TrueStyle = BaseStyle + Style().Color(Colors::Green);
+  static const auto FalseStyle = BaseStyle + Style().Color(Colors::Red);
+
+  if (value) {
+    // StatusCircleRing + StatusCircleChecked
+    FontIcon({{"\uf138"}, {"\uf13e"}}).Styled(TrueStyle);
+  } else {
+    // StatusCircleBlock
+    FontIcon({{"\uf140"}}).Styled(FalseStyle);
+  }
+  Label(label);
+}
+
 static void GesturesGUI() {
   BeginEnabled(
     HTCC::Config::PointerSource == HTCC::PointerSource::OpenXRHandTracking);
@@ -160,17 +178,55 @@ static void GesturesGUI() {
   BeginCard();
   BeginVStackPanel();
 
+  uint32_t extensionCount {};
+  const auto haveOpenXR = XR_SUCCEEDED(xrEnumerateInstanceExtensionProperties(
+    nullptr, 0, &extensionCount, nullptr));
+  bool haveHandTracking = false;
+  bool haveHandTrackingAimPointFB = false;
+  if (haveOpenXR) {
+    std::vector<XrExtensionProperties> extensions(
+      extensionCount, {XR_TYPE_EXTENSION_PROPERTIES});
+    if (XR_SUCCEEDED(xrEnumerateInstanceExtensionProperties(
+          nullptr, extensions.size(), &extensionCount, extensions.data()))) {
+      for (auto&& extension: extensions) {
+        constexpr std::string_view handTrackingExt {
+          XR_EXT_HAND_TRACKING_EXTENSION_NAME};
+        constexpr std::string_view handTrackingAimPointFB {
+          XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME};
+        if (extension.extensionName == handTrackingExt) {
+          haveHandTracking = true;
+        }
+        if (extension.extensionName == handTrackingAimPointFB) {
+          haveHandTrackingAimPointFB = true;
+        }
+      }
+    }
+  }
+  StatusRow(
+    haveOpenXR, haveOpenXR ? "OpenXR appears usable" : "OpenXR is not usable");
+  StatusRow(
+    haveHandTracking,
+    haveHandTracking ? "The runtime supports hand tracking"
+                     : "The runtime does not support hand tracking");
+  StatusRow(
+    haveHandTrackingAimPointFB,
+    haveHandTrackingAimPointFB ? "The runtime supports pinch gestures"
+                               : "The runtime does not support pinch gestures");
+
   if (ToggleSwitch(&HTCC::Config::HandTrackingHibernateGestureEnabled)
         .Caption("Hold a hand up to suspend HTCC")) {
     HTCC::Config::SaveHandTrackingHibernateGestureEnabled();
   }
 
-  if (ToggleSwitch(&HTCC::Config::PinchToClick).Caption("Pinch to click")) {
-    HTCC::Config::SavePinchToClick();
-  }
+  {
+    const auto disabled = BeginEnabled(haveHandTrackingAimPointFB).Scoped();
+    if (ToggleSwitch(&HTCC::Config::PinchToClick).Caption("Pinch to click")) {
+      HTCC::Config::SavePinchToClick();
+    }
 
-  if (ToggleSwitch(&HTCC::Config::PinchToScroll).Caption("Pinch to scroll")) {
-    HTCC::Config::SavePinchToScroll();
+    if (ToggleSwitch(&HTCC::Config::PinchToScroll).Caption("Pinch to scroll")) {
+      HTCC::Config::SavePinchToScroll();
+    }
   }
 
   EndVStackPanel();
