@@ -1,6 +1,6 @@
 ---
 parent: Device Setup
-nav_order: 999
+nav_order: 5
 ---
 
 # Other Headsets

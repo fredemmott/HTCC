@@ -1,5 +1,6 @@
 ---
 parent: Device Setup
+nav_order: 3
 ---
 
 # SteamVR Hand Tracking
