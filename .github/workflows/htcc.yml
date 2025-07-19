@@ -55,7 +55,7 @@ jobs:
           if ("${{github.ref_type}}" -eq "tag") {
             $args += "-DIS_TAGGED_BUILD=ON"
           }
-          if ("${{matrix.preset}}" -contains "clang") {
+          if ("${{matrix.preset}}" -like "*clang*") {
             echo "NOT adding SOURCELINK - not supported by clang's linker"
           } else {
             echo "Telling CMake to enable SOURCELINK"
