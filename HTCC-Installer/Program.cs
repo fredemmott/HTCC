@@ -181,27 +181,16 @@ ManagedProject CreateProject(DirectoryInfo inputRoot)
         "InstallDir",
         "[INSTALLDIR]"));
 
-    // CPack switched from per-machine to per-user MSIs; mark this MSI as an upgrade to either, not just
-    // per machine
     project.AddActions(
-        new ManagedAction(MyActions.FindAllRelatedProducts)
-        {
-            Condition = Condition.Always,
-            Sequence = Sequence.InstallExecuteSequence,
-            SequenceNumber = 5,
-        },
-        new ManagedAction(MyActions.FindAllRelatedProducts)
-        {
-            Condition = Condition.Always,
-            Sequence = Sequence.InstallUISequence,
-            SequenceNumber = 5,
-        },
         new ElevatedManagedAction(MyActions.ReorderUltraleapLayer)
         {
             When = When.After,
             Step = Step.WriteRegistryValues,
         }
     );
+    // CPack switched from per-machine to per-user MSIs; mark this MSI as an upgrade to either, not just
+    // per machine
+    project.EnableUpgradingFromPerUserToPerMachine();
     return project;
 }
 
@@ -273,25 +262,6 @@ internal partial class JsonVersionInfoContext : JsonSerializerContext
 
 internal class MyActions
 {
-    //  TODO: replace with `project.EnableUpgradingFromPerUserToPerMachine();`
-    // https://github.com/oleg-shilo/wixsharp/issues/1818
-    [CustomAction]
-    public static ActionResult FindAllRelatedProducts(Session session)
-    {
-        var upgradeCode = session.QueryUpgradeCode();
-        var productCode = session.QueryProperty("ProductCode");
-        var packages = AppSearch.GetRelatedProducts(upgradeCode).Where(it => it != productCode).ToArray();
-        if (packages.Length >= 1)
-        {
-            var it = packages.First();
-            session.SetProperty("WIX_UPGRADE_DETECTED", it);
-            session.SetProperty("MIGRATE", it);
-            session.SetProperty("UPGRADINGPRODUCTCODE", it);
-        }
-
-        return ActionResult.Success;
-    }
-
     [CustomAction]
     public static ActionResult ReorderUltraleapLayer(Session session)
     {
@@ -334,7 +304,6 @@ internal class MyActions
 
         key.Close();
     }
-
 }
 
 internal class Constants
