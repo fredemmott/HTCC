@@ -133,8 +133,26 @@ void BuildMsi(ManagedProject managedProject, FileInfo? fileInfo)
     }
 }
 
+// Workaround for https://github.com/oleg-shilo/wixsharp/issues/1823
+void SetWindowsKitsPath()
+{
+    var kitsRoot = ((string)Microsoft.Win32.Registry.GetValue(
+        @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots",
+        "KitsRoot10",
+        null)!) + "bin";
+    WixTools.WellKnownLocations =
+    [
+        Directory.GetDirectories(kitsRoot, "10.*")
+            .OrderByDescending(x => new Version(x.PathGetFileName()))
+            .Select(x => x.PathCombine("x86"))
+            .First()
+    ];
+}
+
 ManagedProject CreateProject(DirectoryInfo inputRoot)
 {
+    SetWindowsKitsPath();
+
     var installerResources = new Feature("Installer Resources")
     {
         IsEnabled = false
