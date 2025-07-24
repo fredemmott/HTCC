@@ -153,8 +153,12 @@ static void UnsupportedSettingsGUI() {
   EndCard();
 }
 
-static void StatusRow(const bool value, const std::string_view label) {
-  const auto row = BeginHStackPanel(ID {label}).Scoped();
+static void StatusRow(
+  const bool value,
+  const std::string_view trueLabel,
+  const std::string_view falseLabel,
+  const ID id = ID {std::source_location::current()}) {
+  const auto row = BeginHStackPanel(id).Scoped().Styled(Style().FlexGrow(1));
 
   static const auto BaseStyle = Style().Width(8).AlignSelf(YGAlignCenter);
   static const auto TrueStyle = BaseStyle + Style().Color(Colors::Green);
@@ -167,24 +171,124 @@ static void StatusRow(const bool value, const std::string_view label) {
     // StatusCircleBlock
     FontIcon({{"\uf140"}}).Styled(FalseStyle);
   }
-  Label(label);
+
+  Label(value ? trueLabel : falseLabel).Styled(Style().FlexGrow(1));
 }
 
-static void GesturesGUI() {
+enum class UltraleapResult {
+  NotFound,
+  HTCCFirst,
+  UltraleapFirst,
+};
+
+static std::tuple<UltraleapResult, std::wstring> GetUltraleapAPILayer() {
+  wil::unique_hkey key;
+  if (!SUCCEEDED(
+        wil::reg::open_unique_key_nothrow(
+          HKEY_LOCAL_MACHINE, APILayerSubkey, key))) {
+    return {UltraleapResult::NotFound, {}};
+  }
+
+  bool haveHTCC = false;
+
+  for (auto&& data: wil::make_range(
+         wil::reg::value_iterator(key.get()), wil::reg::value_iterator())) {
+    if (data.name == GetAPILayerPath()) {
+      haveHTCC = true;
+      continue;
+    }
+    if (!data.name.ends_with(L"\\UltraleapHandTracking.json")) {
+      continue;
+    }
+    DWORD disabled {};
+    if (!SUCCEEDED(
+          wil::reg::get_value_dword_nothrow(
+            key.get(), data.name.c_str(), &disabled))) {
+      continue;
+    }
+    if (!disabled) {
+      return {
+        haveHTCC ? UltraleapResult::HTCCFirst : UltraleapResult::UltraleapFirst,
+        data.name};
+    }
+  }
+
+  return {UltraleapResult::NotFound, {}};
+}
+
+static void UltraleapGUI() {
+  static const auto [ultraleap, ultraleapPath] = GetUltraleapAPILayer();
+  if (ultraleap == UltraleapResult::NotFound) {
+    StatusRow(true, "Ultraleap not found", "ERROR");
+    return;
+  }
+
+  static bool fixed = false;
+  const auto row = BeginHStackPanel().Scoped().Styled(
+    Style()
+      .AlignSelf(YGAlignStretch)
+      .AlignContent(YGAlignStretch)
+      .AlignItems(YGAlignCenter)
+      .JustifyContent(YGJustifyCenter));
+  StatusRow(
+    fixed || (ultraleap == UltraleapResult::HTCCFirst),
+    "Ultraleap appears usable by HTCC",
+    "Ultraleap is not usable by HTCC");
+  const auto enabled
+    = BeginEnabled(ultraleap == UltraleapResult::UltraleapFirst && !fixed)
+        .Scoped();
+  static bool showingFixError = false;
+  static std::string fixError;
+  if (Button("Fix")) {
+    if (const auto result = RegDeleteKeyValueW(
+          HKEY_LOCAL_MACHINE, APILayerSubkey, ultraleapPath.c_str());
+        result != ERROR_SUCCESS) {
+      showingFixError = true;
+      const auto hr = HRESULT_FROM_WIN32(result);
+      fixError = std::format(
+        "Error removing Ultraleap registry value: {} ({:#010x})",
+        std::system_error(static_cast<int>(hr), std::system_category()).what(),
+        std::bit_cast<uint32_t>(hr));
+    } else if (const auto hr = wil::reg::set_value_dword_nothrow(
+                 HKEY_LOCAL_MACHINE, APILayerSubkey, ultraleapPath.c_str(), 0);
+               FAILED(hr)) {
+      showingFixError = true;
+      fixError = std::format(
+        "Error creating Ultraleap registry value: {} ({:#010x})",
+        std::system_error(static_cast<int>(hr), std::system_category()).what(),
+        std::bit_cast<uint32_t>(hr));
+    } else {
+      fixed = true;
+    }
+  }
+
+  if (const auto dialog = BeginContentDialog(&showingFixError).Scoped()) {
+    ContentDialogTitle("Couldn't fix Ultraleap layer");
+
+    TextBlock(fixError);
+
+    const auto buttons = BeginContentDialogButtons().Scoped();
+    ContentDialogCloseButton("Close");
+  }
+}
+
+static void OpenXRGUI() {
   BeginEnabled(
     HTCC::Config::PointerSource == HTCC::PointerSource::OpenXRHandTracking);
 
   Label("OpenXR hand tracking").Subtitle();
 
   BeginCard();
-  BeginVStackPanel();
+  BeginVStackPanel().Styled(Style().FlexGrow(1).AlignSelf(YGAlignStretch));
 
   uint32_t extensionCount {};
-  const auto haveOpenXR = XR_SUCCEEDED(xrEnumerateInstanceExtensionProperties(
-    nullptr, 0, &extensionCount, nullptr));
-  bool haveHandTracking = false;
-  bool haveHandTrackingAimPointFB = false;
-  if (haveOpenXR) {
+  static const auto haveOpenXR
+    = XR_SUCCEEDED(xrEnumerateInstanceExtensionProperties(
+      nullptr, 0, &extensionCount, nullptr));
+  static bool haveHandTracking = false;
+  static bool haveHandTrackingAimPointFB = false;
+  static bool haveInitOpenXR = false;
+  if (haveOpenXR && !std::exchange(haveInitOpenXR, true)) {
     std::vector<XrExtensionProperties> extensions(
       extensionCount, {XR_TYPE_EXTENSION_PROPERTIES});
     if (XR_SUCCEEDED(xrEnumerateInstanceExtensionProperties(
@@ -203,16 +307,19 @@ static void GesturesGUI() {
       }
     }
   }
-  StatusRow(
-    haveOpenXR, haveOpenXR ? "OpenXR appears usable" : "OpenXR is not usable");
+  StatusRow(haveOpenXR, "OpenXR appears usable", "OpenXR is not usable");
   StatusRow(
     haveHandTracking,
-    haveHandTracking ? "The runtime supports hand tracking"
-                     : "The runtime does not support hand tracking");
+    "The runtime supports hand tracking",
+    "The runtime does not support hand tracking");
   StatusRow(
     haveHandTrackingAimPointFB,
-    haveHandTrackingAimPointFB ? "The runtime supports pinch gestures"
-                               : "The runtime does not support pinch gestures");
+    "The runtime supports pinch gestures",
+    "The runtime does not support pinch gestures");
+
+  if (haveOpenXR) {
+    UltraleapGUI();
+  }
 
   if (ToggleSwitch(&HTCC::Config::HandTrackingHibernateGestureEnabled)
         .Caption("Hold a hand up to suspend HTCC")) {
@@ -395,7 +502,7 @@ static void FrameTick() {
 
   CommonSettingsGUI();
   UnsupportedSettingsGUI();
-  GesturesGUI();
+  OpenXRGUI();
   PointCtrlGUI();
   AboutGUI();
 
