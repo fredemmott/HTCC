@@ -107,7 +107,8 @@ static void CommonSettingsGUI() {
   static bool isEnabled = IsAPILayerEnabled();
   if (ToggleSwitch(&isEnabled).Caption("Enable HTCC")) {
     const DWORD disabled = isEnabled ? 0 : 1;
-    wil::reg::set_value_dword(HKEY_LOCAL_MACHINE, APILayerSubkey, disabled);
+    wil::reg::set_value_dword(
+      HKEY_LOCAL_MACHINE, APILayerSubkey, GetAPILayerPath().c_str(), disabled);
   }
 
   PointerSourceGUI();
