@@ -3,6 +3,8 @@
 #pragma once
 #include <wil/registry.h>
 
+#include <shared_mutex>
+
 /** Class encapsulating actual OpenXR settings, rather than HTCC settings.
  *
  * For example, this includes runtime and API layer status.
@@ -48,6 +50,18 @@ struct OpenXRSettings {
     return mData.mUltraleapPath;
   }
 
+  void lock_shared() {
+    mMutex.lock_shared();
+  }
+
+  bool try_lock_shared() {
+    return mMutex.try_lock_shared();
+  }
+
+  void unlock_shared() {
+    mMutex.unlock_shared();
+  }
+
  private:
   struct MutableData {
     bool mIsApiLayerEnabled {false};
@@ -60,6 +74,8 @@ struct OpenXRSettings {
   };
 
   const std::wstring mAPILayerPath;
+
+  std::shared_mutex mMutex;
   MutableData mData;
 
   wil::unique_registry_watcher mRegWatcher;

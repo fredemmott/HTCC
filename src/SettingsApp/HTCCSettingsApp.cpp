@@ -61,7 +61,7 @@ auto GetKnownFolderPath() {
   return sPath;
 }
 
-static const OpenXRSettings gOpenXRSettings;
+static OpenXRSettings gOpenXRSettings;
 
 void PointerSourceGUI() {
   constexpr auto Options = std::array {
@@ -232,6 +232,7 @@ static void UltraleapGUI() {
 }
 
 static void OpenXRGUI() {
+  const auto openxrLock = std::shared_lock(gOpenXRSettings);
   BeginEnabled(
     HTCC::Config::PointerSource == HTCC::PointerSource::OpenXRHandTracking);
 

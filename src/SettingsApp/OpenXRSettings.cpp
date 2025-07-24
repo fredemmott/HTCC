@@ -34,6 +34,8 @@ OpenXRSettings::OpenXRSettings() : mAPILayerPath(GetAPILayerPath()) {
 }
 
 void OpenXRSettings::Load() {
+  const auto lock = std::unique_lock(mMutex);
+
   mData = {};
   mData.mIsApiLayerEnabled = IsAPILayerEnabled();
 
