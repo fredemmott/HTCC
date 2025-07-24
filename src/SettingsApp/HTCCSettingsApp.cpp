@@ -45,22 +45,6 @@ const auto VersionString = std::format(
 #endif
   Version::BuildMode);
 
-template <const GUID& TFolderID>
-auto GetKnownFolderPath() {
-  static std::filesystem::path sPath;
-  static std::once_flag sOnce;
-  std::call_once(sOnce, [&path = sPath]() {
-    wil::unique_cotaskmem_string buf;
-    HTCC::CheckHResult(
-      SHGetKnownFolderPath(TFolderID, KF_FLAG_DEFAULT, nullptr, buf.put()));
-    path = {std::wstring_view {buf.get()}};
-    if (std::filesystem::exists(path)) {
-      path = std::filesystem::canonical(path);
-    }
-  });
-  return sPath;
-}
-
 static OpenXRSettings gOpenXRSettings;
 
 void PointerSourceGUI() {
