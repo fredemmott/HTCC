@@ -5,8 +5,10 @@ nav_order: 3
 
 # SteamVR Hand Tracking
 
-Starting with HTCC v1.3.6 (currently in beta), HTCC is compatible with SteamVR's OpenXR runtime. As of July 2025,
-future versions of SteamVR are expected to increase compatibility with stable versions of HTCC.
+As of July 2025:
+
+- Stable SteamVR (v2.11.2) requires HTCC beta v1.3.6
+- SteamVR beta (v2.12.6 or above) can be used with either stable or beta versions of HTCC
 
 ## Requirements
 
