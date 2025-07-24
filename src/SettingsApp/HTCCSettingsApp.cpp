@@ -441,12 +441,16 @@ int WINAPI wWinMain(
     lpCmdLine,
     nCmdShow,
     [](Win32Window&) { FrameTick(); },
-    {"HTCC Settings"},
-    {.mHooks = {
-       .mBeforeMainLoop =
-         [](Win32Window& window) {
-           HTCC::Config::LoadBaseConfig();
-           gWindowHandle = window.GetNativeHandle();
-         },
-     }});
+    { "HTCC Settings" },
+    {
+      .mHooks = {
+        .mBeforeMainLoop =
+          [](Win32Window& window) {
+            HTCC::Config::LoadBaseConfig();
+            gWindowHandle = window.GetNativeHandle();
+            gOpenXRSettings.OnReload(
+              std::bind_front(&Window::InterruptWaitFrame, &window));
+        },
+      },
+    });
 }

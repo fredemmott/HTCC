@@ -50,6 +50,12 @@ struct OpenXRSettings {
     return mData.mUltraleapPath;
   }
 
+  template <std::convertible_to<std::function<void()>> F>
+  void OnReload(F&& onReload) {
+    const auto lock = std::unique_lock(mMutex);
+    mOnReload.emplace_back(std::forward<F>(onReload));
+  }
+
   void lock_shared() {
     mMutex.lock_shared();
   }
@@ -79,6 +85,7 @@ struct OpenXRSettings {
   MutableData mData;
 
   wil::unique_registry_watcher mRegWatcher;
+  std::vector<std::function<void()>> mOnReload;
 
   void Load();
   void LoadRuntime();

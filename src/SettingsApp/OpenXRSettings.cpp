@@ -30,7 +30,13 @@ OpenXRSettings::OpenXRSettings() : mAPILayerPath(GetAPILayerPath()) {
   this->Load();
 
   mRegWatcher = wil::make_registry_watcher(
-    HKEY_LOCAL_MACHINE, OpenXRSubkey, true, [this](auto) { this->Load(); });
+    HKEY_LOCAL_MACHINE, OpenXRSubkey, true, [this](auto) {
+      this->Load();
+      const auto lock = std::shared_lock(mMutex);
+      for (auto&& onReload: mOnReload) {
+        onReload();
+      }
+    });
 }
 
 void OpenXRSettings::Load() {
