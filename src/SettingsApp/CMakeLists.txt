@@ -3,6 +3,8 @@ add_executable(
   WIN32
   HTCCSettingsApp.manifest
   HTCCSettingsApp.cpp
+  OpenXRSettings.h
+  OpenXRSettings.cpp
 )
 target_include_directories(
   HTCCSettings

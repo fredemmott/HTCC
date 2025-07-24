@@ -22,6 +22,7 @@
 #include "../lib/PointCtrlSource.h"
 #include "CheckHResult.hpp"
 #include "Licenses.hpp"
+#include "OpenXRSettings.h"
 #include "version.h"
 
 using namespace FredEmmott::GUI;
@@ -60,25 +61,7 @@ auto GetKnownFolderPath() {
   return sPath;
 }
 
-static std::wstring GetAPILayerPath() {
-  wchar_t buf[MAX_PATH];
-  const auto bufLen = GetModuleFileNameW(nullptr, buf, MAX_PATH);
-  return std::filesystem::weakly_canonical(
-           std::filesystem::path(std::wstring_view {buf, bufLen}).parent_path()
-           / "APILayer.json")
-    .wstring();
-}
-
-static constexpr wchar_t APILayerSubkey[]
-  = L"SOFTWARE\\Khronos\\OpenXR\\1\\ApiLayers\\Implicit";
-
-static bool IsAPILayerEnabled() noexcept {
-  const auto path = GetAPILayerPath();
-  const auto disabled = wil::reg::try_get_value_dword(
-                          HKEY_LOCAL_MACHINE, APILayerSubkey, path.c_str())
-                          .value_or(1);
-  return !disabled;
-}
+static const OpenXRSettings gOpenXRSettings;
 
 void PointerSourceGUI() {
   constexpr auto Options = std::array {
@@ -104,11 +87,14 @@ static void CommonSettingsGUI() {
   BeginCard();
   BeginVStackPanel();
 
-  static bool isEnabled = IsAPILayerEnabled();
+  bool isEnabled = gOpenXRSettings.IsApiLayerEnabled();
   if (ToggleSwitch(&isEnabled).Caption("Enable HTCC")) {
     const DWORD disabled = isEnabled ? 0 : 1;
     wil::reg::set_value_dword(
-      HKEY_LOCAL_MACHINE, APILayerSubkey, GetAPILayerPath().c_str(), disabled);
+      HKEY_LOCAL_MACHINE,
+      OpenXRSettings::APILayerSubkey,
+      gOpenXRSettings.GetApiLayerPath().c_str(),
+      disabled);
   }
 
   PointerSourceGUI();
@@ -181,47 +167,16 @@ enum class UltraleapResult {
   UltraleapFirst,
 };
 
-static std::tuple<UltraleapResult, std::wstring> GetUltraleapAPILayer() {
-  wil::unique_hkey key;
-  if (!SUCCEEDED(
-        wil::reg::open_unique_key_nothrow(
-          HKEY_LOCAL_MACHINE, APILayerSubkey, key))) {
-    return {UltraleapResult::NotFound, {}};
-  }
-
-  bool haveHTCC = false;
-
-  for (auto&& data: wil::make_range(
-         wil::reg::value_iterator(key.get()), wil::reg::value_iterator())) {
-    if (data.name == GetAPILayerPath()) {
-      haveHTCC = true;
-      continue;
-    }
-    if (!data.name.ends_with(L"\\UltraleapHandTracking.json")) {
-      continue;
-    }
-    DWORD disabled {};
-    if (!SUCCEEDED(
-          wil::reg::get_value_dword_nothrow(
-            key.get(), data.name.c_str(), &disabled))) {
-      continue;
-    }
-    if (!disabled) {
-      return {
-        haveHTCC ? UltraleapResult::HTCCFirst : UltraleapResult::UltraleapFirst,
-        data.name};
-    }
-  }
-
-  return {UltraleapResult::NotFound, {}};
-}
-
 static void UltraleapGUI() {
-  static const auto [ultraleap, ultraleapPath] = GetUltraleapAPILayer();
-  if (ultraleap == UltraleapResult::NotFound) {
+  using Status = OpenXRSettings::UltraleapStatus;
+  const auto status = gOpenXRSettings.GetUltraleapLayerStatus();
+
+  if (status == Status::NotFound) {
     StatusRow(true, "Ultraleap not found", "ERROR");
     return;
   }
+
+  const auto layerPath = gOpenXRSettings.GetUltraleapLayerPath();
 
   static bool fixed = false;
   const auto row = BeginHStackPanel().Scoped().Styled(
@@ -231,17 +186,18 @@ static void UltraleapGUI() {
       .AlignItems(YGAlignCenter)
       .JustifyContent(YGJustifyCenter));
   StatusRow(
-    fixed || (ultraleap == UltraleapResult::HTCCFirst),
+    fixed || (status == Status::HTCCFirst),
     "Ultraleap appears usable by HTCC",
     "Ultraleap is not usable by HTCC");
   const auto enabled
-    = BeginEnabled(ultraleap == UltraleapResult::UltraleapFirst && !fixed)
-        .Scoped();
+    = BeginEnabled(status == Status::UltraleapFirst && !fixed).Scoped();
   static bool showingFixError = false;
   static std::string fixError;
   if (Button("Fix")) {
     if (const auto result = RegDeleteKeyValueW(
-          HKEY_LOCAL_MACHINE, APILayerSubkey, ultraleapPath.c_str());
+          HKEY_LOCAL_MACHINE,
+          OpenXRSettings::APILayerSubkey,
+          layerPath.c_str());
         result != ERROR_SUCCESS) {
       showingFixError = true;
       const auto hr = HRESULT_FROM_WIN32(result);
@@ -250,7 +206,10 @@ static void UltraleapGUI() {
         std::system_error(static_cast<int>(hr), std::system_category()).what(),
         std::bit_cast<uint32_t>(hr));
     } else if (const auto hr = wil::reg::set_value_dword_nothrow(
-                 HKEY_LOCAL_MACHINE, APILayerSubkey, ultraleapPath.c_str(), 0);
+                 HKEY_LOCAL_MACHINE,
+                 OpenXRSettings::APILayerSubkey,
+                 layerPath.c_str(),
+                 0);
                FAILED(hr)) {
       showingFixError = true;
       fixError = std::format(
@@ -281,45 +240,20 @@ static void OpenXRGUI() {
   BeginCard();
   BeginVStackPanel().Styled(Style().FlexGrow(1).AlignSelf(YGAlignStretch));
 
-  uint32_t extensionCount {};
-  static const auto haveOpenXR
-    = XR_SUCCEEDED(xrEnumerateInstanceExtensionProperties(
-      nullptr, 0, &extensionCount, nullptr));
-  static bool haveHandTracking = false;
-  static bool haveHandTrackingAimPointFB = false;
-  static bool haveInitOpenXR = false;
-  if (haveOpenXR && !std::exchange(haveInitOpenXR, true)) {
-    std::vector<XrExtensionProperties> extensions(
-      extensionCount, {XR_TYPE_EXTENSION_PROPERTIES});
-    if (XR_SUCCEEDED(xrEnumerateInstanceExtensionProperties(
-          nullptr, extensions.size(), &extensionCount, extensions.data()))) {
-      for (auto&& extension: extensions) {
-        constexpr std::string_view handTrackingExt {
-          XR_EXT_HAND_TRACKING_EXTENSION_NAME};
-        constexpr std::string_view handTrackingAimPointFB {
-          XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME};
-        if (extension.extensionName == handTrackingExt) {
-          haveHandTracking = true;
-        }
-        if (extension.extensionName == handTrackingAimPointFB) {
-          haveHandTrackingAimPointFB = true;
-        }
-      }
-    }
-  }
-  StatusRow(haveOpenXR, "OpenXR appears usable", "OpenXR is not usable");
   StatusRow(
-    haveHandTracking,
+    gOpenXRSettings.HaveOpenXR(),
+    "OpenXR appears usable",
+    "OpenXR is not usable");
+  StatusRow(
+    gOpenXRSettings.HaveHandTracking(),
     "The runtime supports hand tracking",
     "The runtime does not support hand tracking");
   StatusRow(
-    haveHandTrackingAimPointFB,
+    gOpenXRSettings.HaveHandTrackingAimPointFB(),
     "The runtime supports pinch gestures",
     "The runtime does not support pinch gestures");
 
-  if (haveOpenXR) {
-    UltraleapGUI();
-  }
+  UltraleapGUI();
 
   if (ToggleSwitch(&HTCC::Config::HandTrackingHibernateGestureEnabled)
         .Caption("Hold a hand up to suspend HTCC")) {
@@ -327,7 +261,8 @@ static void OpenXRGUI() {
   }
 
   {
-    const auto disabled = BeginEnabled(haveHandTrackingAimPointFB).Scoped();
+    const auto disabled
+      = BeginEnabled(gOpenXRSettings.HaveHandTrackingAimPointFB()).Scoped();
     if (ToggleSwitch(&HTCC::Config::PinchToClick).Caption("Pinch to click")) {
       HTCC::Config::SavePinchToClick();
     }
