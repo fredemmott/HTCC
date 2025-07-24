@@ -15,19 +15,6 @@ Any other hand-tracking interferes with HTCC or entirely stops it from functioni
 
 To test if DCS is configured correctly, *disable HTCC*, restart DCS, and move your hands; if your hands move in-game, you have some other hand tracking turned on which needs to be turned off. Once you have no hand tracking in DCS, re-enable HTCC.
 
-## "PointCTRL Classic" (v0.2 and above)
-
-If you are using a PointCTRL and don't want to use any OpenXR features (e.g. Quest or Ultraleap hand tracking, or controller emulation), you can use the 'HTCC PointCTRL Classic' entry in the start menu.
-
-This will:
-- always use PointCTRL, regardless of your settings
-- always use the Virtual Touch Screen/Tablet, regardless of your settings
-- **only** work with DCS
-
-To launch, hit the Windows key, and type 'HTCC PointCTRL Classic', and run the item. You can then ignore the rest of this file.
-
-"PointCTRL Classic" is mostly useful for people who want to keep using their PointCTRL with DCS without using OpenXR, but also want to use it with DCS.
-
 ## Quest via Link/AirLink
 
 These steps are *only* for Link/AirLink, not Virtual Desktop, Steam Link, or any other tools. As of 2024-05-13, additional steps are needed for Link/AirLink because of a compatibility issue introduced into Meta's drivers.
