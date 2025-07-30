@@ -69,6 +69,11 @@ availability for contract work.
 
 ## I'm a gamer; can you support an additional game?
 
-The game developers can do everything that HTCC does *better*, *more easily*, and *more reliably* in the game itself, without HTCC. Ask the developers of the game to improve the hand tracking experience without HTCC.
-
 I do not currently intend to add support for any additional games to HTCC.
+
+The game developers can do everything that HTCC does *better*, *more easily*, and *more reliably* in the game itself, without HTCC.  I do not want to give game developers a reason not to implement hand tracking directly in the game; long-term, this may be a net loss to users and the broader ecosystem.
+
+You can:
+
+- ask the developers of the game to improve the hand tracking experience without HTCC
+- ask relevant hardware manufacturers to suggest that hand tracking be part of their relationship with software partners
