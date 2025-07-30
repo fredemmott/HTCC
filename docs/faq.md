@@ -60,4 +60,9 @@ If the cause is *not* in the list above, or you have confirmed that it is *not* 
 - If you believe that opening a public GitHub issue puts users at risk, please [email me](mailto:security@fred.fredemmott.com)
 - Otherwise, please open a GitHub issue
 
-Please open a GitHub issue with details.
+## I'm a game developer, how do I add/improve HTCC support?
+
+HTCC is a band-aid; everything it does can be done *better*, *more easily*, and *more reliably* in the game/engine - without HTCC. Adding/improving HTCC support in your game should not be a goal; instead, add/improve support for `XR_EXT_hand_tracking` in your game.
+
+If you would like assistance implementing hand tracking in your game/engine without HTCC, I can be reached [via email](mailto:htcc-commerical@fred.fredemmott.com) to inquire about my
+availability for contract work. 
