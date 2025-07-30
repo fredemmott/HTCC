@@ -19,10 +19,6 @@ HTCC should be compatible with *any* OpenXR-compatible tracker running on a conf
 `XR_FB_hand_tracking_aim` is optional, but is required for pinch gesture recognition. Without this extension, you will
 also need to build or buy a clicking device, like a PointCTRL or SlugMouse.
 
-## Pimax Crystal Light, Pimax Crystal Super
-
-See [*All* other headsets](#all-other-headsets).
-
 ### Getting help
 
 Contact your hardware manufacturer's customer support for information and support.
@@ -30,8 +26,11 @@ Contact your hardware manufacturer's customer support for information and suppor
 If you believe you have found an OpenXR correctness issue in HTCC,
 please [open a GitHub issue with details](https://github.com/fredemmott/HTCC/issues).
 
+## Pimax Crystal Light, Pimax Crystal Super
 
-### Hardware manufacturers
+See [*All* other headsets](#all-other-headsets).
+
+## Hardware manufacturers
 
 If you represent a hardware manufacturer and would like assistance implementing these OpenXR extensions or otherwise
 supporting HTCC, I can be reached [via email](mailto:htcc-commerical@fred.fredemmott.com) to inquire about my
