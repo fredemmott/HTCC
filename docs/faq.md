@@ -45,13 +45,19 @@ Report to your anti-virus vendor as a false positive.
 
 I do not spend my free time (and in some cases, money) trying to fix bugs in other people's software, which this practically always is.
 
-## I'm a security researcher and actually found a problem, what do I do?
+## I'm a security researcher and found a problem, what do I do?
 
-If you have reasons beyond:
+If the potential issue is in this list, please do not report it until you have confirmed that the problem is a genuine issue in HTCC, not a false-positive:
 
-- an antivirus says it found something (assume false positive unless evidence to the contrary)
-- VirusTotal says an antivirus found something (the same, but multiplied)
-- The autoupdater can download and run code from the internet (yes, it's an autoupdater)
-- The autoupdater contains some bad/suspicious words (this is the dictionary for Google's Brotli compression, found in appendix A of RFC 7932)
+- an antivirus says it found something
+- VirusTotal says one or more antivirus programs found something
+- the autoupdater can download and run code from the internet (yes, it's an autoupdater)
+- the autoupdater contains some suspicious words (this is the dictionary for Google's Brotli compression, found in appendix A of RFC 7932)
+- an LLM or any other tool says it found an issue
+- any other heuristic
+
+If the cause is *not* in the list above, or you have confirmed that it is *not* a false-positive:
+- If you believe that opening a public GitHub issue puts users at risk, please [email me](mailto:security@fred.fredemmott.com)
+- Otherwise, please open a GitHub issue
 
 Please open a GitHub issue with details.
