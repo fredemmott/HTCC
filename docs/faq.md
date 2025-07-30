@@ -66,3 +66,9 @@ HTCC is a band-aid; everything it does can be done *better*, *more easily*, and 
 
 If you would like assistance implementing hand tracking in your game/engine without HTCC, I can be reached [via email](mailto:htcc-commerical@fred.fredemmott.com) to inquire about my
 availability for contract work. 
+
+## I'm a gamer; can you support an additional game?
+
+The game developers can do everything that HTCC does *better*, *more easily*, and *more reliably* in the game itself, without HTCC. Ask the developers of the game to improve the hand tracking experience without HTCC.
+
+I do not currently intend to add support for any additional games to HTCC.
