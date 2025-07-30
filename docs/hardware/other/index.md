@@ -33,7 +33,7 @@ please [open a GitHub issue with details](https://github.com/fredemmott/HTCC/iss
 
 ### Hardware manufacturers
 
-If you represent a hardware manufacturer and require assistance implementing these OpenXR extensions or otherwise
+If you represent a hardware manufacturer and would like assistance implementing these OpenXR extensions or otherwise
 supporting HTCC, I can be reached [via email](mailto:htcc-commerical@fred.fredemmott.com) to inquire about my
 availability for contract work.
 
