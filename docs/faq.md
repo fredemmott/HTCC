@@ -76,4 +76,4 @@ The game developers can do everything that HTCC does *better*, *more easily*, an
 You can:
 
 - ask the developers of the game to improve the hand tracking experience without HTCC
-- ask relevant hardware manufacturers to suggest that hand tracking be part of their relationship with software partners
+- ask relevant hardware manufacturers to make hand tracking part of their relationship with their software partners
