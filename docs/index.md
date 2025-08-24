@@ -37,14 +37,15 @@ The following hand trackers are supported:
 
 | Tracker                    | Compatible? | Notes                                             |
 |----------------------------|-------------|---------------------------------------------------|
-| Quest 2                    | ✅          | Requires Oculus Developer Mode or Virtual Desktop |
-| Quest Pro                  | ✅          | Requires Oculus Developer Mode or Virtual Desktop |
-| Quest 3                    | ✅          | Requires Oculus Developer Mode or Virtual Desktop |
+| Quest 2                    | ✅          | Requires Virtual Desktop or Steam Link            |
+| Quest Pro                  | ✅          | Requires Virtual Desktop or Steam Link            |
+| Quest 3                    | ✅          | Requires Virtual Desktop or Steam Link            |
 | PointCTRL                  | ✅          | Requires custom firmware                          |
 | Ultraleap                  | ✅          | Includes Pimax hand tracking modules              |
 | Other OpenXR hand trackers | 🧪          | untested, but *should* work                       |
 | All others                 | ❌          | Includes HP Reverb G2, Varjo Aero                 |
 
+- As of 2025-08-10, Meta appear to have removed or broken support for hand tracking via Link/Air Link. Until/unless Meta change this, I do not provide any support for Meta Link, and you should not expect it to work.
 - **The HP Reverb G2 does not have the required hardware or driver support**
 - **The Varjo Aero does not have the required hardware support**
 - Unlisted hand trackers *may* work if they support `XR_EXT_hand_tracking`
