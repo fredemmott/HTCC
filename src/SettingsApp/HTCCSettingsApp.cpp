@@ -144,6 +144,16 @@ static void StatusRow(
 
   Label(value ? trueLabel : falseLabel).Styled(Style().FlexGrow(1));
 }
+static void PassingStatusRow(
+  const std::string_view label,
+  const ID id = ID {std::source_location::current()}) {
+  StatusRow(true, label, "ERROR", id);
+}
+static void FailingStatusRow(
+  const std::string_view label,
+  const ID id = ID {std::source_location::current()}) {
+  StatusRow(false, "ERROR", label, id);
+}
 
 enum class UltraleapResult {
   NotFound,
@@ -156,25 +166,35 @@ static void UltraleapGUI() {
   const auto status = gOpenXRSettings.GetUltraleapLayerStatus();
 
   if (status == Status::NotFound) {
-    StatusRow(true, "Ultraleap not found", "ERROR");
+    StatusRow(true, "UltraLeap not found", "ERROR");
     return;
   }
 
   const auto layerPath = gOpenXRSettings.GetUltraleapLayerPath();
 
-  static bool fixed = false;
   const auto row = BeginHStackPanel().Scoped().Styled(
     Style()
       .AlignSelf(YGAlignStretch)
       .AlignContent(YGAlignStretch)
       .AlignItems(YGAlignCenter)
       .JustifyContent(YGJustifyCenter));
-  StatusRow(
-    fixed || (status == Status::HTCCFirst),
-    "Ultraleap appears usable by HTCC",
-    "Ultraleap is not usable by HTCC");
-  const auto enabled
-    = BeginEnabled(status == Status::UltraleapFirst && !fixed).Scoped();
+  switch (status) {
+    case Status::NotFound:
+      std::unreachable();
+    case Status::HTCCFirst:
+      PassingStatusRow("UltraLeap appears usable by HTCC");
+      break;
+    case Status::UltraleapFirst:
+      FailingStatusRow("UltraLeap is not usable by HTCC");
+      break;
+    case Status::DisabledInRegistry:
+      PassingStatusRow("UltraLeap disabled in registry");
+      break;
+    case Status::DisabledByEnvironmentVariable:
+      FailingStatusRow("UltraLeap disabled by environment variable");
+      break;
+  }
+  const auto enabled = BeginEnabled(status == Status::UltraleapFirst).Scoped();
   static bool showingFixError = false;
   static std::string fixError;
   if (Button("Fix")) {
@@ -200,8 +220,6 @@ static void UltraleapGUI() {
         "Error creating Ultraleap registry value: {} ({:#010x})",
         std::system_error(static_cast<int>(hr), std::system_category()).what(),
         std::bit_cast<uint32_t>(hr));
-    } else {
-      fixed = true;
     }
   }
 

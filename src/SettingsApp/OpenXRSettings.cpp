@@ -99,12 +99,23 @@ void OpenXRSettings::LoadUltraleap() {
             key.get(), data.name.c_str(), &disabled))) {
       continue;
     }
-    if (!disabled) {
-      mData.mUltraleapPath = data.name;
-      mData.mUltraleapStatus = haveHTCC ? UltraleapStatus::HTCCFirst
-                                        : UltraleapStatus::UltraleapFirst;
+
+    mData.mUltraleapPath = data.name;
+
+    if (disabled) {
+      mData.mUltraleapStatus = UltraleapStatus::DisabledInRegistry;
+      continue;
+    }
+
+    if (
+      std::getenv("DISABLE_XR_APILAYER_ULTRALEAP_HAND_TRACKING_1") != nullptr) {
+      mData.mUltraleapStatus = UltraleapStatus::DisabledByEnvironmentVariable;
       return;
     }
+
+    mData.mUltraleapStatus
+      = haveHTCC ? UltraleapStatus::HTCCFirst : UltraleapStatus::UltraleapFirst;
+    return;
   }
 }
 

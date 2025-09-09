@@ -14,6 +14,8 @@ struct OpenXRSettings {
     NotFound,
     HTCCFirst,
     UltraleapFirst,
+    DisabledInRegistry,
+    DisabledByEnvironmentVariable,
   };
 
   OpenXRSettings();
