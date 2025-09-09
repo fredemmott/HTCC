@@ -414,20 +414,18 @@ static void AboutGUI() {
 static void FrameTick() {
   using namespace FredEmmott::GUI::StaticTheme::Common;
   static const auto ScrollViewStyle
-    = Style().BackgroundColor(LayerOnAcrylicFillColorDefaultBrush);
-  BeginVScrollView().Styled(ScrollViewStyle);
+    = Style().BackgroundColor(LayerOnAcrylicFillColorDefaultBrush).FlexGrow(1);
+  const auto scrollView = BeginVScrollView().Styled(ScrollViewStyle).Scoped();
 
-  static const auto LayoutStyle = Style().Gap(12).Margin(12).Padding(8);
-  BeginVStackPanel().Styled(LayoutStyle);
+  static const auto LayoutStyle
+    = Style().Gap(12).Margin(12).Padding(8).FlexGrow(1);
+  const auto panel = BeginVStackPanel().Styled(LayoutStyle).Scoped();
 
   CommonSettingsGUI();
   UnsupportedSettingsGUI();
   OpenXRGUI();
   PointCtrlGUI();
   AboutGUI();
-
-  EndVStackPanel();
-  EndVScrollView();
 }
 
 int WINAPI wWinMain(
