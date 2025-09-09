@@ -234,7 +234,7 @@ static void OpenXRGUI() {
     "The runtime supports hand tracking",
     "The runtime does not support hand tracking");
   StatusRow(
-    gOpenXRSettings.HaveHandTrackingAimPointFB(),
+    gOpenXRSettings.HaveHandTrackingAimFB(),
     "The runtime supports pinch gestures",
     "The runtime does not support pinch gestures");
 
@@ -247,7 +247,7 @@ static void OpenXRGUI() {
 
   {
     const auto disabled
-      = BeginEnabled(gOpenXRSettings.HaveHandTrackingAimPointFB()).Scoped();
+      = BeginEnabled(gOpenXRSettings.HaveHandTrackingAimFB()).Scoped();
     if (ToggleSwitch(&HTCC::Config::PinchToClick).Caption("Pinch to click")) {
       HTCC::Config::SavePinchToClick();
     }

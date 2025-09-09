@@ -61,13 +61,13 @@ void OpenXRSettings::LoadRuntime() {
       for (auto&& extension: extensions) {
         constexpr std::string_view handTrackingExt {
           XR_EXT_HAND_TRACKING_EXTENSION_NAME};
-        constexpr std::string_view handTrackingAimPointFB {
+        constexpr std::string_view fbHandTrackingAim {
           XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME};
         if (extension.extensionName == handTrackingExt) {
           mData.mHaveHandTracking = true;
         }
-        if (extension.extensionName == handTrackingAimPointFB) {
-          mData.mHaveHandTrackingAimPointFB = true;
+        if (extension.extensionName == fbHandTrackingAim) {
+          mData.mHaveHandTrackingAimFB = true;
         }
       }
     }

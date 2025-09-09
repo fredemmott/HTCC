@@ -38,8 +38,8 @@ struct OpenXRSettings {
     return mData.mHaveHandTracking;
   }
 
-  bool HaveHandTrackingAimPointFB() const noexcept {
-    return mData.mHaveHandTrackingAimPointFB;
+  bool HaveHandTrackingAimFB() const noexcept {
+    return mData.mHaveHandTrackingAimFB;
   }
 
   UltraleapStatus GetUltraleapLayerStatus() const noexcept {
@@ -73,7 +73,7 @@ struct OpenXRSettings {
     bool mIsApiLayerEnabled {false};
     bool mHaveOpenXR {false};
     bool mHaveHandTracking {false};
-    bool mHaveHandTrackingAimPointFB {false};
+    bool mHaveHandTrackingAimFB {false};
 
     UltraleapStatus mUltraleapStatus {UltraleapStatus::NotFound};
     std::wstring mUltraleapPath;
