@@ -28,15 +28,7 @@ cmake_policy(SET CMP0028 NEW)
 # Set extracted file timestamp to extract time
 cmake_policy(SET CMP0135 NEW)
 
-set(X_VCPKG_APPLOCAL_DEPS_INSTALL ON)
-
 include(cmake/hybrid-crt.cmake)
-
-set(
-  CMAKE_TOOLCHAIN_FILE
-  "${CMAKE_SOURCE_DIR}/third-party/vcpkg/scripts/buildsystems/vcpkg.cmake"
-  CACHE STRING "Vcpkg toolchain file"
-)
 
 set(VERSION_TWEAK 0 CACHE STRING "Final component of build number")
 project(
