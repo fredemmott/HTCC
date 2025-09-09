@@ -111,7 +111,7 @@ static XrResult xrEnumerateApiLayerProperties(
     .type = XR_TYPE_API_LAYER_PROPERTIES,
     .next = properties->next,
     .layerName = "XR_APILAYER_FREDEMMOTT_HandTrackedCockpitClicking",
-    .specVersion = XR_CURRENT_API_VERSION,
+    .specVersion = XR_API_VERSION_1_0,
     .layerVersion = 1,
     .description
     = "Hand-tracked cockpit clicking for flight simulators - "
