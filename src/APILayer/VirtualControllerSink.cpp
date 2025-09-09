@@ -7,15 +7,18 @@
 #include <openxr/openxr_platform.h>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <limits>
 #include <numbers>
+#include <string_view>
 
 #include "Environment.h"
 #include "InputState.h"
 #include "openxr.h"
 
 using namespace DirectX::SimpleMath;
+using namespace std::string_view_literals;
 
 namespace HandTrackedCockpitClicking {
 
@@ -30,6 +33,15 @@ static constexpr std::string_view gThumbstickXPath {"/input/thumbstick/x"};
 static constexpr std::string_view gThumbstickYPath {"/input/thumbstick/y"};
 static constexpr std::string_view gTriggerTouchPath {"/input/trigger/touch"};
 static constexpr std::string_view gTriggerValuePath {"/input/trigger/value"};
+
+// We want to block *all* controllers; unfortunately, there isn't a good way
+// to tell if a given suggested interaction profile is for a new kind of
+// controller, or for something else.
+//
+// For now, go with a whitelist
+static constexpr std::array gPassThroughInteractionProfiles {
+  "/interaction_profiles/ext/eye_gaze_interaction"sv,
+};
 
 static bool UseDCSActions() {
   return VirtualControllerSink::IsActionSink()
@@ -491,19 +503,26 @@ XrResult VirtualControllerSink::xrSuggestInteractionProfileBindings(
   const XrInteractionProfileSuggestedBinding* suggestedBindings) {
   const auto interactionProfile
     = ResolvePath(suggestedBindings->interactionProfile);
-  {
-    if (interactionProfile != Config::VirtualControllerInteractionProfilePath) {
-      DebugPrint(
-        "Profile '{}' does not match desired profile '{}'",
-        interactionProfile,
-        Config::VirtualControllerInteractionProfilePath);
-      return XR_SUCCESS;
-    }
+  if (std::ranges::contains(
+        gPassThroughInteractionProfiles, interactionProfile)) {
     DebugPrint(
-      "Found desired profile '{}'",
-      Config::VirtualControllerInteractionProfilePath);
-    mProfilePath = suggestedBindings->interactionProfile;
+      "Profile '{}' is on pass-through list, allowing", interactionProfile);
+    return mOpenXR->xrSuggestInteractionProfileBindings(
+      instance, suggestedBindings);
   }
+
+  if (interactionProfile != Config::VirtualControllerInteractionProfilePath) {
+    DebugPrint(
+      "Profile '{}' does not match desired profile '{}', dropping",
+      interactionProfile,
+      Config::VirtualControllerInteractionProfilePath);
+    return XR_SUCCESS;
+  }
+
+  DebugPrint(
+    "Found desired profile '{}'",
+    Config::VirtualControllerInteractionProfilePath);
+  mProfilePath = suggestedBindings->interactionProfile;
 
   for (uint32_t i = 0; i < suggestedBindings->countSuggestedBindings; ++i) {
     const auto& it = suggestedBindings->suggestedBindings[i];
