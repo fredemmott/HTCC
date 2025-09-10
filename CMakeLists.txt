@@ -33,7 +33,7 @@ include(cmake/hybrid-crt.cmake)
 set(VERSION_TWEAK 0 CACHE STRING "Final component of build number")
 project(
   HTCC
-  VERSION 1.4.2.${VERSION_TWEAK}
+  VERSION 1.4.3.${VERSION_TWEAK}
   LANGUAGES CXX C)
 
 if (NOT VERSION_TWEAK_LABEL)
