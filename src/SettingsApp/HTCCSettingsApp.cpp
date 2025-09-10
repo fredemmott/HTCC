@@ -166,7 +166,7 @@ static void UltraleapGUI() {
   const auto status = gOpenXRSettings.GetUltraleapLayerStatus();
 
   if (status == Status::NotFound) {
-    StatusRow(true, "UltraLeap not found", "ERROR");
+    StatusRow(true, "Ultraleap not found", "ERROR");
     return;
   }
 
@@ -182,16 +182,16 @@ static void UltraleapGUI() {
     case Status::NotFound:
       std::unreachable();
     case Status::HTCCFirst:
-      PassingStatusRow("UltraLeap appears usable by HTCC");
+      PassingStatusRow("Ultraleap appears usable by HTCC");
       break;
     case Status::UltraleapFirst:
-      FailingStatusRow("UltraLeap is not usable by HTCC");
+      FailingStatusRow("Ultraleap is not usable by HTCC");
       break;
     case Status::DisabledInRegistry:
-      PassingStatusRow("UltraLeap disabled in registry");
+      PassingStatusRow("Ultraleap is disabled in registry");
       break;
     case Status::DisabledByEnvironmentVariable:
-      FailingStatusRow("UltraLeap disabled by environment variable");
+      FailingStatusRow("Ultraleap is disabled by environment variable");
       break;
   }
   const auto enabled = BeginEnabled(status == Status::UltraleapFirst).Scoped();
