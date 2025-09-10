@@ -54,3 +54,9 @@ contact Ultraleap support.**
 - you probably want to fix any other issues the tool finds
 - if the game fails to start in VR with the 'Force-enable' options on, **you need to contact Ultraleap support** - the
   Ultraleap driver is not working correctly.
+
+### Disabled by environment variable
+
+As of 2025-09-10, if the environment variable `DISABLE_XR_APILAYER_ULTRALEAP_HAND_TRACKING_1` is set to *any* value (including `0`, `false`, `no`, etc), the Ultraleap layer will be disabled. This is part of OpenXR and the Ultraleap driver, not HTCC.
+
+If the HTCC settings app says that Ultraleap is disabled by environment variable, you can try removing the environment variable from Windows settings; if it is not set there, it is possible for OpenXR runtimes to set the environment variable; contact your VR headset manufacturer for assistance.
