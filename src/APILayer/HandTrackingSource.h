@@ -45,6 +45,10 @@ class HandTrackingSource final : public InputSource {
 
     ActionState mRawActions {};
     XrTime mRawActionsSince {};
+    
+    // --- Added for grab‑and‑move scroll ---
+    float mLastScrollY = 0.0f;
+    bool mScrolling = false;
   };
 
   bool mHibernating {false};
