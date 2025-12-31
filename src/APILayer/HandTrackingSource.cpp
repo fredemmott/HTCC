@@ -345,6 +345,38 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
       state.mPose = {};
       break;
   }
+
+  // --- Grab-and-Move Scroll Gesture ---
+  if (!Config::PinchToScroll) {
+      bool pinchActive = state.mActions.mPrimary;
+
+      if (pinchActive && state.mPose) {
+          float currentY = state.mPose->position.y;
+
+          if (!hand->mScrolling) {
+              // Start scroll mode
+              hand->mScrolling = true;
+              hand->mLastScrollY = currentY;
+          } else {
+              float delta = currentY - hand->mLastScrollY;
+
+              // Threshold to avoid jitter
+              constexpr float scrollThreshold = 0.01f;
+
+              if (delta > scrollThreshold) {
+                  state.mActions.mValueChange = ActionState::ValueChange::Increase;
+                  hand->mLastScrollY = currentY;
+              } else if (delta < -scrollThreshold) {
+                  state.mActions.mValueChange = ActionState::ValueChange::Decrease;
+                  hand->mLastScrollY = currentY;
+              }
+          }
+      } else {
+          // Pinch released → stop scrolling
+          hand->mScrolling = false;
+          hand->mLastScrollY = 0.0f;
+      }
+  }
 }
 
 void HandTrackingSource::InitHandTracker(Hand* hand) {

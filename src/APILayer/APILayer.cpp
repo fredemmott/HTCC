@@ -345,10 +345,8 @@ XrResult APILayer::xrWaitFrame(
       rightHand.mActions.mPrimary = r.mActions.mPrimary;
       rightHand.mActions.mSecondary = r.mActions.mSecondary;
     }
-    if (Config::PinchToScroll) {
-      leftHand.mActions.mValueChange = l.mActions.mValueChange;
-      rightHand.mActions.mValueChange = r.mActions.mValueChange;
-    }
+    leftHand.mActions.mValueChange = l.mActions.mValueChange;
+    rightHand.mActions.mValueChange = r.mActions.mValueChange;
   }
 
   if (mPointCtrl) {
