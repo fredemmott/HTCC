@@ -107,7 +107,7 @@ jobs:
           
           Add-Content $env:GITHUB_OUTPUT "installer-path=${InstallerPath}"
           Add-Content $env:GITHUB_OUTPUT "installer-name=${InstallerName}"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: matrix.preset == 'Release'
         with:
           name: HTCC-v${{steps.build.outputs.version}}-bundle
@@ -115,12 +115,12 @@ jobs:
             ${{steps.configure.outputs.output-root}}/**/*
             !${{steps.configure.outputs.output-root}}/**/*.pdb
             !${{steps.configure.outputs.output-root}}/**/*.msi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: matrix.preset == 'Release'
         with:
           name: HTCC-v${{steps.build.outputs.VERSION}}-DebugSymbols
           path: ${{steps.configure.outputs.output-root}}/bin/*.pdb
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: matrix.preset == 'Release'
         with:
           name: ${{steps.installer.outputs.installer-name}}
