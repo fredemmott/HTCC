@@ -10,7 +10,7 @@ nav_order: 1
 This is only tested with a Quest 2 and a Quest Pro. It probably doesn't work with a Rift S.
 
 1. Enable hand tracking in your
-   headset - [documentation](https://www.meta.com/help/quest/articles/headsets-and-accessories/controllers-and-hand-tracking/hand-tracking/)
+   headset - [documentation](https://www.meta.com/help/quest/articles/headsets-and-accessories/controllers-and-hand-tracking/hand-tracking/); hand tracking *must* work with your headset standalone before it will work with your PC
 2. Set up your account as an Oculus Developer
    account - [documentation](https://developer.oculus.com/documentation/native/android/mobile-device-setup/) - you do
    not need to allow USB debugging or install the ADB drivers
@@ -20,6 +20,8 @@ This is only tested with a Quest 2 and a Quest Pro. It probably doesn't work wit
 5. In HTCC settings, set 'hand tracking source' to 'OpenXR Hand Tracking'
 
 ![Developer Runtime Features option](developer-runtime-features.png)
+
+Meta frequently break PC hand tracking support with firmware/driver updates, or for a random selection of users with experiments. If the steps above don't work for you, you must use Steam Link or Virtual Desktop instead.
 
 ## Virtual Desktop
 
