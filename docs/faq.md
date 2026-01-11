@@ -39,6 +39,10 @@ Gesture recognition is provided by your hand trackers' driver; there is nearly n
 
 This is a limitation of DCS's mouse handling.
 
+## I heard beeps then it stopped working.
+
+You activated [the Sleep/Wake feature](sleep-wake.md).
+
 ## My anti-virus says it found something, what do I do?
 
 Report to your anti-virus vendor as a false positive.
