@@ -5,7 +5,7 @@ nav_order: 4
 
 # Ultraleap
 
-1. Make sure you have Gemini v5.16.0 (October 2023) or later installed
+1. Make sure you have Gemini v5.16.0 (October 2023) or later (including Hyperion) installed
 2. Set 'Hand tracking device' to 'OpenXR hand tracking'
 3. *Optional*: enable pinch gestures
 4. For v5.16.0, under 'Workarounds':
