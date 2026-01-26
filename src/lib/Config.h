@@ -151,6 +151,7 @@ enum class HandTrackingHands : DWORD {
   IT(HandTrackingActionHFOV, std::numbers::pi_v<float> / 2) \
   IT(HandTrackingHibernateCutoff, std::numbers::pi_v<float> / 8) \
   IT(SmoothingFactor, 1.0f) \
+  IT(GrabMoveScrollScale, 1.0f) \
   IT(LeftEyeFOVLeft, 0.0f) \
   IT(LeftEyeFOVRight, 0.0f) \
   IT(LeftEyeFOVUp, 0.0f) \

@@ -360,6 +360,9 @@ void HandTrackingSource::UpdateHand(const FrameInfo& frameInfo, Hand* hand) {
       } else {
         float delta = currentY - hand->mLastScrollY;
 
+        // Apply grab-and-move scroll scale for different applications
+        delta *= Config::GrabMoveScrollScale;
+
         // Threshold to avoid jitter
         constexpr float scrollThreshold = 0.01f;
 
