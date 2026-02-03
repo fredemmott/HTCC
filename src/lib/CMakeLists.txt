@@ -6,6 +6,7 @@ add_library(
   DebugPrint.cpp
   ElevationRPC.cpp ElevationRPC.h
   Environment.cpp
+  IsTrustedExecutable.cpp  IsTrustedExecutable.h
   FrameInfo.cpp
   OpenXRNext.cpp
   VirtualTouchScreenSink.cpp

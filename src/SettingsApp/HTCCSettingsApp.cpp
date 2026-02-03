@@ -24,6 +24,7 @@
 #include "../lib/ElevationRPC.h"
 #include "../lib/PointCtrlSource.h"
 #include "CheckHResult.hpp"
+#include "IsTrustedExecutable.h"
 #include "Licenses.hpp"
 #include "OpenXRSettings.h"
 #include "version.h"
@@ -274,7 +275,6 @@ static void PointCtrlCalibrationGUI() {
     std::array<wchar_t, 32768> myPath {};
     const auto myPathLen
       = GetModuleFileNameW(nullptr, myPath.data(), myPath.size());
-    ;
     const auto calibrationExe
       = std::filesystem::weakly_canonical(
           std::filesystem::path(std::wstring_view {myPath.data(), myPathLen})
@@ -282,13 +282,15 @@ static void PointCtrlCalibrationGUI() {
             .parent_path()
           / L"PointCtrlCalibration.exe")
           .wstring();
-    ShellExecuteW(
-      nullptr,
-      L"open",
-      calibrationExe.c_str(),
-      calibrationExe.c_str(),
-      nullptr,
-      SW_NORMAL);
+    if (HandTrackedCockpitClicking::IsTrustedExecutable(calibrationExe)) {
+      ShellExecuteW(
+        nullptr,
+        L"open",
+        calibrationExe.c_str(),
+        calibrationExe.c_str(),
+        nullptr,
+        SW_NORMAL);
+    }
   }
   EndEnabled();
 }
