@@ -5,6 +5,7 @@
 #include <filesystem>
 
 #include "DebugPrint.h"
+#include "ElevationRPC.h"
 
 namespace HandTrackedCockpitClicking::Config {
 
@@ -130,37 +131,18 @@ void LoadForExecutableFileName(std::wstring_view executableFileName) {
 }
 
 template <class T>
-static void SaveDWord(const wchar_t* valueName, T value) {
-  auto data = static_cast<DWORD>(value);
-  const auto result = RegSetKeyValueW(
-    HKEY_LOCAL_MACHINE,
-    BaseSubKey.c_str(),
-    valueName,
-    REG_DWORD,
-    &data,
-    sizeof(data));
-  if (result != ERROR_SUCCESS) {
-    auto message = std::format("Saving to registry failed: error {}", result);
-    throw std::runtime_error(message);
-  }
+static void SaveDWord(const std::string_view valueName, T value) {
+  ElevationRPC::Client::Get().WriteHKLMDWord(
+    valueName, static_cast<uint32_t>(value));
 }
 
-static void SaveString(const wchar_t* valueName, const std::string_view value) {
-  const auto buffer = Utf8::ToWide(value);
-  const auto result = RegSetKeyValueW(
-    HKEY_LOCAL_MACHINE,
-    BaseSubKey.c_str(),
-    valueName,
-    REG_SZ,
-    buffer.data(),
-    buffer.size() * sizeof(buffer[0]));
-  if (result != ERROR_SUCCESS) {
-    auto message = std::format("Saving to registry failed: error {}", result);
-    throw std::runtime_error(message);
-  }
+static void SaveString(
+  const std::string_view valueName,
+  const std::string_view value) {
+  ElevationRPC::Client::Get().WriteHKLMString(valueName, value);
 }
 
-static void SaveFloat(const wchar_t* valueName, float value) {
+static void SaveFloat(const std::string_view valueName, float value) {
   const auto data = std::format("{}", value);
   SaveString(valueName, data);
 }
@@ -168,21 +150,21 @@ static void SaveFloat(const wchar_t* valueName, float value) {
 #define IT(native_type, name, defaultValue) \
   void Save##name(native_type value) { \
     Config::name = value; \
-    SaveDWord(L#name, Config::name); \
+    SaveDWord(#name, Config::name); \
   }
 HandTrackedCockpitClicking_DWORD_SETTINGS
 #undef IT
 #define IT(name, defaultValue) \
   void Save##name(float value) { \
     Config::name = value; \
-    SaveFloat(L#name, Config::name); \
+    SaveFloat(#name, Config::name); \
   }
   HandTrackedCockpitClicking_FLOAT_SETTINGS
 #undef IT
 #define IT(name, defaultValue) \
   void Save##name(float value) { \
     Config::name = value; \
-    SaveString(L#name, Config::name); \
+    SaveString(#name, Config::name); \
   }
   HandTrackedCockpitClicking_STRING_SETTINGS
 #undef IT

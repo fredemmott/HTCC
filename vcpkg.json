@@ -4,6 +4,9 @@
   "dependencies": [
     "compressed-embed",
     "directxtk",
+    "glaze",
+    "magic-args",
+    "magic-enum",
     "openxr-loader",
     "wil",
     {

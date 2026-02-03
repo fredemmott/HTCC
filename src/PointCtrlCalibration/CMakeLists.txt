@@ -21,5 +21,3 @@ target_link_libraries(
   OpenXR::headers
   OpenXR::openxr_loader
 )
-
-target_link_options(PointCtrlCalibration PRIVATE "/MANIFESTUAC:level='requireAdministrator'")

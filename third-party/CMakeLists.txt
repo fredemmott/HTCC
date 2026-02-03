@@ -15,6 +15,9 @@ include(system.cmake)
 # From vcpkg
 find_package(OpenXR CONFIG REQUIRED GLOBAL)
 find_package(directxtk CONFIG REQUIRED GLOBAL)
+find_package(magic_args CONFIG REQUIRED GLOBAL)
+find_package(magic_enum CONFIG REQUIRED GLOBAL)
+find_package(glaze CONFIG REQUIRED GLOBAL)
 find_package(wil CONFIG REQUIRED GLOBAL)
 
 set(fredemmmott-gui_SOURCE_DIR "" CACHE PATH "Path to a local checkout of fredemmott-gui")

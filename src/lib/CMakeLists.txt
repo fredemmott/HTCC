@@ -4,6 +4,7 @@ add_library(
   Config.cpp
   CheckHResult.cpp CheckHResult.hpp
   DebugPrint.cpp
+  ElevationRPC.cpp ElevationRPC.h
   Environment.cpp
   FrameInfo.cpp
   OpenXRNext.cpp
@@ -32,6 +33,11 @@ target_link_libraries(
   Microsoft::DirectXTK
   OpenXR::headers
   System::WindowsApp
+)
+target_compile_definitions(
+  HTCCLibCommon
+  PRIVATE
+  "$<$<CONFIG:Debug>:ALLOW_UNSIGNED_EXECUTABLES>"
 )
 
 add_library(

@@ -23,7 +23,6 @@ target_link_libraries(
   OpenXR::headers
   OpenXR::openxr_loader
 )
-target_link_options(HTCCSettings PRIVATE "/MANIFESTUAC:level='requireAdministrator'")
 add_version_metadata(HTCCSettings)
 
 set(VERSION_HEADER_FILE "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/include/version.h")

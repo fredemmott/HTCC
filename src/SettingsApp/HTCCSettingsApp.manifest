@@ -31,7 +31,7 @@
           redirected.
         -->
         <requestedExecutionLevel
-          level="requireAdministrator"
+          level="asInvoker"
           uiAccess="false"
         />
       </requestedPrivileges>

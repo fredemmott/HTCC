@@ -15,10 +15,13 @@
 #include <FredEmmott/GUI/StaticTheme/Common.hpp>
 #include <filesystem>
 #include <format>
+#include <magic_args/magic_args.hpp>
+#include <magic_args/windows.hpp>
 #include <optional>
 #include <string_view>
 
 #include "../lib/Config.h"
+#include "../lib/ElevationRPC.h"
 #include "../lib/PointCtrlSource.h"
 #include "CheckHResult.hpp"
 #include "Licenses.hpp"
@@ -73,12 +76,8 @@ static void CommonSettingsGUI() {
 
   bool isEnabled = gOpenXRSettings.IsApiLayerEnabled();
   if (ToggleSwitch(&isEnabled).Caption("Enable HTCC")) {
-    const DWORD disabled = isEnabled ? 0 : 1;
-    wil::reg::set_value_dword(
-      HKEY_LOCAL_MACHINE,
-      OpenXRSettings::APILayerSubkey,
-      gOpenXRSettings.GetApiLayerPath().c_str(),
-      disabled);
+    HandTrackedCockpitClicking::ElevationRPC::Client::Get().SetAPILayerEnabled(
+      isEnabled);
   }
 
   PointerSourceGUI();
@@ -198,29 +197,8 @@ static void UltraleapGUI() {
   static bool showingFixError = false;
   static std::string fixError;
   if (Button("Fix")) {
-    if (const auto result = RegDeleteKeyValueW(
-          HKEY_LOCAL_MACHINE,
-          OpenXRSettings::APILayerSubkey,
-          layerPath.c_str());
-        result != ERROR_SUCCESS) {
-      showingFixError = true;
-      const auto hr = HRESULT_FROM_WIN32(result);
-      fixError = std::format(
-        "Error removing Ultraleap registry value: {} ({:#010x})",
-        std::system_error(static_cast<int>(hr), std::system_category()).what(),
-        std::bit_cast<uint32_t>(hr));
-    } else if (const auto hr = wil::reg::set_value_dword_nothrow(
-                 HKEY_LOCAL_MACHINE,
-                 OpenXRSettings::APILayerSubkey,
-                 layerPath.c_str(),
-                 0);
-               FAILED(hr)) {
-      showingFixError = true;
-      fixError = std::format(
-        "Error creating Ultraleap registry value: {} ({:#010x})",
-        std::system_error(static_cast<int>(hr), std::system_category()).what(),
-        std::bit_cast<uint32_t>(hr));
-    }
+    HandTrackedCockpitClicking::ElevationRPC::Client::Get().MoveAPILayerToLast(
+      layerPath);
   }
 
   if (const auto dialog = BeginContentDialog(&showingFixError).Scoped()) {
@@ -455,11 +433,26 @@ static void FrameTick() {
   AboutGUI();
 }
 
+struct CLIArgs {
+  std::string mElevatedHelperPipe;
+};
+
 int WINAPI wWinMain(
   HINSTANCE hInstance,
   [[maybe_unused]] HINSTANCE hPrevInstance,
   [[maybe_unused]] LPWSTR lpCmdLine,
   const int nCmdShow) {
+  magic_args::attach_to_parent_terminal();
+
+  const auto args = magic_args::parse<CLIArgs>(GetCommandLineW());
+  if (!args) {
+    return EXIT_FAILURE;
+  }
+  if (!args->mElevatedHelperPipe.empty()) {
+    return HandTrackedCockpitClicking::ElevationRPC::main(
+      args->mElevatedHelperPipe);
+  }
+
   return Win32Window::WinMain(
     hInstance,
     hPrevInstance,

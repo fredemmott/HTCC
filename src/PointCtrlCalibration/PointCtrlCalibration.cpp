@@ -14,12 +14,15 @@
 #include <array>
 #include <chrono>
 #include <iostream>
+#include <magic_args/magic_args.hpp>
+#include <magic_args/windows.hpp>
 #include <numbers>
 #include <thread>
 
 #include "CheckHResult.hpp"
 #include "Config.h"
 #include "DebugPrint.h"
+#include "ElevationRPC.h"
 #include "Environment.h"
 #include "OpenXRNext.h"
 #include "PointCtrlSource.h"
@@ -237,7 +240,21 @@ void DrawLayer(
   context->CopyResource(texture, res.mTexture.get());
 }
 
+struct CLIArgs {
+  std::string mElevatedHelperPipe;
+};
+
 int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
+  magic_args::attach_to_parent_terminal();
+
+  const auto args = magic_args::parse<CLIArgs>(GetCommandLineW());
+  if (!args) {
+    return EXIT_FAILURE;
+  }
+  if (!args->mElevatedHelperPipe.empty()) {
+    return ElevationRPC::main(args->mElevatedHelperPipe);
+  }
+
   CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
   Environment::IsPointCtrlCalibration = true;
 
