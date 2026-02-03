@@ -5,8 +5,6 @@ add_executable(
 )
 add_version_metadata(PointCtrlCalibration)
 
-find_package(OpenXR CONFIG REQUIRED)
-
 target_link_libraries(
   PointCtrlCalibration
   PRIVATE

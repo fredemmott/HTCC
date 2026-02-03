@@ -26,7 +26,6 @@ target_link_libraries(
   System::Dinput8
   System::Dxguid
 )
-find_package(OpenXR CONFIG REQUIRED)
 target_link_libraries(
   HTCCLibCommon
   PUBLIC

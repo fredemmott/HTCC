@@ -13,6 +13,7 @@ configure_file(
 include(system.cmake)
 
 # From vcpkg
+find_package(OpenXR CONFIG REQUIRED GLOBAL)
 find_package(directxtk CONFIG REQUIRED GLOBAL)
 find_package(wil CONFIG REQUIRED GLOBAL)
 

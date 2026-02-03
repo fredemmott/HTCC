@@ -11,7 +11,6 @@ target_include_directories(
   PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}"
 )
-find_package(OpenXR CONFIG REQUIRED)
 target_link_libraries(
   HTCCSettings
   PRIVATE

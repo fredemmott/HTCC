@@ -1,4 +1,3 @@
-find_package(OpenXR CONFIG REQUIRED)
 add_library(
   HTCCAPILayer
   MODULE
