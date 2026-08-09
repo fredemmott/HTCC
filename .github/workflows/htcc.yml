@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     name: ${{matrix.preset}}
-    runs-on: windows-latest
+    runs-on: windows-2022 # VS 2022
     strategy:
       matrix:
         preset:
